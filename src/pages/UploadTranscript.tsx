@@ -8,19 +8,23 @@ import { Label } from "@/components/ui/label";
 import { Upload as UploadIcon, FileText, Lock, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { transcriptSample } from "@/lib/mockData";
 import { toast } from "sonner";
+import AnonymizationPreview from "@/components/AnonymizationPreview";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Upload() {
   const navigate = useNavigate();
-  const [anonymize, setAnonymize] = useState(true);
+  const { logAction } = useAuth();
   const [scrub, setScrub] = useState(true);
   const [tech, setTech] = useState(false);
+  const [strict, setStrict] = useState(true);
   const [file, setFile] = useState<string | null>(null);
   const [step, setStep] = useState<"idle" | "uploading" | "anon" | "extract" | "done">("idle");
 
   const onPick = (name: string) => {
     setFile(name);
     setStep("uploading");
-    setTimeout(() => setStep("anon"), 700);
+    logAction("Uploaded transcript", name);
+    setTimeout(() => { setStep("anon"); logAction("Anonymized client identifiers", name); }, 700);
     setTimeout(() => setStep("extract"), 1600);
     setTimeout(() => setStep("done"), 2700);
   };
@@ -29,7 +33,7 @@ export default function Upload() {
     <>
       <PageHeader
         title="Upload Transcript"
-        description="Upload a meeting transcript (e.g., from Fireflies). Client identifiers are anonymized before AI processing."
+        description="Upload a meeting transcript (e.g., from Fireflies). Sensitive identifiers are anonymized before AI processing."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -56,14 +60,14 @@ export default function Upload() {
                     <span className="text-xs text-muted-foreground">· 12.4 KB</span>
                   </div>
                   {step === "done" && (
-                    <Button size="sm" onClick={() => { toast.success("PIA draft generated"); navigate("/review"); }}>
+                    <Button size="sm" onClick={() => { logAction("Generated PIA from transcript", file); toast.success("PIA draft generated"); navigate("/review"); }}>
                       <Sparkles className="h-3.5 w-3.5 mr-1" />Review extraction
                     </Button>
                   )}
                 </div>
                 <div className="p-4 space-y-2 text-sm">
                   <PipelineRow label="Uploading securely (TLS 1.3)" active={step === "uploading"} done={["anon","extract","done"].includes(step)} />
-                  <PipelineRow label="Anonymizing client identifiers" active={step === "anon"} done={["extract","done"].includes(step)} />
+                  <PipelineRow label={`Anonymizing client identifiers${strict ? " (Strict mode)" : ""}`} active={step === "anon"} done={["extract","done"].includes(step)} />
                   <PipelineRow label="AI extraction of privacy fields" active={step === "extract"} done={step === "done"} />
                 </div>
               </div>
@@ -75,12 +79,12 @@ export default function Upload() {
           <CardContent className="p-6">
             <h3 className="text-sm font-semibold mb-4">Processing options</h3>
             <div className="space-y-4">
-              <ToggleRow id="anon" checked={anonymize} onChange={setAnonymize} icon={Lock}
-                title="Anonymize client names" desc="Replace client and rep names with tokens before AI." />
+              <ToggleRow id="strict" checked={strict} onChange={setStrict} icon={Lock}
+                title="Strict Anonymization Mode" desc="Aggressively masks names, emails, IDs and systems before AI processing." />
               <ToggleRow id="scrub" checked={scrub} onChange={setScrub} icon={Lock}
-                title="Scrub before storage" desc="PII removed prior to persisted storage." />
+                title="Scrub before storage" desc="Raw data is never persisted — only the anonymized version is stored." />
               <ToggleRow id="tech" checked={tech} onChange={setTech} icon={Sparkles}
-                title="Enable Tech Security (DRL/IRL)" desc="Enables technical security questions during extraction." />
+                title="Enable Tech Security (DRL/IRL)" desc="Adds technical security questions during extraction." />
             </div>
             <div className="mt-6 p-3 rounded-md bg-info/5 border border-info/20 text-xs text-foreground">
               <strong className="text-info">Compliance:</strong> Aligned with NPC Philippines requirements; GDPR overlay applies for EU data subjects.
@@ -89,15 +93,9 @@ export default function Upload() {
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold">Sample transcript preview</h3>
-            <span className="text-xs text-muted-foreground">Anonymized view</span>
-          </div>
-          <pre className="text-xs leading-relaxed bg-muted/40 rounded-md p-4 whitespace-pre-wrap font-mono">{transcriptSample}</pre>
-        </CardContent>
-      </Card>
+      <div className="mt-6">
+        <AnonymizationPreview original={transcriptSample} strict={strict} onStrictChange={setStrict} />
+      </div>
     </>
   );
 }
