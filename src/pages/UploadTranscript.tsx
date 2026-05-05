@@ -165,10 +165,70 @@ export default function Upload() {
               </pre>
 
               <div className="mt-6 flex justify-end">
-                <Button size="lg" onClick={handleGenerate}>
-                  <Sparkles className="h-4 w-4 mr-2" />Generate PIA
+                <Button size="lg" onClick={() => setProcessOpen(true)}>
+                  <Sparkles className="h-4 w-4 mr-2" />Process PIA
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <Dialog open={processOpen} onOpenChange={setProcessOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Process PIA</DialogTitle>
+            <DialogDescription>
+              Choose how to process this anonymized transcript.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid sm:grid-cols-2 gap-3 py-2">
+            <button
+              onClick={handleGenerateNew}
+              className="text-left border rounded-lg p-4 hover:border-accent hover:bg-accent/5 transition-colors"
+            >
+              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3">
+                <FilePlus2 className="h-4 w-4" />
+              </div>
+              <div className="text-sm font-semibold">Generate New PIA</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Create a brand new PIA from this transcript.
+              </div>
+            </button>
+
+            <div className="border rounded-lg p-4">
+              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3">
+                <Link2 className="h-4 w-4" />
+              </div>
+              <div className="text-sm font-semibold">Link to Existing PIA</div>
+              <div className="text-xs text-muted-foreground mt-1 mb-3">
+                Attach this transcript to a PIA in the library.
+              </div>
+              <Select value={linkPiaId} onValueChange={setLinkPiaId}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select PIA…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockPIAs.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.id} — {p.dpsName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProcessOpen(false)}>Cancel</Button>
+            <Button onClick={handleLinkExisting} disabled={!linkPiaId}>
+              <Link2 className="h-4 w-4 mr-2" />Link Selected
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
             </CardContent>
           </Card>
         )}
