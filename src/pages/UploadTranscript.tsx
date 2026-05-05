@@ -73,10 +73,22 @@ export default function Upload() {
     }, 1700);
   };
 
-  const handleGenerate = () => {
-    logAction("Generated PIA from transcript", file?.name ?? "");
-    toast.success("Generating PIA from anonymized transcript");
+  const handleGenerateNew = () => {
+    logAction("Generated new PIA from transcript", file?.name ?? "");
+    toast.success("Generating new PIA from anonymized transcript");
+    setProcessOpen(false);
     navigate(`/pia?uploadId=${uploadId}`);
+  };
+
+  const handleLinkExisting = () => {
+    if (!linkPiaId) {
+      toast.error("Please select a PIA to link");
+      return;
+    }
+    logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`);
+    toast.success(`Linked to ${linkPiaId}`);
+    setProcessOpen(false);
+    navigate(`/pia?uploadId=${uploadId}&piaId=${linkPiaId}`);
   };
 
   const beforeUpload = step === "idle";
