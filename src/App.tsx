@@ -11,7 +11,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import UploadTranscript from "./pages/UploadTranscript";
-import TranscriptReview from "./pages/TranscriptReview";
 import GeneratedPIA from "./pages/GeneratedPIA";
 import PIALibrary from "./pages/PIALibrary";
 import CompilationBuilder from "./pages/CompilationBuilder";
@@ -40,7 +39,6 @@ const App = () => (
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/upload" element={<UploadTranscript />} />
-                <Route path="/review" element={<TranscriptReview />} />
                 <Route path="/pia" element={<GeneratedPIA />} />
                 <Route path="/library" element={<PIALibrary />} />
                 <Route path="/compile" element={<CompilationBuilder />} />

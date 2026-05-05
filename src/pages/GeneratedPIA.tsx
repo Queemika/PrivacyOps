@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusChip } from "@/components/StatusChip";
-import { Download, Edit3, Sparkles, ShieldCheck, Send } from "lucide-react";
+import { Download, Edit3, Sparkles, ShieldCheck, Send, FileLock2 } from "lucide-react";
 import { toast } from "sonner";
+import { anonymizeText } from "@/lib/anonymize";
+import { transcriptSample } from "@/lib/mockData";
+
+interface UploadRecord {
+  id: string;
+  fileName: string;
+  anonymizedContent: string;
+}
 
 const phase1 = [
   ["DPS Name", "HR Onboarding Portal"],
@@ -42,6 +51,20 @@ const phase3 = [
 
 export default function GeneratedPIA() {
   const [edit, setEdit] = useState(false);
+  const [params] = useSearchParams();
+  const uploadId = params.get("uploadId");
+
+  const anonymizedTranscript = useMemo(() => {
+    if (uploadId) {
+      try {
+        const all: UploadRecord[] = JSON.parse(localStorage.getItem("pa_uploads") || "[]");
+        const found = all.find((u) => u.id === uploadId);
+        if (found?.anonymizedContent) return found.anonymizedContent;
+      } catch { /* ignore */ }
+    }
+    return anonymizeText(transcriptSample, true).text;
+  }, [uploadId]);
+
   return (
     <>
       <PageHeader
@@ -59,6 +82,21 @@ export default function GeneratedPIA() {
           </>
         }
       />
+
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <FileLock2 className="h-4 w-4 text-success" />
+            <h3 className="text-sm font-semibold">Anonymized transcript</h3>
+            <span className="text-[11px] text-muted-foreground">
+              Source: {uploadId ?? "sample"} · names masked
+            </span>
+          </div>
+          <pre className="text-xs leading-relaxed bg-muted/30 border rounded-md p-3 whitespace-pre-wrap font-mono max-h-56 overflow-auto">
+            {anonymizedTranscript}
+          </pre>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="p1">
         <TabsList>
