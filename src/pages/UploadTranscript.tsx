@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
-import { transcriptSample } from "@/lib/mockData";
+import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles, Link2, FilePlus2 } from "lucide-react";
+import { transcriptSample, mockPIAs } from "@/lib/mockData";
 import { anonymizeText } from "@/lib/anonymize";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Mock "uploads" store — in a real backend this would be a DB row.
 // IMPORTANT: only the anonymized content is ever persisted.
@@ -37,6 +39,8 @@ export default function Upload() {
   const [step, setStep] = useState<"idle" | "uploading" | "anon" | "done">("idle");
   const [anonymized, setAnonymized] = useState<string>("");
   const [uploadId, setUploadId] = useState<string>("");
+  const [processOpen, setProcessOpen] = useState(false);
+  const [linkPiaId, setLinkPiaId] = useState<string>("");
 
   const onPick = (name: string, size = 12400) => {
     setFile({ name, size });
@@ -69,10 +73,22 @@ export default function Upload() {
     }, 1700);
   };
 
-  const handleGenerate = () => {
-    logAction("Generated PIA from transcript", file?.name ?? "");
-    toast.success("Generating PIA from anonymized transcript");
+  const handleGenerateNew = () => {
+    logAction("Generated new PIA from transcript", file?.name ?? "");
+    toast.success("Generating new PIA from anonymized transcript");
+    setProcessOpen(false);
     navigate(`/pia?uploadId=${uploadId}`);
+  };
+
+  const handleLinkExisting = () => {
+    if (!linkPiaId) {
+      toast.error("Please select a PIA to link");
+      return;
+    }
+    logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`);
+    toast.success(`Linked to ${linkPiaId}`);
+    setProcessOpen(false);
+    navigate(`/pia?uploadId=${uploadId}&piaId=${linkPiaId}`);
   };
 
   const beforeUpload = step === "idle";
@@ -149,14 +165,69 @@ export default function Upload() {
               </pre>
 
               <div className="mt-6 flex justify-end">
-                <Button size="lg" onClick={handleGenerate}>
-                  <Sparkles className="h-4 w-4 mr-2" />Generate PIA
+                <Button size="lg" onClick={() => setProcessOpen(true)}>
+                  <Sparkles className="h-4 w-4 mr-2" />Process PIA
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
       </div>
+
+      <Dialog open={processOpen} onOpenChange={setProcessOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Process PIA</DialogTitle>
+            <DialogDescription>
+              Choose how to process this anonymized transcript.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid sm:grid-cols-2 gap-3 py-2">
+            <button
+              onClick={handleGenerateNew}
+              className="text-left border rounded-lg p-4 hover:border-accent hover:bg-accent/5 transition-colors"
+            >
+              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3">
+                <FilePlus2 className="h-4 w-4" />
+              </div>
+              <div className="text-sm font-semibold">Generate New PIA</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Create a brand new PIA from this transcript.
+              </div>
+            </button>
+
+            <div className="border rounded-lg p-4">
+              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3">
+                <Link2 className="h-4 w-4" />
+              </div>
+              <div className="text-sm font-semibold">Link to Existing PIA</div>
+              <div className="text-xs text-muted-foreground mt-1 mb-3">
+                Attach this transcript to a PIA in the library.
+              </div>
+              <Select value={linkPiaId} onValueChange={setLinkPiaId}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select PIA…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockPIAs.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.id} — {p.dpsName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProcessOpen(false)}>Cancel</Button>
+            <Button onClick={handleLinkExisting} disabled={!linkPiaId}>
+              <Link2 className="h-4 w-4 mr-2" />Link Selected
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
