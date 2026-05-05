@@ -39,6 +39,8 @@ export default function Upload() {
   const [step, setStep] = useState<"idle" | "uploading" | "anon" | "done">("idle");
   const [anonymized, setAnonymized] = useState<string>("");
   const [uploadId, setUploadId] = useState<string>("");
+  const [processOpen, setProcessOpen] = useState(false);
+  const [linkPiaId, setLinkPiaId] = useState<string>("");
 
   const onPick = (name: string, size = 12400) => {
     setFile({ name, size });
