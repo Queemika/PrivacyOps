@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Upload, FileSearch, FileText, Library, Layers,
+  LayoutDashboard, Upload, FileText, Library, Layers,
   Table2, BookOpen, ShieldCheck, ClipboardCheck, GitCompare, Mail, ScrollText
 } from "lucide-react";
 import {
@@ -11,7 +11,6 @@ import {
 const workflow = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Upload Transcript", url: "/upload", icon: Upload },
-  { title: "Transcript Review", url: "/review", icon: FileSearch },
   { title: "Generated PIA", url: "/pia", icon: FileText },
   { title: "PIA Library", url: "/library", icon: Library },
   { title: "Compilation Builder", url: "/compile", icon: Layers },
