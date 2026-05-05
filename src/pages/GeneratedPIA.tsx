@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusChip } from "@/components/StatusChip";
-import { Download, Edit3, Sparkles, ShieldCheck, Send } from "lucide-react";
+import { Download, Edit3, Sparkles, ShieldCheck, Send, FileLock2 } from "lucide-react";
 import { toast } from "sonner";
+import { anonymizeText } from "@/lib/anonymize";
+import { transcriptSample } from "@/lib/mockData";
+
+interface UploadRecord {
+  id: string;
+  fileName: string;
+  anonymizedContent: string;
+}
 
 const phase1 = [
   ["DPS Name", "HR Onboarding Portal"],
