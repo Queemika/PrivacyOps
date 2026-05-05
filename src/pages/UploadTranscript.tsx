@@ -229,11 +229,6 @@ export default function Upload() {
         </DialogContent>
       </Dialog>
     </>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </>
   );
 }
 
