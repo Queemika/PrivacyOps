@@ -69,6 +69,21 @@ export default function GeneratedPIA() {
         }
       />
 
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <FileLock2 className="h-4 w-4 text-success" />
+            <h3 className="text-sm font-semibold">Anonymized transcript</h3>
+            <span className="text-[11px] text-muted-foreground">
+              Source: {uploadId ?? "sample"} · names masked
+            </span>
+          </div>
+          <pre className="text-xs leading-relaxed bg-muted/30 border rounded-md p-3 whitespace-pre-wrap font-mono max-h-56 overflow-auto">
+            {anonymizedTranscript}
+          </pre>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="p1">
         <TabsList>
           <TabsTrigger value="p1">Phase 1 — Project Context</TabsTrigger>
