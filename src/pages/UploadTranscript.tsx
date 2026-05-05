@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
-import { transcriptSample } from "@/lib/mockData";
+import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles, Link2, FilePlus2 } from "lucide-react";
+import { transcriptSample, mockPIAs } from "@/lib/mockData";
 import { anonymizeText } from "@/lib/anonymize";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Mock "uploads" store — in a real backend this would be a DB row.
 // IMPORTANT: only the anonymized content is ever persisted.
