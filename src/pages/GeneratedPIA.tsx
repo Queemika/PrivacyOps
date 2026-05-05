@@ -51,6 +51,20 @@ const phase3 = [
 
 export default function GeneratedPIA() {
   const [edit, setEdit] = useState(false);
+  const [params] = useSearchParams();
+  const uploadId = params.get("uploadId");
+
+  const anonymizedTranscript = useMemo(() => {
+    if (uploadId) {
+      try {
+        const all: UploadRecord[] = JSON.parse(localStorage.getItem("pa_uploads") || "[]");
+        const found = all.find((u) => u.id === uploadId);
+        if (found?.anonymizedContent) return found.anonymizedContent;
+      } catch { /* ignore */ }
+    }
+    return anonymizeText(transcriptSample, true).text;
+  }, [uploadId]);
+
   return (
     <>
       <PageHeader
