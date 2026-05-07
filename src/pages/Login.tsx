@@ -11,8 +11,8 @@ import { toast } from "sonner";
 export default function Login() {
   const nav = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@kpmg.com");
+  const [password, setPassword] = useState("admin1234");
   const [error, setError] = useState<string | null>(null);
   const [forgot, setForgot] = useState(false);
 
