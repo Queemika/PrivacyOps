@@ -41,6 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
 
   useEffect(() => {
+    // Seed default admin account
+    const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
+    if (!accounts["admin@kpmg.com"]) {
+      accounts["admin@kpmg.com"] = {
+        firstName: "Admin",
+        lastName: "User",
+        email: "admin@kpmg.com",
+        password: "admin1234",
+      };
+      localStorage.setItem("pa_accounts", JSON.stringify(accounts));
+    }
     const u = localStorage.getItem("pa_user");
     if (u) setUser(JSON.parse(u));
     const a = localStorage.getItem("pa_audit");
