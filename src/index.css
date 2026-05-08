@@ -25,9 +25,10 @@
     --muted: 40 14% 94%;
     --muted-foreground: 30 6% 38%;
 
-    /* Refined warm accent (muted terracotta) */
-    --accent: 18 55% 48%;            /* #c0593a */
+    /* Indigo accent (Nickelfox-inspired) */
+    --accent: 244 75% 61%;           /* #5b4ee5 indigo */
     --accent-foreground: 0 0% 100%;
+    --accent-soft: 244 100% 97%;     /* very light indigo wash */
 
     --success: 152 40% 36%;
     --success-foreground: 0 0% 100%;
@@ -54,9 +55,10 @@
     --sidebar-ring: 0 0% 60%;
 
     --gradient-primary: linear-gradient(135deg, hsl(0 0% 12%), hsl(0 0% 22%));
-    --gradient-accent: linear-gradient(135deg, hsl(18 55% 48%), hsl(18 60% 38%));
-    --shadow-elegant: 0 8px 24px -10px hsl(0 0% 0% / 0.12);
+    --gradient-accent: linear-gradient(135deg, hsl(244 75% 61%), hsl(252 80% 68%));
+    --shadow-elegant: 0 12px 32px -16px hsl(244 50% 30% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.06);
     --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.04), 0 1px 1px hsl(0 0% 0% / 0.03);
+    --shadow-soft: 0 8px 28px -12px hsl(244 30% 30% / 0.12);
   }
 
   .dark {

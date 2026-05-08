@@ -1,5 +1,4 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AlertTriangle, Bell, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -18,20 +17,18 @@ export default function AppLayout() {
   const initials = user ? (user.firstName[0] + user.lastName[0]).toUpperCase() : "U";
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b bg-card px-4 sticky top-0 z-30">
-            <SidebarTrigger />
-            <div className="flex-1 flex items-center gap-2 text-sm">
-              <span className="font-medium text-foreground">PrivacyAtlas</span>
-              <span className="text-muted-foreground">/ Compliance Console</span>
-            </div>
-            <div className="hidden md:flex items-center gap-2 text-xs text-warning bg-warning/10 border border-warning/30 rounded-full px-3 py-1">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Auto-generated content requires human review
-            </div>
+    <div className="min-h-screen flex w-full bg-background">
+      <AppSidebar />
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-14 flex items-center gap-3 border-b bg-card px-4 sticky top-0 z-30">
+          <div className="flex-1 flex items-center gap-2 text-sm">
+            <span className="font-medium text-foreground">PrivacyAtlas</span>
+            <span className="text-muted-foreground">/ Compliance Console</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2 text-xs text-warning bg-warning/10 border border-warning/30 rounded-full px-3 py-1">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Auto-generated content requires human review
+          </div>
 
             <ComplianceModeSelect />
 
@@ -74,15 +71,15 @@ export default function AppLayout() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </header>
-          <div className="flex-1 flex min-w-0">
-            <main className="flex-1 p-6 overflow-x-hidden min-w-0">
-              <Outlet />
-            </main>
-            <InsightPanel />
-          </div>
+        </header>
+        <div className="flex-1 flex min-w-0">
+          <main className="flex-1 p-6 overflow-x-hidden min-w-0">
+            <Outlet />
+          </main>
+          <InsightPanel />
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
+
