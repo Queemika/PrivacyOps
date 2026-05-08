@@ -33,13 +33,13 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-3">
-          <div className="h-8 w-8 rounded-md bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-bold text-sm">
+        <div className="flex items-center gap-2.5 px-2 py-3">
+          <div className="h-8 w-8 rounded-lg bg-sidebar-accent border border-sidebar-border flex items-center justify-center text-sidebar-foreground font-semibold text-[11px] tracking-wider">
             PA
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold text-sidebar-foreground">PrivacyAtlas</span>
-            <span className="text-[10px] text-sidebar-foreground/60">PIA · RoPA · NPC-RS</span>
+            <span className="text-sm font-medium text-sidebar-foreground tracking-tight">PrivacyAtlas</span>
+            <span className="text-[10px] text-sidebar-foreground/50">PIA · RoPA · NPC-RS</span>
           </div>
         </div>
       </SidebarHeader>
