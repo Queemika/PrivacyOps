@@ -56,8 +56,10 @@ export default function Upload() {
     }, 700);
 
     setTimeout(() => {
-      // Server returns ONLY the anonymized version. Raw text is discarded.
-      const result = anonymizeText(transcriptSample, true);
+      const text = anonMode === "off" ? transcriptSample : anonymizeText(transcriptSample, anonMode === "strict").text;
+      const result = anonMode === "off"
+        ? { text, replacements: [], speakerMap: {}, stats: { emails: 0, phones: 0, ids: 0, persons: 0 } }
+        : anonymizeText(transcriptSample, anonMode === "strict");
       const id = `UPL-${Date.now()}`;
       const rec: UploadRecord = {
         id,
