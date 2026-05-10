@@ -32,6 +32,8 @@ function persistUpload(rec: UploadRecord) {
   localStorage.setItem(UPLOADS_KEY, JSON.stringify(all.slice(0, 25)));
 }
 
+type AnonMode = "off" | "standard" | "strict";
+
 export default function Upload() {
   const navigate = useNavigate();
   const { logAction } = useAuth();
@@ -41,6 +43,7 @@ export default function Upload() {
   const [uploadId, setUploadId] = useState<string>("");
   const [processOpen, setProcessOpen] = useState(false);
   const [linkPiaId, setLinkPiaId] = useState<string>("");
+  const [anonMode, setAnonMode] = useState<AnonMode>("standard");
 
   const onPick = (name: string, size = 12400) => {
     setFile({ name, size });
