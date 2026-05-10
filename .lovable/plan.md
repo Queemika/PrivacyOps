@@ -1,354 +1,112 @@
-## Goal
-
-Bring your PRADAR workbook into the app so consultants can **perform the assessment in a streamlined UI (not Excel-like)**, while exporting back to the **exact Excel template** so all formulas (`#DIV/0!` rollups → real values), styles, and cross-sheet links are preserved.
-
-No Cloud needed for this phase. Browser-only, using `exceljs`.
-
----
-
-## What I extracted from your template
-
-- **5 sheets:** `Rating Guide`, `Scoreboard`, `PRADAR`, `DRL`, `Reference`
-- **PRADAR sheet** = 24 control questions across 10 privacy domains (Organizational Commitment → Oversight & Continuous Improvement)
-- **20 columns per question:** PMP Component, Sub-domain, Privacy Domain, Control Question, DRL No., Proof of Compliance, Document Link, **DRL Status**, Basis/Min Req, **Assessor**, **Assessment**, **Assessment Status**, **Reviewer's Status**, Rating Guide, **Rating**, Gaps, Client's Comments, **Client's Status**, Action Plan
-- **Dropdowns (data validations) detected:**
-  - DRL Status → Not Applicable / Pending / Provided / Closed
-  - Assessment Status → Not started / Ongoing / Not Applicable / Completed
-  - Reviewer's Status → Not started / Ongoing / Reviewed
-  - Rating → 1 / 2 / 3 / 4
-  - Client's Status → Not Started / In Progress / Accepted / Rejected
-  - Assessor & Reviewer → name lists from your template
-- **Tooltip content** lives in the long text in `Basis/Minimum Req` (col J) and `Rating Guide` (col O) — these become hover tooltips in the UI.
-
----
-
-## SYSTEM DESIGN CHANGE 
-
-### Introduce 3-layer architecture:
-
-### 1. Template Layer (Excel)
-
-- Original file (unchanged)
-- Used ONLY during export/import
-
-### 2. Data Model Layer
-
-- Clean JSON structure optimized for the app
-- NOT 1:1 with Excel columns
-
-Example structure:  
-{
-
-  id,
-
-  domain,
-
-  subDomain,
-
-  component,
-
-  controlQuestion,
-
-  drlNo,
-
-  
-
-
-  // Evidence
-
-  documents: [],
-
-  documentLinks: "",
-
-  
-
-
-  // Assessment
-
-  rating,
-
-  gap,
-
-  actionPlan,
-
-  
-
-
-  // Internal tracking (hidden by default)
-
-  assessor,
-
-  reviewer,
-
-  assessmentStatus,
-
-  reviewerStatus,
-
-  drlStatus,
-
-  
-
-
-  // Optional client-facing
-
-  clientComment,
-
-  clientStatus,
-
-  
-
-
-  // AI
-
-  aiSummary,
-
-  aiSuggestedGap,
-
-  aiSuggestedRating,
-
-  aiEvidenceHighlights: []
-
-}
-
-### 3. UI Layer
-
-- Clean, minimal interface
-- Uses toggles for additional fields
-
----
-
-## Plan
-
-### 1. Bundle the template
-
-- Copy your file to `public/templates/pradar_template.xlsx` so the app can fetch it at export time and write into the original (preserves formulas, conditional formatting, Scoreboard rollups, branding).
-
-### 2. Seed the PRADAR data model
-
-- Replace `mockData.ts` with:
-  - 24 real control questions
-  - Domain grouping
-  - Tooltip content
-  - Dropdown values
-- Store in:
-  - `localStorage (pa_pradar_state)`
-- Key improvement:
-  - Store **only necessary fields**
-  - Do NOT mirror Excel columns directly
-
-### 3. Rebuild  UI (`PradarChecklist.tsx` )
-
-## 3.1 Layout structure
-
-- Group by **Privacy Domain (10 sections)**
-- Each section = collapsible
-
----
-
-## 3.2 Row UI (SIMPLIFIED)
-
-Each control question shows:
-
-### Core (always visible)
-
-- Control Question
-- DRL badge
-- Rating (1–4 selector w/ popover)
-- Gap (1-liner input)
-- Action Plan (structured input)
-- Evidence upload / document link
-
----
-
-### Tooltip (on-demand)
-
-- Basis / Minimum Requirement
-- Rating Guide (popover per rating)
-
----
-
-### Optional fields (toggle-based)
-
-####  Internal Mode
-
-- Assessor (initials + color tags)
-- Reviewer
-- Assessment Status
-- Reviewer Status
-- DRL Status
-
-#### Client Mode
-
-- Client Comments
-- Client Status
-
-Hidden by default but:
-
-- Data still stored
-- Included in export
-
----
-
-## 3.3 Evidence-first workflow 
-
-Flow per control:
-
-```
-Upload document → AI assist → User review → Rating → Gap → Action
-
+# Data Privacy Engagement Management System — Build Plan
+
+This is a large scope. I'll deliver it in phased, shippable increments so you can review each stage. Everything stays frontend (TypeScript + React + Tailwind + shadcn) with `localStorage` persistence keyed by engagement, matching the existing pattern. Lovable Cloud can be wired in later if you want multi-user persistence.
+
+## Data Model (shared)
+
+A single `Engagement` aggregate stored under `pa_engagements`:
+
+```text
+Engagement
+├─ id, clientName, status, createdAt
+├─ transcripts[]   { id, raw, anonymized, mode: off|standard|strict, actions[], dpsMentions[] }
+├─ pias[]          { id, type: "Phase1"|"Full", dpsStatus: "New"|"Existing",
+│                    scope: "Individual"|"Consolidated", consolidatedGroupId?,
+│                    phase1, phase2, phase3, drlLinks[] }
+├─ drlItems[]      { id, kind, title, file?, status, linkedFields[] }
+└─ riskMitigation[] (rows from Risk Mitigation table)
 ```
 
-## 3.4 AI Assistance
+Each PIA phase mirrors the Excel template exactly (field IDs match column anchors so export round-trips cleanly).
 
-When user uploads document:
+## Phase A — Engagement + Kickoff (Transcript → Actions)
 
-AI generates:
+1. **Engagement Manager** becomes functional: create / select / switch engagement (sidebar shows active engagement).
+2. **Upload Transcript** page extended:
+   - Anonymization selector: Off / Standard / Strict (extends existing `anonymize.ts`).
+   - Stub extractor produces: action items, key discussion points, DPS mentions.
+   - Buttons: "Send via Email Generator" (prefills template) and "Create PIA from this transcript".
 
-- Summary (editable)
-- Suggested rating (editable)
-- Suggested 1-line gap (editable)
-- Highlighted evidence mapping
+## Phase B — PIA Engine (the big one)
 
-Key feature:
+New route `/pia/:id` with phase tabs. Each phase is its own component.
 
-> Clicking AI claim → highlights source in document
+### Phase 1 — Project Context
+- **Project-System Description** form (sentence-style fill-ins matching your template).
+- **Threshold Analysis** — 12 questions, Yes/No + Response, auto-computes "IS PIA REQUIRED?" (Yes if any Yes, except specific exclusions per template logic).
+- **Stakeholder Engagement** dynamic table.
 
-Always:
+### Phase 2 — Data Mapping
+- DPS Details block (manual/electronic/both, PIC/PIP, DPO, lawful basis dropdowns, consent, retention, automated decisioning, security measures O/P/T).
+- Data Lifecycle blocks: Collection, Use, Disclosure (Internal/External), Retention & Disposal repositories.
+- All dropdowns + tooltips ported from the Excel (lawful-basis enum, media types, etc.).
 
-- User reviews
-- User can edit/delete AI output
+### Phase 3 — Assessment
+Five sub-sections, each a structured checklist with Response, Threats/Vulnerabilities, Risk, Legal Basis, Impact (1–5), Probability (1–5), auto-computed Risk Rating (Low/Medium/High/Critical):
+1. General Data Privacy Principles (Transparency, Legitimate Purpose, Proportionality, Fairness, Accuracy, Purpose Limitation, Storage Limitation)
+2. Data Subject Rights
+3. Data Security Measures (Organizational, Physical, Technical)
+4. Cross-Border Transfers (optional toggle)
+5. Risk Mitigation table (Observation, Inherent Risk, Treatment, Mitigation, Status, Residual, Control Ref, dates, owner)
 
----
+Inherent-risk seed values come from the template; user can override per your DPO note.
 
-## 3.5 Gap & Action Plan Standardization
+### Cross-cutting
+- **Auto-save** to localStorage with completion %.
+- **PIA Type toggle** (Phase 1 only / Full).
+- **DPS Status** (New / Existing) and **Scope** (Individual / Consolidated + group picker).
+- **Privacy Risk Map** info card.
+- **Excel export** updated to write all new fields back into the existing PRADAR-style workbook.
 
-Enforce:
+## Phase C — DRL Integration
+- DRL panel inside each PIA: add items (System Design Doc, Consent Form, Full Privacy Notice, JIT Notice, CCTV Notice, DPO Contact Details, custom).
+- Each DRL item can be linked to one or many PIA fields ("Used for fairness evaluation", etc.).
+- Status: Requested / Received / N/A. Surfaced in DRL Generator page.
 
-- **Gap:**
-  - 1–2 lines only
-  - Direct statement of issue
-- **Action Plan:** Structured:
+## Phase D — Executive Summary Generator
+New route `/executive-summary` (replaces the current stub) with the nine sections you listed:
 
-```
-Action:
-Responsible:
-Timeline:
+1. Overview KPIs (DPS count, Full PIA count, Phase 1 count)
+2. DPS Breakdown (Existing/New, Full/Phase 1, Consolidated/Individual + group sizes)
+3. Purpose (editable templated paragraph)
+4. Scope — Data Lifecycle aggregations:
+   - Collection (PI/SPI/Privileged totals, internal/external/both, legal-basis breakdown for PI and SPI separately)
+   - Use & Storage (defined vs undefined repos, retention availability, electronic/physical/unspecified)
+   - Sharing (with/without sharing, with/without agreement, cross-border)
+   - Retention distribution + averages
+   - Disposal coverage by media type
+5. Key Risks — risk matrices for each Phase 3 sub-section + Top 5 risks per category
+6. Mitigation Measures — Top 5 recommended actions
+7. Conclusion (editable standard text)
+8. Annexes — full tables backing the analytics
+9. Export to PDF / Excel
 
-```
+All charts use existing `recharts`/shadcn `chart` components. Styling stays in the indigo dashboard theme.
 
----
+## Suggested ship order
 
-## 3.6 Timeline Logic
+1. Phase A (Engagement + Transcript with anonymization modes)
+2. Phase B.1 (Phase 1 form — Description, Threshold, Stakeholders)
+3. Phase B.2 (Phase 2 Data Mapping)
+4. Phase B.3 (Phase 3 Assessment + Risk Mitigation)
+5. Phase C (DRL linking)
+6. Phase D (Executive Summary)
+7. Updated Excel export covering everything
 
-- Add **global submission date (footer setting)**
-- Suggest timeline (e.g., +3 months)
+Each step is independently usable and reviewable.
 
-BUT:
+## Technical notes
 
-- Always editable
-- Not auto-final
+- New files under `src/lib/pia/` (`schema.ts`, `store.ts`, `risk.ts`, `analytics.ts`).
+- New components under `src/components/pia/` per phase, plus reusable `RiskRatingCell`, `ChecklistRow`, `LegalBasisSelect`.
+- Existing `pradarTemplate.ts` / `pradarExport.ts` extended, not replaced — your current PRADAR Checklist keeps working.
+- No backend yet; if you want collaboration / audit trail across users, we enable Lovable Cloud after Phase B.
 
----
+## Open questions
 
-## 3.7 Role visualization 
+1. **Persistence**: stick with localStorage for now, or enable Lovable Cloud up front so multiple consultants share data?
+2. **Risk Rating formula**: use the 5×5 matrix (Impact × Probability → Low ≤6, Medium 7–14, High 15–19, Critical 20–25) or your firm's existing scale?
+3. **Consolidated PIAs**: should one consolidated PIA's Phase 2 hold many DPS rows, or do member PIAs stay separate and just reference a group ID?
+4. **Export format priority**: keep XLSX as primary, or also need PDF for the Executive Summary now?
 
-Instead of dropdown-heavy UI:
-
-- Show:
-  - Initials (e.g., MC, JD)
-  - Color-coded roles:
-    - Preparer (blue)
-    - Reviewer (purple)
-    - Approver (green)
-
-Hover → full name
-
----
-
-## 3.8 DRL Integration
-
-- Each control → linked DRL item
-
-Behavior:
-
-- DRL Status syncs with DRL module
-- Evidence uploaded → auto-link to DRL
-- “Missing evidence” flag auto-triggered
-
----
-
-## 3.9 Filtering
-
-Add filters:
-
-- By Domain
-- By Rating (e.g., 1–2 only)
-- By Status
-- By Assignee
-
-## 3.10 Live Scoreboard
-
-Compute in-app:
-
-- Average per domain
-- Overall maturity level
-
-Display:
-
-- Mini dashboard (top)
-- Optional expanded view (modal)
-
-### 4. Export back to the original template (formula-preserving)
-
-- Add `src/lib/pradarExport.ts` using `exceljs`:
-  1. `fetch('/templates/pradar_template.xlsx')` → load as workbook.
-  2. Map app data → exact Excel cells
-  3. Populate only:
-    - Rating
-    - Gap
-    - Action Plan
-    - Status fields
-    - Document link(s)
-  4. Keep:
-    - Scoreboard formulas
-    - DRL formulas
-    - formatting intact
-  5. Trigger download as `PRADAR_<client>_<date>.xlsx`.
-- Add **"Export"** button in the page header alongside the existing actions.
-
-### 5. Optional (same phase, low cost)
-
-- **Import existing PRADAR**: drag-drop a previously-filled file → parse rows 4–27 → Map back to data model → Resume assessment in app
-
----
-
-## Out of scope for this phase
-
-- Cloud / shared storage (still localStorage — flip later as agreed).
-- Editing the Scoreboard or Rating Guide sheets in-app (they remain template-owned, recalculated on open).
-- Word/PowerPoint templates — handle separately when you upload them.
-
----
-
-## Files to add / edit
-
-### Add
-
-- `public/templates/pradar_template.xlsx`
-- `src/lib/pradarTemplate.ts`
-- `src/lib/pradarExport.ts`
-
-### New (important)
-
-- `src/lib/pradarModel.ts` ✅ (data layer)
-
-### Edit
-
-- `src/pages/PradarChecklist.tsx`
-- `src/lib/mockData.ts`
-
-### Dependency
-
-- `exceljs`
-
-Confirm and I'll implement. If you also want me to wire the same template-preserving export pattern for RoPA / NPC-RS / Exec Summary, send those template files next and I'll repeat the pattern.
+Confirm (or adjust) and tell me which phase to start with — I'd suggest A → B.1 in the next turn.
