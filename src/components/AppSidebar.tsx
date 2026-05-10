@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Upload, FileText, Library, Layers,
   Table2, BookOpen, ShieldCheck, ClipboardCheck, GitCompare, Mail, ScrollText,
   Search, Settings, Workflow, Wrench, User, ChevronRight,
+  Briefcase, Camera, FileCheck2, Lock, BarChart3, FolderArchive, BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -13,45 +14,75 @@ type Section = { id: string; title: string; icon: any; groups: { label: string; 
 
 const sections: Section[] = [
   {
-    id: "workflow",
-    title: "Workflow",
+    id: "workspace",
+    title: "Workspace",
     icon: Workflow,
     groups: [
       {
-        label: "Assessment",
+        label: "Overview",
         items: [
           { title: "Dashboard", url: "/", icon: LayoutDashboard },
-          { title: "Upload Transcript", url: "/upload", icon: Upload },
-          { title: "Generated PIA", url: "/pia", icon: FileText },
-          { title: "PIA Library", url: "/library", icon: Library },
-        ],
-      },
-      {
-        label: "Outputs",
-        items: [
-          { title: "Compilation Builder", url: "/compile", icon: Layers },
-          { title: "RoPA & NPC-RS", url: "/ropa", icon: Table2 },
-          { title: "Executive Summary", url: "/summary", icon: BookOpen },
+          { title: "Engagement Manager", url: "/engagements", icon: Briefcase },
         ],
       },
     ],
   },
   {
-    id: "tools",
-    title: "Tools",
-    icon: Wrench,
+    id: "assessment",
+    title: "Assessment",
+    icon: ClipboardCheck,
     groups: [
       {
-        label: "Generators",
+        label: "Intake",
         items: [
-          { title: "DRL / IRL Generator", url: "/drl", icon: ShieldCheck },
-          { title: "Email Generator", url: "/email", icon: Mail },
+          { title: "Transcript Processing", url: "/upload", icon: Upload },
+          { title: "DRL / IRL Manager", url: "/drl", icon: ShieldCheck },
+          { title: "Physical Inspection", url: "/inspection", icon: Camera },
         ],
       },
       {
-        label: "Quality",
+        label: "Reviews",
         items: [
-          { title: "PRADAR Checklist", url: "/pradar", icon: ClipboardCheck },
+          { title: "PIA Library", url: "/library", icon: Library },
+          { title: "Generated PIA", url: "/pia", icon: FileText },
+          { title: "PRADAR Module", url: "/pradar", icon: ClipboardCheck },
+          { title: "Privacy Notice Review", url: "/notice", icon: FileCheck2 },
+          { title: "Technical Security", url: "/tsa", icon: Lock },
+        ],
+      },
+    ],
+  },
+  {
+    id: "outputs",
+    title: "Outputs",
+    icon: Wrench,
+    groups: [
+      {
+        label: "Deliverables",
+        items: [
+          { title: "ROPA & NPC-RS", url: "/ropa", icon: Table2 },
+          { title: "Compilation Builder", url: "/compile", icon: Layers },
+          { title: "Executive Summary", url: "/summary", icon: BookOpen },
+          { title: "Manuals & Deliverables", url: "/manuals", icon: FolderArchive },
+        ],
+      },
+      {
+        label: "Communication",
+        items: [
+          { title: "Email Generator", url: "/email", icon: Mail },
+        ],
+      },
+    ],
+  },
+  {
+    id: "insights",
+    title: "Insights",
+    icon: BarChart2,
+    groups: [
+      {
+        label: "Analytics",
+        items: [
+          { title: "Analytics Hub", url: "/analytics", icon: BarChart3 },
           { title: "Consistency Checker", url: "/consistency", icon: GitCompare },
           { title: "Audit Log", url: "/audit", icon: ScrollText },
         ],
