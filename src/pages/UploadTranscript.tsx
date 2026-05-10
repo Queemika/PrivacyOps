@@ -109,6 +109,22 @@ export default function Upload() {
         {/* Upload card */}
         <Card>
           <CardContent className="p-8">
+            {beforeUpload && (
+              <div className="mb-5 flex items-center justify-between gap-3 px-4 py-3 rounded-md border bg-muted/20">
+                <div>
+                  <div className="text-sm font-medium">Anonymization mode</div>
+                  <div className="text-xs text-muted-foreground">Controls how PII is masked before storage.</div>
+                </div>
+                <Select value={anonMode} onValueChange={(v) => setAnonMode(v as AnonMode)}>
+                  <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="off">Off — keep raw</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="strict">Strict</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div
               className="border-2 border-dashed rounded-lg p-12 text-center hover:border-accent transition-colors cursor-pointer"
               onClick={() => step === "idle" && onPick("hr_onboarding_transcript.txt")}
