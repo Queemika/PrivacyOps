@@ -180,8 +180,9 @@ export function Phase2Form({ value, onChange }: { value: Phase2; onChange: (next
           rows={value.disclosure}
           headers={["Internal/External", "Recipients", "Sharing Purpose", "Data Sharing Agreement?", "Name of PIC", "Cross-border?"]}
           fields={["kind", "recipients", "purpose", "agreement", "pic", "crossBorder"]}
-          onChange={(rows) => set("disclosure", rows)}
+          onChange={(rows) => set("disclosure", rows as Phase2["disclosure"])}
           newRow={() => ({ id: uid("DIS"), kind: "Internal", recipients: "", purpose: "", agreement: "", pic: "", crossBorder: "" })}
+          enums={{ kind: ["Internal", "External"] }}
         />
       </Section>
 
