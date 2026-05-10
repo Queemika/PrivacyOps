@@ -32,6 +32,8 @@ function persistUpload(rec: UploadRecord) {
   localStorage.setItem(UPLOADS_KEY, JSON.stringify(all.slice(0, 25)));
 }
 
+type AnonMode = "off" | "standard" | "strict";
+
 export default function Upload() {
   const navigate = useNavigate();
   const { logAction } = useAuth();
@@ -41,6 +43,7 @@ export default function Upload() {
   const [uploadId, setUploadId] = useState<string>("");
   const [processOpen, setProcessOpen] = useState(false);
   const [linkPiaId, setLinkPiaId] = useState<string>("");
+  const [anonMode, setAnonMode] = useState<AnonMode>("standard");
 
   const onPick = (name: string, size = 12400) => {
     setFile({ name, size });
@@ -53,8 +56,10 @@ export default function Upload() {
     }, 700);
 
     setTimeout(() => {
-      // Server returns ONLY the anonymized version. Raw text is discarded.
-      const result = anonymizeText(transcriptSample, true);
+      const text = anonMode === "off" ? transcriptSample : anonymizeText(transcriptSample, anonMode === "strict").text;
+      const result = anonMode === "off"
+        ? { text, replacements: [], speakerMap: {}, stats: { emails: 0, phones: 0, ids: 0, persons: 0 } }
+        : anonymizeText(transcriptSample, anonMode === "strict");
       const id = `UPL-${Date.now()}`;
       const rec: UploadRecord = {
         id,
@@ -77,7 +82,7 @@ export default function Upload() {
     logAction("Generated new PIA from transcript", file?.name ?? "");
     toast.success("Generating new PIA from anonymized transcript");
     setProcessOpen(false);
-    navigate(`/pia?uploadId=${uploadId}`);
+    navigate(`/pia/new?uploadId=${uploadId}`);
   };
 
   const handleLinkExisting = () => {
@@ -104,6 +109,22 @@ export default function Upload() {
         {/* Upload card */}
         <Card>
           <CardContent className="p-8">
+            {beforeUpload && (
+              <div className="mb-5 flex items-center justify-between gap-3 px-4 py-3 rounded-md border bg-muted/20">
+                <div>
+                  <div className="text-sm font-medium">Anonymization mode</div>
+                  <div className="text-xs text-muted-foreground">Controls how PII is masked before storage.</div>
+                </div>
+                <Select value={anonMode} onValueChange={(v) => setAnonMode(v as AnonMode)}>
+                  <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="off">Off — keep raw</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="strict">Strict</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div
               className="border-2 border-dashed rounded-lg p-12 text-center hover:border-accent transition-colors cursor-pointer"
               onClick={() => step === "idle" && onPick("hr_onboarding_transcript.txt")}

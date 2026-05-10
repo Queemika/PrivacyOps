@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import UploadTranscript from "./pages/UploadTranscript";
 import GeneratedPIA from "./pages/GeneratedPIA";
+import PiaWorkspace from "./pages/PiaWorkspace";
 import PIALibrary from "./pages/PIALibrary";
 import CompilationBuilder from "./pages/CompilationBuilder";
 import RopaPreview from "./pages/RopaPreview";
@@ -46,6 +47,8 @@ const App = () => (
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/upload" element={<UploadTranscript />} />
                 <Route path="/pia" element={<GeneratedPIA />} />
+                <Route path="/pia/new" element={<PiaWorkspace />} />
+                <Route path="/pia/:id" element={<PiaWorkspace />} />
                 <Route path="/library" element={<PIALibrary />} />
                 <Route path="/compile" element={<CompilationBuilder />} />
                 <Route path="/ropa" element={<RopaPreview />} />
