@@ -82,7 +82,7 @@ export default function Upload() {
     logAction("Generated new PIA from transcript", file?.name ?? "");
     toast.success("Generating new PIA from anonymized transcript");
     setProcessOpen(false);
-    navigate(`/pia?uploadId=${uploadId}`);
+    navigate(`/pia/new?uploadId=${uploadId}`);
   };
 
   const handleLinkExisting = () => {
