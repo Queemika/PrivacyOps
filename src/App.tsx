@@ -21,6 +21,12 @@ import PradarChecklist from "./pages/PradarChecklist";
 import ConsistencyChecker from "./pages/ConsistencyChecker";
 import EmailGenerator from "./pages/EmailGenerator";
 import AuditLog from "./pages/AuditLog";
+import EngagementManager from "./pages/EngagementManager";
+import PhysicalInspection from "./pages/PhysicalInspection";
+import PrivacyNoticeReview from "./pages/PrivacyNoticeReview";
+import TechnicalSecurityAssessment from "./pages/TechnicalSecurityAssessment";
+import AnalyticsHub from "./pages/AnalyticsHub";
+import ManualsDeliverables from "./pages/ManualsDeliverables";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -49,6 +55,12 @@ const App = () => (
                 <Route path="/consistency" element={<ConsistencyChecker />} />
                 <Route path="/email" element={<EmailGenerator />} />
                 <Route path="/audit" element={<AuditLog />} />
+                <Route path="/engagements" element={<EngagementManager />} />
+                <Route path="/inspection" element={<PhysicalInspection />} />
+                <Route path="/notice" element={<PrivacyNoticeReview />} />
+                <Route path="/tsa" element={<TechnicalSecurityAssessment />} />
+                <Route path="/analytics" element={<AnalyticsHub />} />
+                <Route path="/manuals" element={<ManualsDeliverables />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
