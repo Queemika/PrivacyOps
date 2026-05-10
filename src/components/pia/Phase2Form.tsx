@@ -191,7 +191,7 @@ export function Phase2Form({ value, onChange }: { value: Phase2; onChange: (next
           rows={value.repositories}
           headers={["Repository Name", "Type of Media", "Location", "City, Country", "Retention Period", "Basis", "Disposal/Destruction/Deletion"]}
           fields={["name", "mediaType", "location", "cityCountry", "retentionPeriod", "basis", "disposal"]}
-          onChange={(rows) => set("repositories", rows)}
+          onChange={(rows) => set("repositories", rows as Phase2["repositories"])}
           newRow={() => ({ id: uid("REP"), name: "", mediaType: "Electronic", location: "", cityCountry: "", retentionPeriod: "", basis: "", disposal: "" })}
           enums={{ mediaType: [...MEDIA_TYPES] }}
         />
