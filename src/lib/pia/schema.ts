@@ -130,11 +130,15 @@ export interface Pia {
   dpsStatus: DpsStatus;
   scope: PiaScope;
   consolidatedGroupId?: string;
+  consolidatedComponents?: string[];
   createdAt: string;
   updatedAt: string;
   phase1: Phase1;
   phase2: Phase2;
   phase3: Phase3;
+  phase4: Phase4;
+  ropaOverrides?: Record<string, string>;
+  npcOverrides?: Record<string, string>;
   drlLinks: { drlItemId: string; fieldRef: string }[];
 }
 
