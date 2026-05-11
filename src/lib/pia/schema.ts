@@ -46,7 +46,7 @@ export interface DataCategoryRow { id: string; type: "PI" | "SPI" | "Privileged"
 export interface CollectionRow { id: string; when: string; who: string; from: string; }
 export interface UseRow { id: string; positionDept: string; scopeModule: string; fileName: string; purpose: string; }
 export interface DisclosureRow { id: string; kind: "Internal" | "External"; recipients: string; purpose: string; agreement: string; pic: string; crossBorder: string; }
-export interface RepositoryRow { id: string; name: string; mediaType: "Electronic" | "Physical" | "Unspecified"; location: string; cityCountry: string; retentionPeriod: string; basis: string; disposal: string; }
+export interface RepositoryRow { id: string; name: string; mediaType: "Electronic" | "Physical" | "Unspecified"; location: string; hosting?: "In-house" | "Outsourced" | ""; cityCountry: string; retentionPeriod: string; basis: string; disposal: string; }
 
 export interface Phase2 {
   dpsType: "Manual" | "Electronic" | "Both" | "";
