@@ -6,28 +6,40 @@ export type DpsStatus = "New" | "Existing";
 export type PiaScope = "Individual" | "Consolidated";
 export type AnonMode = "off" | "standard" | "strict";
 
-export interface ThresholdAnswer { yn: "Yes" | "No" | "N/A" | ""; response: string; }
-export interface Stakeholder { id: string; name: string; role: string; involvement: string; inputs: string; }
+export interface ThresholdAnswer { yn: "Yes" | "No" | ""; response: string; }
+export interface Stakeholder { id: string; name: string; role: string; involvement: string; inputs: string; locked?: boolean; }
+
+export interface Phase1Desc {
+  systemType: string;
+  systemFunction: string;
+  organizationScope: string;
+  keyProcesses: string;
+  dataCollection: string[];
+  dataCollectionNote: string;
+  dataUsage: string;
+  dataStorage: string[];
+  dataStorageNote: string;
+  dataDisposal: string;
+  dataDisposalNote: string;
+  integration: string[];
+  integrationNote: string;
+  supportingDocs: string;
+  purpose: string;
+  piaScope: string;
+  outOfScope: string;
+}
 
 export interface Phase1 {
-  desc: {
-    systemIs: string;
-    designedToManage: string;
-    ofPersonalDataWithin: string;
-    dataCollection: string;
-    dataUsage: string;
-    dataStorage: string;
-    dataDisposal: string;
-    integratesWith: string;
-    supportingDocs: string;
-    purpose: string;
-    scopeArea: string;
-    relatedTo: string;
-    estimatedRecords: number;
-    examines: string;
-  };
-  threshold: Record<string, ThresholdAnswer>; // keyed by Q id "T1"-"T12"
+  desc: Phase1Desc;
+  threshold: Record<string, ThresholdAnswer>;
   stakeholders: Stakeholder[];
+}
+
+export interface SignOffBlock { name: string; designation: string; date: string; signature: string; }
+export interface Phase4 {
+  prepared: SignOffBlock;
+  reviewed: SignOffBlock;
+  approved: SignOffBlock;
 }
 
 export interface DataCategoryRow { id: string; type: "PI" | "SPI" | "Privileged"; categories: string; amount: string; pipPic: string; }
