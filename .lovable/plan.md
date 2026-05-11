@@ -1,112 +1,236 @@
-# Data Privacy Engagement Management System — Build Plan
+# Plan — PIA Refinements + ROPA/NPC-RS Generator
 
-This is a large scope. I'll deliver it in phased, shippable increments so you can review each stage. Everything stays frontend (TypeScript + React + Tailwind + shadcn) with `localStorage` persistence keyed by engagement, matching the existing pattern. Lovable Cloud can be wired in later if you want multi-user persistence.
+Applies the new spec across **all PIAs** (new and existing). Migration logic in `store.ts` will fill missing fields with safe defaults so older saved PIAs auto-upgrade on load.
 
-## Data Model (shared)
+## 1. Phase 1 — Project System Description (rebuild)
 
-A single `Engagement` aggregate stored under `pa_engagements`:
+Replace the current "fill-in-the-paragraph" UI with a structured form. New `phase1.desc` fields with tooltips:
 
-```text
-Engagement
-├─ id, clientName, status, createdAt
-├─ transcripts[]   { id, raw, anonymized, mode: off|standard|strict, actions[], dpsMentions[] }
-├─ pias[]          { id, type: "Phase1"|"Full", dpsStatus: "New"|"Existing",
-│                    scope: "Individual"|"Consolidated", consolidatedGroupId?,
-│                    phase1, phase2, phase3, drlLinks[] }
-├─ drlItems[]      { id, kind, title, file?, status, linkedFields[] }
-└─ riskMitigation[] (rows from Risk Mitigation table)
+
+| Field                | Input                                            | Notes                                                          |
+| -------------------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| System Type          | text                                             | high-level nature                                              |
+| System Function      | text                                             | what it does                                                   |
+| Organization / Scope | text                                             | dept/BU                                                        |
+| Key Processes        | multi-line / checklist                           | lifecycle activities                                           |
+| Data Collection      | multi-select + text                              | sources/methods (drives Phase 2 Lifecycle → Collection "When") |
+| Data Usage           | text                                             | operational use                                                |
+| Data Storage         | multi-select (Cloud / On-prem / Physical) + text | &nbsp;                                                         |
+| Data Disposal        | dropdown + text                                  | (Shredding, Secure Erase, Vendor Disposal, Other)              |
+| Integration          | multi-select + text                              | &nbsp;                                                         |
+| Supporting Documents | file upload                                      | stored as file refs                                            |
+| Purpose              | text                                             | drives Phase 2 Purpose of Processing                           |
+| PIA Scope            | multi-line                                       | &nbsp;                                                         |
+| Out of Scope         | multi-line                                       | &nbsp;                                                         |
+
+
+Each field gets a hover tooltip via `Tooltip` component using the wording supplied.
+
+## 2. Phase 1 — Threshold Analysis
+
+- Remove **N/A** option (Yes/No only).
+- Question #5 ("Estimated records") - If yes is selected, response becomes a **dropdown**: `Low (<250)`, `Medium (<1000)`, `High (1000+)`.
+- `isPiaRequired` logic updated (Yes triggers required; all No → not required).
+
+## 3. Phase 1 — Stakeholders (default rows)
+
+Always seeded and non-removable rows:
+
+- **DPO** — Present
+- **MIS** — Present (label note: "if system is hybrid/purely-system based")
+- **Client / Customer** — Role: Data Subject — Present
+
+User may add more stakeholders below.
+
+## 4. PIA Status gating
+
+- Header `type` select: when **Phase 1 only status** is chosen, Phase 1 (except Threshold Analysis), Phase 2, and Phase 3 tabs are hidden (not just disabled), and Sign-off tab appears immediately after Phase 1/Threshold Analysis.
+- **Scope = Consolidated** → new **required** field "DPS Components" appears in the workspace header (textarea / chip input listing component DPS names). Save/submit blocked until populated.
+
+## 5. Phase 2 wiring
+
+- **DPS Name** edits also set `pia.title` (live sync both ways).
+- **Purpose of Processing** auto-populates from Phase 1 `Data Collection` (editable, with "reset to Phase 1" link).
+- **Personal Data Categories** table: rename column `PIP/PIC` → `PIC/PIP` with dropdown `[PIC, PIP]`. `amount` field uses `Intl.NumberFormat` (`0,000`).
+- **Roles & Contacts**:
+  - PIC block always visible.
+  - PIP block only renders when any category row has `PIC/PIP = PIP` OR `outsourced = Yes`.
+- **Lawful Basis & Consent** section only renders when PIP is present (same condition above).
+- **Data Lifecycle — Collection**: `When collected` dropdown derived from Phase 1 `Data Collection` selections; `Who collects` dropdown `[PIC, PIP]`.
+- **Data Lifecycle — Use**: `Position & Department` auto-fills from Stakeholders' Name/Role; `Purpose` auto-fills from Stakeholders' Involvement. Cells editable to override.
+- **Data Lifecycle — Disclosure**: when `kind=Internal` AND recipients includes `"Inter-office Collaboration"`, the `agreement`, `pic`, `crossBorder` cells become disabled & blank.
+- **Retention & Disposal — Information Repositories**:
+  - Rename column `Repository Name` → `List of Information`, auto-fills from Phase 2 Use `fileName`.
+  - New column `Hosting` dropdown `[In-house, Outsourced]`; `Location` display becomes `"<location> | <hosting>"`.
+
+## 6. Phase 3 — Risk Map
+
+Update `risk.ts` to the 4×4 matrix from the spec:
+
+```
+Impact \ Prob  1  2  3  4
+   4          4  8 12 16
+   3          3  6  9 12
+   2          2  4  6  8
+   1          1  2  3  4
 ```
 
-Each PIA phase mirrors the Excel template exactly (field IDs match column anchors so export round-trips cleanly).
+Buckets: **Low 1–3, Medium 4–6, High 8–9, Critical 12–16**. `ChecklistRow` impact/probability selectors switch from 1–5 to 1–4 with tooltip describing each level (Negligible/Limited/Significant/Maximum; Unlikely/Possible/Likely/Almost Certain).
 
-## Phase A — Engagement + Kickoff (Transcript → Actions)
+## 7. Sign-off tab
 
-1. **Engagement Manager** becomes functional: create / select / switch engagement (sidebar shows active engagement).
-2. **Upload Transcript** page extended:
-   - Anonymization selector: Off / Standard / Strict (extends existing `anonymize.ts`).
-   - Stub extractor produces: action items, key discussion points, DPS mentions.
-   - Buttons: "Send via Email Generator" (prefills template) and "Create PIA from this transcript".
+New `Phase4SignOff.tsx` + `phase4` block in schema:
 
-## Phase B — PIA Engine (the big one)
+```
+prepared: { name, designation, date, signature }   // System/Process Owner
+reviewed: { name, designation, date, signature }   // DPO / Compliance Officer
+approved: { name, designation, date, signature }   // Group Head
+```
 
-New route `/pia/:id` with phase tabs. Each phase is its own component.
+Signature input = typed name + canvas pad (data URL). Tab visible for all PIA types (also when Phase 1 only and threshold says "Not Required").
 
-### Phase 1 — Project Context
-- **Project-System Description** form (sentence-style fill-ins matching your template).
-- **Threshold Analysis** — 12 questions, Yes/No + Response, auto-computes "IS PIA REQUIRED?" (Yes if any Yes, except specific exclusions per template logic).
-- **Stakeholder Engagement** dynamic table.
+## 8. Submit copy
 
-### Phase 2 — Data Mapping
-- DPS Details block (manual/electronic/both, PIC/PIP, DPO, lawful basis dropdowns, consent, retention, automated decisioning, security measures O/P/T).
-- Data Lifecycle blocks: Collection, Use, Disclosure (Internal/External), Retention & Disposal repositories.
-- All dropdowns + tooltips ported from the Excel (lawful-basis enum, media types, etc.).
+Workspace header **Submit** button toast: `"Submitted to reviewer"` (replaces "Submitted to supervisor").
 
-### Phase 3 — Assessment
-Five sub-sections, each a structured checklist with Response, Threats/Vulnerabilities, Risk, Legal Basis, Impact (1–5), Probability (1–5), auto-computed Risk Rating (Low/Medium/High/Critical):
-1. General Data Privacy Principles (Transparency, Legitimate Purpose, Proportionality, Fairness, Accuracy, Purpose Limitation, Storage Limitation)
-2. Data Subject Rights
-3. Data Security Measures (Organizational, Physical, Technical)
-4. Cross-Border Transfers (optional toggle)
-5. Risk Mitigation table (Observation, Inherent Risk, Treatment, Mitigation, Status, Residual, Control Ref, dates, owner)
+## 9. Migration / Apply across PIAs
 
-Inherent-risk seed values come from the template; user can override per your DPO note.
+`store.ts` gets a `migratePia(p)` helper called inside `getPia` / `loadPias` that:
 
-### Cross-cutting
-- **Auto-save** to localStorage with completion %.
-- **PIA Type toggle** (Phase 1 only / Full).
-- **DPS Status** (New / Existing) and **Scope** (Individual / Consolidated + group picker).
-- **Privacy Risk Map** info card.
-- **Excel export** updated to write all new fields back into the existing PRADAR-style workbook.
+- Fills new `phase1.desc` keys with values from old ones (e.g., `dataCollection`).
+- Removes any `"N/A"` threshold answers → blank.
+- Seeds default stakeholders if missing.
+- Adds `phase4` sign-off skeleton.
+- Adds `consolidatedComponents: []` field.
 
-## Phase C — DRL Integration
-- DRL panel inside each PIA: add items (System Design Doc, Consent Form, Full Privacy Notice, JIT Notice, CCTV Notice, DPO Contact Details, custom).
-- Each DRL item can be linked to one or many PIA fields ("Used for fairness evaluation", etc.).
-- Status: Requested / Received / N/A. Surfaced in DRL Generator page.
+This ensures **existing PIAs** receive the new UI/behavior automatically.
 
-## Phase D — Executive Summary Generator
-New route `/executive-summary` (replaces the current stub) with the nine sections you listed:
+---
 
-1. Overview KPIs (DPS count, Full PIA count, Phase 1 count)
-2. DPS Breakdown (Existing/New, Full/Phase 1, Consolidated/Individual + group sizes)
-3. Purpose (editable templated paragraph)
-4. Scope — Data Lifecycle aggregations:
-   - Collection (PI/SPI/Privileged totals, internal/external/both, legal-basis breakdown for PI and SPI separately)
-   - Use & Storage (defined vs undefined repos, retention availability, electronic/physical/unspecified)
-   - Sharing (with/without sharing, with/without agreement, cross-border)
-   - Retention distribution + averages
-   - Disposal coverage by media type
-5. Key Risks — risk matrices for each Phase 3 sub-section + Top 5 risks per category
-6. Mitigation Measures — Top 5 recommended actions
-7. Conclusion (editable standard text)
-8. Annexes — full tables backing the analytics
-9. Export to PDF / Excel
+## 10. ROPA & NPC-RS Generator (new page)
 
-All charts use existing `recharts`/shadcn `chart` components. Styling stays in the indigo dashboard theme.
+New route `/ropa/:piaId` (`src/pages/RopaGenerator.tsx`) replacing the current `RopaPreview` stub, plus library list at `/ropa`.
 
-## Suggested ship order
+**Two tabs**: ROPA, NPC-RS. Each renders a table built from Phase 2 data using a field-mapping module `src/lib/pia/ropaMap.ts`:
 
-1. Phase A (Engagement + Transcript with anonymization modes)
-2. Phase B.1 (Phase 1 form — Description, Threshold, Stakeholders)
-3. Phase B.2 (Phase 2 Data Mapping)
-4. Phase B.3 (Phase 3 Assessment + Risk Mitigation)
-5. Phase C (DRL linking)
-6. Phase D (Executive Summary)
-7. Updated Excel export covering everything
+- ROPA fields (per spec): 
 
-Each step is independently usable and reviewable.
+  |                                                           |
+  | --------------------------------------------------------- |
+  | PIA Name                                                  |
+  | Data Processing System                                    |
+  | Purpose of Processing                                     |
+  | Intended Future Purpose (if any)                          |
+  | Data Sharing Purpose                                      |
+  | Is there any Data Sharing Agreements with other parties?  |
+  | Description of the category or categories of data subject |
+  | Personal Information                                      |
+  | Sensitive Personal Information                            |
+  | Privileged Information                                    |
+  | When is data collected?                                   |
+  | Retention Period with Reckoning date/time                 |
+  | Disposal/Destruction/Deletion Procedure                   |
+  | Organizational                                            |
+  | Physical                                                  |
+  | Technical                                                 |
+  | Name of PIC                                               |
+  | Name of DPO                                               |
+  | Email                                                     |
+  | Contact No.                                               |
+  | Timestamps (created / updated)                            |
 
-## Technical notes
+- NPC-RS fields: 
 
-- New files under `src/lib/pia/` (`schema.ts`, `store.ts`, `risk.ts`, `analytics.ts`).
-- New components under `src/components/pia/` per phase, plus reusable `RiskRatingCell`, `ChecklistRow`, `LegalBasisSelect`.
-- Existing `pradarTemplate.ts` / `pradarExport.ts` extended, not replaced — your current PRADAR Checklist keeps working.
-- No backend yet; if you want collaboration / audit trail across users, we enable Lovable Cloud after Phase B.
+  |                                                                                                                                                             |
+  | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | PIA Name                                                                                                                                                    |
+  | Data Processing Name                                                                                                                                        |
+  | Is DPS Manual, Electronic, or Both?                                                                                                                         |
+  | Basis for Processing Personal Information                                                                                                                   |
+  | Basis for Processing Sensitive Personal Information (If applicable)                                                                                         |
+  | Purpose of Processing                                                                                                                                       |
+  | Description of the category or categories of data subject                                                                                                   |
+  | Description of data or categories of data relating to Data Subjects                                                                                         |
+  | Recipients or categories of recipients to whom the data might be disclosed                                                                                  |
+  | Is processing done as PIC or PIP?                                                                                                                           |
+  | Is the system outsourced or subcontracted?                                                                                                                  |
+  | Name of PIP                                                                                                                                                 |
+  | Email                                                                                                                                                       |
+  | Contact No.                                                                                                                                                 |
+  | When is data collected?                                                                                                                                     |
+  | Retention Period with Reckoning date/time                                                                                                                   |
+  | Disposal/Destruction/Deletion Procedure                                                                                                                     |
+  | Organizational                                                                                                                                              |
+  | Physical                                                                                                                                                    |
+  | Technical                                                                                                                                                   |
+  | Is personal data transferred outside of the Philippines?                                                                                                    |
+  | Is there any Data Sharing Agreements with other parties?                                                                                                    |
+  | Name of PIC                                                                                                                                                 |
+  | Is the system a publicly facing online mobile or web-based application?                                                                                     |
+  | Is the system External and/or Internal facing?                                                                                                              |
+  | Is there any notification regarding any automated decision-making operation?                                                                                |
+  | Lawful basis of processing personal data                                                                                                                    |
+  | Other relevant information pertaining to specified lawful basis:                                                                                            |
+  | Is consent used as the basis for processing?                                                                                                                |
+  | Consent form or any other proof of obtaining consent?                                                                                                       |
+  | Retention period for the data processed                                                                                                                     |
+  | Methods and logic utilized for automated processing                                                                                                         |
+  | Possible decisions relating to the data subject based on the processed data, particularly if they would significantly affect his or her rights and freedoms |
+  | &nbsp;                                                                                                                                                      |
+  | Consolidated DPS:                                                                                                                                           |
+  | Status                                                                                                                                                      |
+  | Date of registration:                                                                                                                                       |
 
-## Open questions
 
-1. **Persistence**: stick with localStorage for now, or enable Lovable Cloud up front so multiple consultants share data?
-2. **Risk Rating formula**: use the 5×5 matrix (Impact × Probability → Low ≤6, Medium 7–14, High 15–19, Critical 20–25) or your firm's existing scale?
-3. **Consolidated PIAs**: should one consolidated PIA's Phase 2 hold many DPS rows, or do member PIAs stay separate and just reference a group ID?
-4. **Export format priority**: keep XLSX as primary, or also need PDF for the Executive Summary now?
+**Behavior**:
 
-Confirm (or adjust) and tell me which phase to start with — I'd suggest A → B.1 in the next turn.
+- Multi-value cells join with `next line` and render as bullet list.
+- Each cell editable; edits stored in `pia.ropaOverrides[fieldKey]` (does not mutate Phase 2 source). "Reset to source" link per cell.
+- "Configurable export" — checkbox column toggles inclusion.
+- Export options: **PDF, XLSX** (using `exceljs`, preserving a template if present) and **CSV**.
+
+## 11. Action Items & Email Generator (lightweight wire-up)
+
+Existing `EmailGenerator` page extended with:
+
+- "Source" radio: Transcript / DRL / PIA.
+- When PIA is selected → pull action items (from transcripts) and DRL items already linked.
+- Template selector: **Action Item Email**, **DRL Request Email**.
+- Generated body uses template fills with engagement/PIA/DPS IDs.
+
+Action items list in `UploadTranscript` becomes editable + assignable (assignee dropdown from engagement stakeholders).
+
+## 12. Linking & traceability (cross-cutting)
+
+Every record carries `engagementId`, `dpsId` (= `pia.phase2.dpsName` slug, persisted on first save), `piaId`. ROPA / NPC-RS / Email outputs reference these IDs in a footer line so outputs trace back to source.
+
+---
+
+## Technical details
+
+**Files to add**
+
+- `src/components/pia/Phase4SignOff.tsx`
+- `src/components/pia/RopaTable.tsx`, `NpcRsTable.tsx`
+- `src/lib/pia/ropaMap.ts`
+- `src/lib/pia/migrate.ts`
+- `src/pages/RopaGenerator.tsx`
+
+**Files to edit**
+
+- `src/lib/pia/schema.ts` — extend `Phase1.desc` shape, add `phase4`, `consolidatedComponents`, `ropaOverrides`.
+- `src/lib/pia/store.ts` — call `migratePia` on load; seed default stakeholders; default sign-off.
+- `src/lib/pia/templates.ts` — drop `"N/A"`, update Q5 options; tooltip text per field.
+- `src/lib/pia/risk.ts` — 4×4 matrix + bucket thresholds.
+- `src/components/pia/Phase1Form.tsx` — full rebuild (structured form + tooltips).
+- `src/components/pia/Phase2Form.tsx` — wiring rules (PIP visibility, dropdown derivations, disclosure gating, repositories column rename).
+- `src/components/pia/Phase3Form.tsx` + `ChecklistRow.tsx` — 1–4 scales, tooltips.
+- `src/pages/PiaWorkspace.tsx` — tab hide logic, consolidated-required field, submit toast, sign-off tab.
+- `src/pages/EmailGenerator.tsx` — source switch + templates.
+- `src/App.tsx` — add `/ropa` and `/ropa/:piaId` routes.
+
+**Persistence**: continues to use `localStorage` (`pa_engagements`, `pa_pias`). Migration on read means no data loss.
+
+**Out of scope (this round)**: external client portal, real-time multi-user sync, file upload backend (uploads stored as base64 in localStorage with a 1 MB guard).
+
+Approve to implement, or tell me which sections to drop/defer.
