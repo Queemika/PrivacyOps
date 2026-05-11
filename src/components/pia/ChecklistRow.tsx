@@ -66,12 +66,19 @@ export function ChecklistRow({
   );
 }
 
-function NumberPicker({ value, onChange }: { value: number | null; onChange: (n: number | null) => void }) {
+function NumberPicker({ value, onChange, descriptions }: { value: number | null; onChange: (n: number | null) => void; descriptions: Record<number, { label: string; desc: string }> }) {
   return (
     <Select value={value == null ? "" : String(value)} onValueChange={(v) => onChange(v === "" ? null : Number(v))}>
       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
       <SelectContent>
-        {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+        {[1, 2, 3, 4].map(n => (
+          <Tooltip key={n}>
+            <TooltipTrigger asChild>
+              <SelectItem value={String(n)}>{n} — {descriptions[n].label}</SelectItem>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[260px] text-xs">{descriptions[n].desc}</TooltipContent>
+          </Tooltip>
+        ))}
       </SelectContent>
     </Select>
   );
