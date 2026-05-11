@@ -16,6 +16,7 @@ import PiaWorkspace from "./pages/PiaWorkspace";
 import PIALibrary from "./pages/PIALibrary";
 import CompilationBuilder from "./pages/CompilationBuilder";
 import RopaPreview from "./pages/RopaPreview";
+import RopaGenerator from "./pages/RopaGenerator";
 import ExecutiveSummary from "./pages/ExecutiveSummary";
 import DrlGenerator from "./pages/DrlGenerator";
 import PradarChecklist from "./pages/PradarChecklist";
