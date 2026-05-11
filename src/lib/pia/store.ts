@@ -117,16 +117,27 @@ function seedAnswers(seeds: ChecklistSeed[]): Record<string, ChecklistAnswer> {
   return out;
 }
 
+export const DEFAULT_STAKEHOLDERS = (): import("./schema").Stakeholder[] => ([
+  { id: "S-DPO", name: "DPO", role: "Data Protection Officer", involvement: "Oversight & sign-off", inputs: "", locked: true },
+  { id: "S-MIS", name: "MIS", role: "Management Information Systems", involvement: "System owner (if hybrid/system-based)", inputs: "", locked: true },
+  { id: "S-CLI", name: "Client / Customer", role: "Data Subject", involvement: "Provides personal data", inputs: "", locked: true },
+]);
+
 export function blankPia(engagementId: string, opts: { title: string; type: PiaType; dpsStatus: DpsStatus; scope: PiaScope; }): Pia {
   const phase1: Phase1 = {
     desc: {
-      systemIs: "", designedToManage: "", ofPersonalDataWithin: "",
-      dataCollection: "", dataUsage: "", dataStorage: "", dataDisposal: "",
-      integratesWith: "", supportingDocs: "",
-      purpose: "", scopeArea: "", relatedTo: "", estimatedRecords: 0, examines: "",
+      systemType: "", systemFunction: "", organizationScope: "",
+      keyProcesses: "",
+      dataCollection: [], dataCollectionNote: "",
+      dataUsage: "",
+      dataStorage: [], dataStorageNote: "",
+      dataDisposal: "", dataDisposalNote: "",
+      integration: [], integrationNote: "",
+      supportingDocs: "",
+      purpose: "", piaScope: "", outOfScope: "",
     },
     threshold: Object.fromEntries(THRESHOLD_QUESTIONS.map(q => [q.id, { yn: "", response: "" }])),
-    stakeholders: [],
+    stakeholders: DEFAULT_STAKEHOLDERS(),
   };
   const phase2: Phase2 = {
     dpsType: "", dpsName: opts.title, basisPI: "", basisSPI: "",
@@ -153,18 +164,24 @@ export function blankPia(engagementId: string, opts: { title: string; type: PiaT
     crossBorder: seedAnswers(CROSS_BORDER_SEED),
     mitigation: [],
   };
+  const phase4 = {
+    prepared: { name: "", designation: "System / Process Owner", date: "", signature: "" },
+    reviewed: { name: "", designation: "Data Protection Officer / Compliance Officer for Privacy", date: "", signature: "" },
+    approved: { name: "", designation: "Group Head", date: "", signature: "" },
+  };
   const now = new Date().toISOString();
   return {
     id: `PIA-${Date.now()}`, engagementId, title: opts.title,
     type: opts.type, dpsStatus: opts.dpsStatus, scope: opts.scope,
-    createdAt: now, updatedAt: now, phase1, phase2, phase3, drlLinks: [],
+    consolidatedComponents: [],
+    createdAt: now, updatedAt: now, phase1, phase2, phase3, phase4,
+    ropaOverrides: {}, npcOverrides: {}, drlLinks: [],
   };
 }
 
 export function createPia(engagementId: string, opts: { title: string; type: PiaType; dpsStatus: DpsStatus; scope: PiaScope; }): Pia {
   const pia = blankPia(engagementId, opts);
   upsertPia(pia);
-  // attach to engagement
   const engs = loadEngagements();
   const e = engs.find(x => x.id === engagementId);
   if (e) {
@@ -174,10 +191,68 @@ export function createPia(engagementId: string, opts: { title: string; type: Pia
   return pia;
 }
 
+// Migrate older PIAs to the current schema. Idempotent.
+export function migratePia(p: any): Pia {
+  if (!p) return p;
+  // Phase 1 desc shape
+  const d = p.phase1?.desc || {};
+  const newDesc = {
+    systemType: d.systemType ?? d.systemIs ?? "",
+    systemFunction: d.systemFunction ?? d.designedToManage ?? "",
+    organizationScope: d.organizationScope ?? d.ofPersonalDataWithin ?? "",
+    keyProcesses: d.keyProcesses ?? "",
+    dataCollection: Array.isArray(d.dataCollection) ? d.dataCollection : (d.dataCollection ? [String(d.dataCollection)] : []),
+    dataCollectionNote: d.dataCollectionNote ?? "",
+    dataUsage: d.dataUsage ?? "",
+    dataStorage: Array.isArray(d.dataStorage) ? d.dataStorage : (d.dataStorage ? [String(d.dataStorage)] : []),
+    dataStorageNote: d.dataStorageNote ?? "",
+    dataDisposal: d.dataDisposal ?? "",
+    dataDisposalNote: d.dataDisposalNote ?? "",
+    integration: Array.isArray(d.integration) ? d.integration : (d.integratesWith ? [String(d.integratesWith)] : []),
+    integrationNote: d.integrationNote ?? "",
+    supportingDocs: d.supportingDocs ?? "",
+    purpose: d.purpose ?? "",
+    piaScope: d.piaScope ?? d.scopeArea ?? "",
+    outOfScope: d.outOfScope ?? "",
+  };
+  p.phase1 = p.phase1 || { threshold: {}, stakeholders: [] };
+  p.phase1.desc = newDesc;
+  // Threshold: drop N/A
+  const thr = p.phase1.threshold || {};
+  for (const k of Object.keys(thr)) {
+    if (thr[k]?.yn === "N/A") thr[k] = { ...thr[k], yn: "" };
+  }
+  // Ensure all questions exist
+  for (const q of THRESHOLD_QUESTIONS) {
+    if (!thr[q.id]) thr[q.id] = { yn: "", response: "" };
+  }
+  p.phase1.threshold = thr;
+  // Stakeholders defaults
+  const sh = p.phase1.stakeholders || [];
+  const defaults = DEFAULT_STAKEHOLDERS();
+  for (const d2 of defaults) {
+    if (!sh.find((s: any) => s.id === d2.id)) sh.unshift(d2);
+  }
+  p.phase1.stakeholders = sh;
+  // Phase 4
+  if (!p.phase4) {
+    p.phase4 = {
+      prepared: { name: "", designation: "System / Process Owner", date: "", signature: "" },
+      reviewed: { name: "", designation: "Data Protection Officer / Compliance Officer for Privacy", date: "", signature: "" },
+      approved: { name: "", designation: "Group Head", date: "", signature: "" },
+    };
+  }
+  if (!p.consolidatedComponents) p.consolidatedComponents = [];
+  if (!p.ropaOverrides) p.ropaOverrides = {};
+  if (!p.npcOverrides) p.npcOverrides = {};
+  return p as Pia;
+}
+
 // Threshold logic: if any Yes -> PIA required.
 export function isPiaRequired(p: Phase1): "Yes" | "No" | "Pending" {
   const vals = Object.values(p.threshold);
   if (vals.some(v => v.yn === "Yes")) return "Yes";
-  if (vals.every(v => v.yn === "No" || v.yn === "N/A")) return "No";
+  if (vals.every(v => v.yn === "No")) return "No";
   return "Pending";
 }
+
