@@ -77,13 +77,17 @@ export function updateEngagement(id: string, patch: Partial<Engagement>) {
 // ---------- PIAs ----------
 
 export function loadPias(): Pia[] {
-  try { return JSON.parse(localStorage.getItem(PIAS_KEY) || "[]"); } catch { return []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem(PIAS_KEY) || "[]");
+    return raw.map((p: any) => migratePia(p));
+  } catch { return []; }
 }
 export function savePias(list: Pia[]) {
   localStorage.setItem(PIAS_KEY, JSON.stringify(list));
 }
 export function getPia(id: string): Pia | undefined {
-  return loadPias().find(p => p.id === id);
+  const p = loadPias().find(p => p.id === id);
+  return p ? migratePia(p) : undefined;
 }
 export function upsertPia(pia: Pia) {
   const all = loadPias();
