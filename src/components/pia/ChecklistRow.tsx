@@ -1,8 +1,9 @@
 import { ChecklistAnswer } from "@/lib/pia/schema";
-import { computeRating, RATING_CLASS } from "@/lib/pia/risk";
+import { computeRating, RATING_CLASS, IMPACT_DESCRIPTIONS, PROBABILITY_DESCRIPTIONS } from "@/lib/pia/risk";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChecklistSeed } from "@/lib/pia/templates";
 
 export function ChecklistRow({
