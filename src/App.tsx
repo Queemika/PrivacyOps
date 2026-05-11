@@ -52,7 +52,9 @@ const App = () => (
                 <Route path="/pia/:id" element={<PiaWorkspace />} />
                 <Route path="/library" element={<PIALibrary />} />
                 <Route path="/compile" element={<CompilationBuilder />} />
-                <Route path="/ropa" element={<RopaPreview />} />
+                <Route path="/ropa" element={<RopaGenerator />} />
+                <Route path="/ropa/:piaId" element={<RopaGenerator />} />
+                <Route path="/ropa-legacy" element={<RopaPreview />} />
                 <Route path="/summary" element={<ExecutiveSummary />} />
                 <Route path="/drl" element={<DrlGenerator />} />
                 <Route path="/pradar" element={<PradarChecklist />} />
