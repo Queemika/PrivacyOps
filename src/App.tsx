@@ -16,6 +16,7 @@ import PiaWorkspace from "./pages/PiaWorkspace";
 import PIALibrary from "./pages/PIALibrary";
 import CompilationBuilder from "./pages/CompilationBuilder";
 import RopaPreview from "./pages/RopaPreview";
+import RopaGenerator from "./pages/RopaGenerator";
 import ExecutiveSummary from "./pages/ExecutiveSummary";
 import DrlGenerator from "./pages/DrlGenerator";
 import PradarChecklist from "./pages/PradarChecklist";
@@ -51,7 +52,9 @@ const App = () => (
                 <Route path="/pia/:id" element={<PiaWorkspace />} />
                 <Route path="/library" element={<PIALibrary />} />
                 <Route path="/compile" element={<CompilationBuilder />} />
-                <Route path="/ropa" element={<RopaPreview />} />
+                <Route path="/ropa" element={<RopaGenerator />} />
+                <Route path="/ropa/:piaId" element={<RopaGenerator />} />
+                <Route path="/ropa-legacy" element={<RopaPreview />} />
                 <Route path="/summary" element={<ExecutiveSummary />} />
                 <Route path="/drl" element={<DrlGenerator />} />
                 <Route path="/pradar" element={<PradarChecklist />} />

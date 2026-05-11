@@ -23,6 +23,28 @@ export const LAWFUL_BASIS_SPI = [
 
 export const MEDIA_TYPES = ["Electronic", "Physical", "Unspecified"] as const;
 
+export const DATA_COLLECTION_OPTIONS = ["Online Form", "Manual / Paper Form", "API / System Integration", "Email", "Phone / Verbal", "Third Party", "CCTV / Sensor"];
+export const DATA_STORAGE_OPTIONS = ["Cloud", "On-prem Server", "Physical Cabinet", "Local Workstation", "Third-party Vendor"];
+export const DATA_DISPOSAL_OPTIONS = ["Shredding", "Secure Erase / Wipe", "Vendor-managed Disposal", "Anonymization", "Archival then Destruction", "Other"];
+export const INTEGRATION_OPTIONS = ["Email Service", "Identity Provider (SSO)", "Payment Gateway", "Analytics", "CRM", "ERP / HRIS", "External API"];
+export const RECORD_VOLUME_OPTIONS = ["Low (<250)", "Medium (<1000)", "High (1000+)"];
+
+export const PHASE1_TOOLTIPS: Record<string, string> = {
+  systemType: "Describe the nature of the system processing personal data. Keep it high-level but specific.",
+  systemFunction: "Explain the main function of the system (e.g., manages employee records, processes applications).",
+  organizationScope: "Specify the business unit, department, or organization using the system.",
+  keyProcesses: "List how personal data is handled across the lifecycle.",
+  dataCollection: "Indicate all sources and methods of data collection (e.g., online forms, manual forms, APIs).",
+  dataUsage: "Describe how the collected data is used operationally.",
+  dataStorage: "Specify storage locations (systems, databases, cloud, physical cabinets).",
+  dataDisposal: "Describe how data is deleted or destroyed after retention.",
+  integration: "Identify other systems or tools integrated with this system.",
+  supportingDocs: "Upload or reference design documents that support system understanding.",
+  purpose: "Clearly state the purpose of processing personal data.",
+  piaScope: "Define what parts of the system are included in the PIA.",
+  outOfScope: "Identify areas not covered in the PIA (e.g., non-personal data).",
+};
+
 export const THRESHOLD_QUESTIONS: { id: string; q: string }[] = [
   { id: "T1", q: "Does the project or system collect, use, keep, share, or dispose of personal information?" },
   { id: "T2", q: "Does the project or system collect, use, keep, share, or dispose of sensitive personal information or privileged information?" },

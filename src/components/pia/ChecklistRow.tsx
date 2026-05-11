@@ -1,8 +1,9 @@
 import { ChecklistAnswer } from "@/lib/pia/schema";
-import { computeRating, RATING_CLASS } from "@/lib/pia/risk";
+import { computeRating, RATING_CLASS, IMPACT_DESCRIPTIONS, PROBABILITY_DESCRIPTIONS } from "@/lib/pia/risk";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChecklistSeed } from "@/lib/pia/templates";
 
 export function ChecklistRow({
@@ -53,10 +54,10 @@ export function ChecklistRow({
       </div>
       <div className="col-span-1 text-[11px] text-muted-foreground whitespace-pre-wrap">{answer.legalBasis}</div>
       <div className="col-span-1">
-        <NumberPicker value={answer.impact} onChange={(n) => set({ impact: n })} />
+        <NumberPicker value={answer.impact} onChange={(n) => set({ impact: n })} descriptions={IMPACT_DESCRIPTIONS} />
       </div>
       <div className="col-span-1">
-        <NumberPicker value={answer.probability} onChange={(n) => set({ probability: n })} />
+        <NumberPicker value={answer.probability} onChange={(n) => set({ probability: n })} descriptions={PROBABILITY_DESCRIPTIONS} />
       </div>
       <div className="col-span-1">
         <span className={`status-chip text-[10px] ${RATING_CLASS[answer.rating]}`}>{answer.rating || "—"}</span>
@@ -65,12 +66,19 @@ export function ChecklistRow({
   );
 }
 
-function NumberPicker({ value, onChange }: { value: number | null; onChange: (n: number | null) => void }) {
+function NumberPicker({ value, onChange, descriptions }: { value: number | null; onChange: (n: number | null) => void; descriptions: Record<number, { label: string; desc: string }> }) {
   return (
     <Select value={value == null ? "" : String(value)} onValueChange={(v) => onChange(v === "" ? null : Number(v))}>
       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
       <SelectContent>
-        {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+        {[1, 2, 3, 4].map(n => (
+          <Tooltip key={n}>
+            <TooltipTrigger asChild>
+              <SelectItem value={String(n)}>{n} — {descriptions[n].label}</SelectItem>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[260px] text-xs">{descriptions[n].desc}</TooltipContent>
+          </Tooltip>
+        ))}
       </SelectContent>
     </Select>
   );
