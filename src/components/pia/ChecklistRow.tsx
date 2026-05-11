@@ -54,10 +54,10 @@ export function ChecklistRow({
       </div>
       <div className="col-span-1 text-[11px] text-muted-foreground whitespace-pre-wrap">{answer.legalBasis}</div>
       <div className="col-span-1">
-        <NumberPicker value={answer.impact} onChange={(n) => set({ impact: n })} />
+        <NumberPicker value={answer.impact} onChange={(n) => set({ impact: n })} descriptions={IMPACT_DESCRIPTIONS} />
       </div>
       <div className="col-span-1">
-        <NumberPicker value={answer.probability} onChange={(n) => set({ probability: n })} />
+        <NumberPicker value={answer.probability} onChange={(n) => set({ probability: n })} descriptions={PROBABILITY_DESCRIPTIONS} />
       </div>
       <div className="col-span-1">
         <span className={`status-chip text-[10px] ${RATING_CLASS[answer.rating]}`}>{answer.rating || "—"}</span>
