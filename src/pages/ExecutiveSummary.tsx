@@ -1,7 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, BookOpen } from "lucide-react";
+import { Download, BookOpen, FileText, Table2, ShieldAlert, ShieldCheck, Mail } from "lucide-react";
+import { RelatedLinks } from "@/components/RelatedLinks";
 
 const sections = [
   { id: "01", title: "Overview", body: "This compilation covers 4 Data Processing Systems across HR, Sales, Finance, and Procurement, processed by Acme Corp (PIC) with 3 contracted PIPs." },
