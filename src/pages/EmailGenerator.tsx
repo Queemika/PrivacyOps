@@ -424,12 +424,25 @@ export default function EmailGenerator() {
     toast.success("Template uploaded");
   };
 
+  const [params] = useSearchParams();
+  const source = params.get("source");
+  const refId = params.get("refId");
+
   return (
     <>
       <PageHeader
         title="Email Generator"
-        description="Generate professional follow-up emails with customizable templates"
+        description={source
+          ? `Drafting from ${source.toUpperCase()}${refId ? ` · ${refId}` : ""}. Action items and document requests prefilled from the source.`
+          : "Generate professional follow-up emails with customizable templates"}
       />
+
+      {source && (
+        <div className="mb-4 flex items-center gap-2 text-xs px-3 py-2 rounded-md border bg-accent/5">
+          <span className="font-medium">Context:</span>
+          <span className="text-muted-foreground">{source}{refId && ` (${refId})`}</span>
+        </div>
+      )}
 
       {/* ---- Template selection row ---- */}
       <section className="mb-6">
