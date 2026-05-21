@@ -1,10 +1,15 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusChip } from "@/components/StatusChip";
 import { drlSystems } from "@/lib/mockData";
-import { Sparkles, Download } from "lucide-react";
+import { Sparkles, Download, FileText, Mail, BookOpen, ShieldCheck } from "lucide-react";
+import { loadActions, saveActions, ActionItem } from "@/lib/actionsStore";
+import { RelatedLinks } from "@/components/RelatedLinks";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const guideQuestions = [
   "Confirm encryption is enforced at rest and in transit for all production data stores.",
@@ -30,11 +35,26 @@ const irl = [
 ];
 
 export default function DrlGenerator() {
+  const [params] = useSearchParams();
+  const piaId = params.get("piaId");
+  const source = params.get("source");
+  const [actions, setActions] = useState<ActionItem[]>([]);
+  const defaultTab = source === "transcript" || piaId ? "actions" : "guide";
+
+  useEffect(() => { setActions(loadActions()); }, []);
+
+  const updateStatus = (id: string, status: ActionItem["status"]) => {
+    const next = actions.map(a => a.id === id ? { ...a, status } : a);
+    setActions(next); saveActions(next);
+  };
+
   return (
     <>
       <PageHeader
         title="DRL / IRL Generator"
-        description="Technical Security assessment. Configure systems and applicability — guide questions, DRL, and IRL are auto-generated."
+        description={piaId
+          ? `Filtered to PIA ${piaId}. Items across Tech Security, PRADAR, Privacy Notice, PIA, and Action Items.`
+          : "Technical Security assessment. Configure systems and applicability — guide questions, DRL, and IRL are auto-generated."}
         actions={
           <>
             <Button variant="outline"><Sparkles className="mr-2 h-4 w-4" />Re-generate</Button>
@@ -72,11 +92,12 @@ export default function DrlGenerator() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="guide">
+      <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="guide">Guide Questions</TabsTrigger>
           <TabsTrigger value="drl">Document Request List</TabsTrigger>
           <TabsTrigger value="irl">Inquiry Request List</TabsTrigger>
+          <TabsTrigger value="actions">Action Items {actions.length > 0 && <span className="ml-1 text-[10px] text-muted-foreground">({actions.length})</span>}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="guide">
@@ -123,7 +144,62 @@ export default function DrlGenerator() {
             </table>
           </CardContent></Card>
         </TabsContent>
+
+        <TabsContent value="actions">
+          <Card><CardContent className="p-0">
+            {actions.length === 0 ? (
+              <div className="p-6 text-sm text-muted-foreground text-center">
+                No action items yet. Upload a transcript to extract action items automatically.
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 border-b text-xs text-muted-foreground">
+                  <tr>
+                    <th className="text-left font-medium px-4 py-2.5">Action</th>
+                    <th className="text-left font-medium px-4 py-2.5 w-32">Owner</th>
+                    <th className="text-left font-medium px-4 py-2.5 w-28">Source</th>
+                    <th className="text-left font-medium px-4 py-2.5 w-40">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {actions.map(a => (
+                    <tr key={a.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">{a.text}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{a.owner || "—"}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {a.source}
+                        {a.sourceRef && <span className="block text-[10px] font-mono">{a.sourceRef}</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Select value={a.status} onValueChange={(v) => updateStatus(a.id, v as ActionItem["status"])}>
+                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Open">Open</SelectItem>
+                            <SelectItem value="In Progress">In Progress</SelectItem>
+                            <SelectItem value="Closed">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </CardContent></Card>
+        </TabsContent>
       </Tabs>
+
+      <RelatedLinks
+        title="Jump to"
+        links={[
+          ...(piaId ? [{ to: `/pia/${piaId}`, label: "Source PIA", icon: FileText }] : []),
+          { to: "/library", label: "PIA Library", icon: FileText },
+          { to: "/tsa", label: "Technical Security", icon: ShieldCheck },
+          { to: "/pradar", label: "PRADAR", icon: ShieldCheck },
+          { to: `/email?source=drl${piaId ? `&refId=${piaId}` : ""}`, label: "Send follow-up email", icon: Mail },
+          { to: "/summary", label: "Executive Summary", icon: BookOpen },
+        ]}
+      />
     </>
   );
 }

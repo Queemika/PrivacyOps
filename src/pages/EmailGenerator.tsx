@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { RelatedLinks } from "@/components/RelatedLinks";
+import { ShieldAlert, Upload as UploadIcon2, BookOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -421,12 +424,25 @@ export default function EmailGenerator() {
     toast.success("Template uploaded");
   };
 
+  const [params] = useSearchParams();
+  const source = params.get("source");
+  const refId = params.get("refId");
+
   return (
     <>
       <PageHeader
         title="Email Generator"
-        description="Generate professional follow-up emails with customizable templates"
+        description={source
+          ? `Drafting from ${source.toUpperCase()}${refId ? ` · ${refId}` : ""}. Action items and document requests prefilled from the source.`
+          : "Generate professional follow-up emails with customizable templates"}
       />
+
+      {source && (
+        <div className="mb-4 flex items-center gap-2 text-xs px-3 py-2 rounded-md border bg-accent/5">
+          <span className="font-medium">Context:</span>
+          <span className="text-muted-foreground">{source}{refId && ` (${refId})`}</span>
+        </div>
+      )}
 
       {/* ---- Template selection row ---- */}
       <section className="mb-6">
@@ -783,6 +799,17 @@ export default function EmailGenerator() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <RelatedLinks
+        title="Jump to source"
+        links={[
+          ...(source === "pia" && refId ? [{ to: `/pia/${refId}`, label: "Source PIA", icon: UploadIcon2 }] : []),
+          ...(source === "transcript" && refId ? [{ to: `/upload`, label: "Source transcript", icon: UploadIcon2 }] : []),
+          { to: "/drl", label: "DRL / IRL", icon: ShieldAlert },
+          { to: "/library", label: "PIA Library", icon: UploadIcon2 },
+          { to: "/summary", label: "Executive Summary", icon: BookOpen },
+        ]}
+      />
     </>
   );
 }

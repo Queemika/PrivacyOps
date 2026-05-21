@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles, Link2, FilePlus2 } from "lucide-react";
+import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles, Link2, FilePlus2, ShieldAlert, Mail } from "lucide-react";
 import { transcriptSample, mockPIAs } from "@/lib/mockData";
 import { anonymizeText } from "@/lib/anonymize";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { addActions } from "@/lib/actionsStore";
+import { RelatedLinks } from "@/components/RelatedLinks";
 
 // Mock "uploads" store — in a real backend this would be a DB row.
 // IMPORTANT: only the anonymized content is ever persisted.
@@ -72,6 +74,12 @@ export default function Upload() {
         createdAt: new Date().toISOString(),
       };
       persistUpload(rec);
+      // Extract sample action items to shared store → surfaces in DRL + Email Generator
+      addActions([
+        { source: "Transcript", sourceRef: id, text: "Provide updated DSA with payroll vendor", owner: "HR Lead", deadline: "" },
+        { source: "Transcript", sourceRef: id, text: "Share SCC for cross-border BG-check provider", owner: "Legal", deadline: "" },
+        { source: "Transcript", sourceRef: id, text: "Submit latest access review report", owner: "IT Security", deadline: "" },
+      ]);
       setAnonymized(result.text);
       setUploadId(id);
       setStep("done");
@@ -192,6 +200,18 @@ export default function Upload() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {step === "done" && (
+          <RelatedLinks
+            title="From this transcript"
+            links={[
+              { to: `/pia/new?uploadId=${uploadId}`, label: "Generate new PIA", icon: FilePlus2 },
+              { to: `/drl?source=transcript&refId=${uploadId}`, label: "Action items → DRL", icon: ShieldAlert, hint: "3 created" },
+              { to: `/email?source=transcript&refId=${uploadId}`, label: "Draft email", icon: Mail },
+              { to: `/tsa?uploadId=${uploadId}`, label: "Tech Security autofill", icon: ShieldCheck },
+            ]}
+          />
         )}
       </div>
 

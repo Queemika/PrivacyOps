@@ -1,7 +1,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, BookOpen } from "lucide-react";
+import { Download, BookOpen, FileText, Table2, ShieldAlert, ShieldCheck, Mail } from "lucide-react";
+import { RelatedLinks } from "@/components/RelatedLinks";
 
 const sections = [
   { id: "01", title: "Overview", body: "This compilation covers 4 Data Processing Systems across HR, Sales, Finance, and Procurement, processed by Acme Corp (PIC) with 3 contracted PIPs." },
@@ -92,6 +93,18 @@ export default function ExecutiveSummary() {
           </CardContent>
         </Card>
       </div>
+
+      <RelatedLinks
+        title="Drill through"
+        links={[
+          { to: "/library", label: "PIA Library", icon: FileText },
+          { to: "/compile", label: "Compilation Builder", icon: BookOpen },
+          { to: "/ropa", label: "ROPA / NPC-RS", icon: Table2 },
+          { to: "/drl", label: "DRL / IRL", icon: ShieldAlert },
+          { to: "/pradar", label: "PRADAR Scoreboard", icon: ShieldCheck },
+          { to: "/email?source=summary", label: "Send progress report", icon: Mail },
+        ]}
+      />
     </>
   );
 }
