@@ -12,7 +12,6 @@ import { ROPA_FIELDS, NPC_FIELDS, FieldDef, resolveValue, deriveFieldValue, toCS
 import { Download, RotateCcw, FileText, ArrowLeft, Mail, ShieldAlert, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
-import { Button } from "@/components/ui/button";
 
 type Kind = "ropa" | "npc";
 
