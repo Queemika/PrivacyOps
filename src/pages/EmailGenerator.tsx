@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { PageHeader } from "@/components/PageHeader";
 import { RelatedLinks } from "@/components/RelatedLinks";
-import { FileText, ShieldAlert, Upload as UploadIcon2, BookOpen } from "lucide-react";
+import { ShieldAlert, Upload as UploadIcon2, BookOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
