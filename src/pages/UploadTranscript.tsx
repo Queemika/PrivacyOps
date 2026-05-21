@@ -201,6 +201,18 @@ export default function Upload() {
             </CardContent>
           </Card>
         )}
+
+        {step === "done" && (
+          <RelatedLinks
+            title="From this transcript"
+            links={[
+              { to: `/pia/new?uploadId=${uploadId}`, label: "Generate new PIA", icon: FilePlus2 },
+              { to: `/drl?source=transcript&refId=${uploadId}`, label: "Action items → DRL", icon: ShieldAlert, hint: "3 created" },
+              { to: `/email?source=transcript&refId=${uploadId}`, label: "Draft email", icon: Mail },
+              { to: `/tsa?uploadId=${uploadId}`, label: "Tech Security autofill", icon: ShieldCheck },
+            ]}
+          />
+        )}
       </div>
 
       <Dialog open={processOpen} onOpenChange={setProcessOpen}>
