@@ -799,6 +799,17 @@ export default function EmailGenerator() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <RelatedLinks
+        title="Jump to source"
+        links={[
+          ...(source === "pia" && refId ? [{ to: `/pia/${refId}`, label: "Source PIA", icon: UploadIcon2 }] : []),
+          ...(source === "transcript" && refId ? [{ to: `/upload`, label: "Source transcript", icon: UploadIcon2 }] : []),
+          { to: "/drl", label: "DRL / IRL", icon: ShieldAlert },
+          { to: "/library", label: "PIA Library", icon: UploadIcon2 },
+          { to: "/summary", label: "Executive Summary", icon: BookOpen },
+        ]}
+      />
     </>
   );
 }
