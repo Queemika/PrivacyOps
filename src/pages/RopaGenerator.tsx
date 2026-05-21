@@ -9,8 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Pia } from "@/lib/pia/schema";
 import { getPia, upsertPia, loadPias } from "@/lib/pia/store";
 import { ROPA_FIELDS, NPC_FIELDS, FieldDef, resolveValue, deriveFieldValue, toCSV } from "@/lib/pia/ropaMap";
-import { Download, RotateCcw, FileText } from "lucide-react";
+import { Download, RotateCcw, FileText, ArrowLeft, Mail, ShieldAlert, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { RelatedLinks } from "@/components/RelatedLinks";
+import { Button } from "@/components/ui/button";
 
 type Kind = "ropa" | "npc";
 
@@ -112,6 +114,11 @@ function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
       <PageHeader
         title={`${pia.title} — ROPA / NPC-RS`}
         description={`Generated from Phase 2 data. Engagement ${pia.engagementId} · PIA ${pia.id}`}
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <a href={`/pia/${pia.id}`}><ArrowLeft className="h-3.5 w-3.5 mr-1" />Back to PIA</a>
+          </Button>
+        }
       />
       <Tabs defaultValue="ropa">
         <TabsList>

@@ -13,8 +13,9 @@ import { Phase3Form } from "@/components/pia/Phase3Form";
 import { Phase4SignOff } from "@/components/pia/Phase4SignOff";
 import { Pia } from "@/lib/pia/schema";
 import { getPia, upsertPia, ensureSeedEngagement, createPia } from "@/lib/pia/store";
-import { Save, ShieldCheck, FileText } from "lucide-react";
+import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, BookOpen, Table2 } from "lucide-react";
 import { toast } from "sonner";
+import { RelatedLinks } from "@/components/RelatedLinks";
 
 export default function PiaWorkspace() {
   const { id } = useParams();
@@ -170,6 +171,19 @@ export default function PiaWorkspace() {
           Buckets — Low 1–3, Medium 4–6, High 8–9, Critical 12–16.
         </CardContent>
       </Card>
+
+      <RelatedLinks
+        title="Linked workables"
+        links={[
+          { to: `/ropa/${pia.id}`, label: "ROPA / NPC-RS", icon: Table2 },
+          { to: `/drl?piaId=${pia.id}`, label: "DRL / IRL items", icon: ShieldAlert },
+          { to: `/consistency?piaId=${pia.id}`, label: "Consistency Checker", icon: GitCompare },
+          { to: `/email?source=pia&refId=${pia.id}`, label: "Email Generator", icon: Mail },
+          { to: `/upload?piaId=${pia.id}`, label: "Source Transcript", icon: Upload },
+          { to: `/summary?piaId=${pia.id}`, label: "Executive Summary", icon: BookOpen },
+          { to: `/library`, label: "PIA Library", icon: FileText },
+        ]}
+      />
     </>
   );
 }
