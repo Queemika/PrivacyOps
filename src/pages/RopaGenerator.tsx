@@ -139,6 +139,16 @@ function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
           />
         </TabsContent>
       </Tabs>
+      <RelatedLinks
+        title="Related"
+        links={[
+          { to: `/pia/${pia.id}`, label: "Source PIA", icon: FileText },
+          { to: `/drl?piaId=${pia.id}`, label: "DRL items", icon: ShieldAlert },
+          { to: `/email?source=ropa&refId=${pia.id}`, label: "Email this output", icon: Mail },
+          { to: `/summary?piaId=${pia.id}`, label: "Executive Summary", icon: BookOpen },
+          { to: `/library`, label: "PIA Library", icon: FileText },
+        ]}
+      />
     </>
   );
 }
