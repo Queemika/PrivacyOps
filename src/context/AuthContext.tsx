@@ -24,15 +24,10 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-const ALLOWED_DOMAIN = "kpmg.com";
-const BLOCKED = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "aol.com", "proton.me", "protonmail.com"];
-
+// Prototype: accept any well-formed email (demo mode).
 export function validateCorporateEmail(email: string): string | null {
   const e = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return "Please enter a valid email address.";
-  const domain = e.split("@")[1];
-  if (BLOCKED.includes(domain)) return "Generic email providers are not allowed. Please use your corporate email.";
-  if (!domain.endsWith(ALLOWED_DOMAIN)) return `Only @${ALLOWED_DOMAIN} corporate emails are allowed.`;
   return null;
 }
 

@@ -4,92 +4,70 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Shield, AlertCircle } from "lucide-react";
+import { ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
   const nav = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState("admin@kpmg.com");
-  const [password, setPassword] = useState("admin1234");
-  const [error, setError] = useState<string | null>(null);
-  const [forgot, setForgot] = useState(false);
+  const [email, setEmail] = useState("consultant@privacyteam.ph");
+  const [password, setPassword] = useState("demo1234");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    // Demo mode: any credentials work
     const r = login(email, password);
-    if (!r.ok) { setError(r.error ?? "Login failed"); return; }
-    toast.success("Welcome back");
-    nav("/", { replace: true });
+    if (!r.ok) {
+      // fall back: still let them in
+      const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
+      accounts[email.toLowerCase()] = { firstName: "Demo", lastName: "User", email, password };
+      localStorage.setItem("pa_accounts", JSON.stringify(accounts));
+      const u = { firstName: "Demo", lastName: "User", email };
+      localStorage.setItem("pa_user", JSON.stringify(u));
+    }
+    toast.success("Welcome to PrivacyOps");
+    nav("/engagements", { replace: true });
   };
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
-      <div className="hidden lg:flex flex-col justify-between p-10 w-1/2 bg-[var(--gradient-primary)] text-primary-foreground">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-md bg-white/10 flex items-center justify-center font-bold">PA</div>
-          <span className="font-semibold">PrivacyAtlas</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_top,hsl(220_45%_12%),hsl(220_50%_6%))] text-white p-6">
+      <div className="flex flex-col items-center gap-3 mb-8">
+        <div className="h-14 w-14 rounded-xl bg-accent flex items-center justify-center shadow-[0_10px_30px_-10px_hsl(var(--accent))]">
+          <ShieldCheck className="h-7 w-7 text-accent-foreground" />
         </div>
-        <div className="space-y-3 max-w-md">
-          <h1 className="text-3xl font-semibold leading-tight">Enterprise Data Privacy Console</h1>
-          <p className="text-sm text-primary-foreground/80">Automate PIAs, RoPA, NPC-RS and PRADAR — with anonymization, audit trail, and GDPR / Philippines compliance guidance built in.</p>
-        </div>
-        <p className="text-xs text-primary-foreground/60">Prototype · Sample data only · No real client data is processed.</p>
+        <h1 className="text-3xl font-semibold tracking-tight">PrivacyOps</h1>
+        <p className="text-sm text-white/60">Data Privacy Compliance Platform</p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8">
-            <div className="flex items-center gap-2 mb-6">
-              <Shield className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Sign in to PrivacyAtlas</span>
-            </div>
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-7 text-foreground">
+        <div className="text-xs text-muted-foreground mb-5">Sign in to your workspace</div>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-xs font-medium">Email</Label>
+            <Input id="email" type="email" autoComplete="email"
+              value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs font-medium">Password</Label>
+            <Input id="password" type="password" autoComplete="current-password"
+              value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          <Button type="submit" className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground text-sm font-medium">
+            Sign In
+          </Button>
+          <p className="text-[11px] text-muted-foreground text-center pt-1">
+            Demo: Any credentials work · Version 1.0 Prototype
+          </p>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Need an account?{" "}
+            <Link to="/signup" className="text-accent hover:underline font-medium">Create one</Link>
+          </p>
+        </form>
+      </div>
 
-            {forgot ? (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">Enter your corporate email and we'll send a reset link.</p>
-                <Input placeholder="firstname.lastname@kpmg.com" />
-                <Button className="w-full" onClick={(e) => { e.preventDefault(); toast.success("Reset link sent (prototype)"); setForgot(false); }}>Send reset link</Button>
-                <button type="button" className="text-xs text-accent hover:underline" onClick={() => setForgot(false)}>Back to sign in</button>
-              </div>
-            ) : (
-              <form onSubmit={submit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Work email</Label>
-                  <Input id="email" type="email" autoComplete="email" placeholder="firstname.lastname@kpmg.com"
-                    value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <button type="button" className="text-xs text-accent hover:underline" onClick={() => setForgot(true)}>Forgot password?</button>
-                  </div>
-                  <Input id="password" type="password" autoComplete="current-password"
-                    value={password} onChange={(e) => setPassword(e.target.value)} required />
-                </div>
-
-                {error && (
-                  <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2.5">
-                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <Button type="submit" className="w-full">Sign in</Button>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Don't have an account?{" "}
-                  <Link to="/signup" className="text-accent hover:underline font-medium">Create one</Link>
-                </p>
-                <p className="text-[11px] text-muted-foreground text-center pt-2 border-t">
-                  Only <span className="font-mono">@kpmg.com</span> corporate emails are accepted.
-                </p>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+      <div className="mt-6 flex items-center gap-1.5 text-[11px] text-white/50 max-w-md text-center">
+        <AlertTriangle className="h-3 w-3 text-warning shrink-0" />
+        Auto-generated content requires human review. All data shown is for demonstration only.
       </div>
     </div>
   );
