@@ -26,7 +26,7 @@ export default function Signup() {
     const r = signup({ firstName: first, lastName: last, email, password });
     if (!r.ok) { setError(r.error ?? "Signup failed"); return; }
     toast.success("Account created");
-    nav("/", { replace: true });
+    nav("/engagements", { replace: true });
   };
 
   return (
@@ -96,7 +96,7 @@ export default function Signup() {
                 <Link to="/login" className="text-accent hover:underline font-medium">Sign in</Link>
               </p>
               <p className="text-[11px] text-muted-foreground text-center pt-2 border-t">
-                Generic providers (gmail, yahoo, outlook…) are blocked. Only <span className="font-mono">@kpmg.com</span> is accepted.
+                Demo prototype — any well-formed email is accepted.
               </p>
             </form>
           </CardContent>
