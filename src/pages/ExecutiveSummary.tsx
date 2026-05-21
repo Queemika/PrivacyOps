@@ -93,6 +93,18 @@ export default function ExecutiveSummary() {
           </CardContent>
         </Card>
       </div>
+
+      <RelatedLinks
+        title="Drill through"
+        links={[
+          { to: "/library", label: "PIA Library", icon: FileText },
+          { to: "/compile", label: "Compilation Builder", icon: BookOpen },
+          { to: "/ropa", label: "ROPA / NPC-RS", icon: Table2 },
+          { to: "/drl", label: "DRL / IRL", icon: ShieldAlert },
+          { to: "/pradar", label: "PRADAR Scoreboard", icon: ShieldCheck },
+          { to: "/email?source=summary", label: "Send progress report", icon: Mail },
+        ]}
+      />
     </>
   );
 }
