@@ -12,6 +12,10 @@ export interface PradarEntry {
   reviewerStatus: string;
   clientComment: string;
   clientStatus: string;
+  basisChecks?: Record<number, boolean>;
+  responsibleParty?: string;
+  timeline?: string;
+  drlRowId?: string; // link to DRL row
 }
 
 const STORAGE_KEY = "pa_pradar_state";
@@ -28,6 +32,9 @@ const blank = (id: string): PradarEntry => ({
   reviewerStatus: "Not started",
   clientComment: "",
   clientStatus: "Not Started",
+  basisChecks: {},
+  responsibleParty: "",
+  timeline: "",
 });
 
 export function loadEntries(): Record<string, PradarEntry> {
