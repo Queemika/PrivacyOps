@@ -1,26 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageShell } from "@/components/ui/PageShell";
 import { StatTile } from "@/components/ui/StatTile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { FileText, AlertTriangle, ShieldCheck, Activity, ClipboardCheck, FileSearch, Building2, BookOpen, ListChecks } from "lucide-react";
+import {
+  FileText, AlertTriangle, ShieldCheck, Activity, ClipboardCheck, FileSearch,
+  Building2, BookOpen, ListChecks, ExternalLink,
+} from "lucide-react";
 import { loadPias } from "@/lib/pia/store";
 import { aggregate } from "@/lib/analytics/executiveSummary";
 import { loadDrl } from "@/lib/drl/store";
-import { Link } from "react-router-dom";
+import { loadEntries, domainAverage, overallMaturity } from "@/lib/pradarModel";
+import { PRADAR_DOMAINS, MATURITY_LABELS } from "@/lib/pradarTemplate";
+import { loadNotices, compliance } from "@/lib/privacyNotice/store";
+import { loadInspections } from "@/lib/inspections/store";
+import { loadTechStackFull } from "@/lib/templates/techStackFull";
 
 export default function AnalyticsHub() {
   const [pias, setPias] = useState(() => loadPias());
   const [drl, setDrl] = useState(() => loadDrl());
-  useEffect(() => { setPias(loadPias()); setDrl(loadDrl()); }, []);
+  const [pradar, setPradar] = useState(() => loadEntries());
+  const [notices, setNotices] = useState(() => loadNotices());
+  const [insps, setInsps] = useState(() => loadInspections());
+  const [stack, setStack] = useState(() => loadTechStackFull());
+
+  useEffect(() => {
+    setPias(loadPias()); setDrl(loadDrl()); setPradar(loadEntries());
+    setNotices(loadNotices()); setInsps(loadInspections()); setStack(loadTechStackFull());
+  }, []);
 
   const agg = useMemo(() => aggregate(pias), [pias]);
-
-  const RISK = [
-    { name: "Yes (Compliant)", value: agg.riskMatrix.principles.yes + agg.riskMatrix.rights.yes + agg.riskMatrix.security.yes + agg.riskMatrix.crossBorder.yes, fill: "hsl(var(--success))" },
-    { name: "No (Gap)", value: agg.riskMatrix.principles.no + agg.riskMatrix.rights.no + agg.riskMatrix.security.no + agg.riskMatrix.crossBorder.no, fill: "hsl(var(--destructive))" },
-    { name: "N/A", value: agg.riskMatrix.principles.na + agg.riskMatrix.rights.na + agg.riskMatrix.security.na + agg.riskMatrix.crossBorder.na, fill: "hsl(var(--muted-foreground))" },
-  ];
+  const overall = overallMaturity(pradar);
 
   const drlByStatus = useMemo(() => {
     const m: Record<string, number> = {};
@@ -39,71 +50,275 @@ export default function AnalyticsHub() {
         <StatTile label="DRL items" value={drl.length} icon={ListChecks} accent="violet" />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-sm font-semibold mb-4">Phase 3 risk matrix (aggregate)</h3>
-            <div className="h-64">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={RISK} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
-                    {RISK.map((r) => <Cell key={r.name} fill={r.fill} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap gap-3 justify-center text-xs mt-2">
-              {RISK.map((r) => (
-                <div key={r.name} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: r.fill }} /> {r.name} ({r.value})</div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Executive Summary entry */}
+      <Card>
+        <CardContent className="p-5 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2"><Activity className="h-4 w-4 text-accent" /> Executive Summary</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Full Phase 2 & 3 derived narrative — sections 01–09 across all selected PIAs.</p>
+          </div>
+          <Link to="/summary" className="text-xs text-accent hover:underline inline-flex items-center gap-1"><ExternalLink className="h-3.5 w-3.5" />Open</Link>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-sm font-semibold mb-4">DRL items by status</h3>
-            <div className="h-64">
-              <ResponsiveContainer>
-                <BarChart data={drlByStatus}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* PRADAR Scoreboard */}
+      <PradarScoreboardCard pradar={pradar} overall={overall} />
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <CrossLink to="/pradar" icon={ClipboardCheck} title="PRADAR Scoreboard" caption="Maturity across 10 privacy domains" />
-        <CrossLink to="/notice" icon={FileSearch} title="Privacy Notice Review" caption="Compliance status of published notices" />
-        <CrossLink to="/tsa" icon={ShieldCheck} title="Technical Security" caption="OFI vs Complied per domain & component" />
-        <CrossLink to="/inspection" icon={Building2} title="Physical Inspection" caption="OFI vs Complied per area / department" />
-        <CrossLink to="/manuals" icon={BookOpen} title="Manuals & Deliverables" caption="Not Started, Ongoing, Completed" />
-        <CrossLink to="/drl" icon={ListChecks} title="DRL / IRL" caption="Open, Under Inspection, Closed, N/A" />
-      </div>
+      {/* Privacy Notice */}
+      <NoticeAnalyticsCard notices={notices} />
 
-      <CrossLink to="/summary" icon={Activity} title="Open Executive Summary" caption="Full Phase 2 & 3 derived narrative — sections 01-09" full />
+      {/* TSA */}
+      <TsaAnalyticsCard stack={stack} />
+
+      {/* Physical Inspection */}
+      <InspectionAnalyticsCard insps={insps} />
+
+      {/* Manuals */}
+      <ManualsAnalyticsCard />
+
+      {/* DRL */}
+      <DrlAnalyticsCard drlByStatus={drlByStatus} total={drl.length} />
     </PageShell>
   );
 }
 
-function CrossLink({ to, icon: Icon, title, caption, full }: { to: string; icon: React.ComponentType<{ className?: string }>; title: string; caption: string; full?: boolean }) {
+function SectionHeader({ title, icon: Icon, to }: { title: string; icon: React.ComponentType<{ className?: string }>; to: string }) {
   return (
-    <Link to={to} className={`block ${full ? "" : ""}`}>
-      <Card className="hover:border-accent transition-colors">
-        <CardContent className="p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-accent/10 grid place-items-center"><Icon className="h-5 w-5 text-accent" /></div>
-          <div>
-            <div className="text-sm font-semibold">{title}</div>
-            <div className="text-xs text-muted-foreground">{caption}</div>
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-sm font-semibold flex items-center gap-2"><Icon className="h-4 w-4 text-accent" /> {title}</h3>
+      <Link to={to} className="text-xs text-accent hover:underline inline-flex items-center gap-1"><ExternalLink className="h-3 w-3" />Open module</Link>
+    </div>
+  );
+}
+
+function complianceLabel(r: number | null) {
+  if (r == null) return "—";
+  if (r >= 3.5) return "Fully Compliant";
+  if (r >= 2.5) return "Substantially Compliant";
+  if (r >= 1.5) return "Partially Compliant";
+  return "Not Compliant";
+}
+
+function PradarScoreboardCard({ pradar, overall }: { pradar: ReturnType<typeof loadEntries>; overall: number | null }) {
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return (
+    <Card><CardContent className="p-5">
+      <SectionHeader title="PRADAR Scoreboard" icon={ClipboardCheck} to="/pradar" />
+      <p className="text-[11px] text-muted-foreground mb-3">Status as of {today}</p>
+      <div className="mb-4 grid grid-cols-3 gap-3 text-sm">
+        <div><div className="text-[10px] uppercase text-muted-foreground">Overall Maturity Level</div>
+          <div className="text-2xl font-semibold tabular-nums">{overall != null ? overall.toFixed(2) : "—"}</div>
+          <div className="text-xs text-muted-foreground">{overall != null ? MATURITY_LABELS[Math.round(overall)] : "—"}</div>
+        </div>
+        <div><div className="text-[10px] uppercase text-muted-foreground">Compliance</div>
+          <div className="text-base font-medium mt-1">{complianceLabel(overall)}</div>
+        </div>
+        <div><div className="text-[10px] uppercase text-muted-foreground">Description</div>
+          <div className="text-xs text-muted-foreground mt-1">Average across all rated PRADAR control questions.</div>
+        </div>
+      </div>
+      <table className="w-full text-xs">
+        <thead className="border-b text-muted-foreground">
+          <tr>
+            <th className="text-left font-medium py-1.5">Privacy Domain</th>
+            <th className="text-left font-medium py-1.5 w-24">Avg Rating</th>
+            <th className="text-left font-medium py-1.5 w-44">Compliance</th>
+            <th className="text-left font-medium py-1.5 w-24">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {PRADAR_DOMAINS.map(d => {
+            const avg = domainAverage(d, pradar);
+            return (
+              <tr key={d} className="border-b last:border-0">
+                <td className="py-1.5">{d}</td>
+                <td className="py-1.5 font-mono">{avg != null ? avg.toFixed(2) : "—"}</td>
+                <td className="py-1.5">{complianceLabel(avg)}</td>
+                <td className="py-1.5 text-muted-foreground">{avg != null ? MATURITY_LABELS[Math.round(avg)] : "—"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </CardContent></Card>
+  );
+}
+
+function NoticeAnalyticsCard({ notices }: { notices: ReturnType<typeof loadNotices> }) {
+  const compliant = notices.filter(n => { const c = compliance(n); return c.total > 0 && c.complied === c.total; }).length;
+  const partial = notices.filter(n => { const c = compliance(n); return c.total > 0 && c.complied > 0 && c.complied < c.total; }).length;
+  const nonComp = notices.length - compliant - partial;
+  const data = [
+    { name: "Compliant", value: compliant, fill: "hsl(var(--success))" },
+    { name: "Partial", value: partial, fill: "hsl(var(--warning))" },
+    { name: "Non-compliant", value: nonComp, fill: "hsl(var(--destructive))" },
+  ];
+  return (
+    <Card><CardContent className="p-5">
+      <SectionHeader title="Privacy Notice Review" icon={FileSearch} to="/notice" />
+      {notices.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No privacy notices recorded yet.</p>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4 items-center">
+          <div className="h-48">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={40} outerRadius={75} paddingAngle={2}>
+                  {data.map(d => <Cell key={d.name} fill={d.fill} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+          <div className="space-y-1.5 text-xs">
+            {data.map(d => (
+              <div key={d.name} className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: d.fill }} />{d.name}</span>
+                <span className="font-mono">{d.value}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between border-t pt-1.5 font-semibold">
+              <span>Total</span><span className="font-mono">{notices.length}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </CardContent></Card>
+  );
+}
+
+function TsaAnalyticsCard({ stack }: { stack: ReturnType<typeof loadTechStackFull> }) {
+  // Group by domain: OFI (Not Implemented / Partial) vs Complied (Implemented)
+  const byDomain = new Map<string, { ofi: number; complied: number; na: number }>();
+  for (const s of stack) {
+    const r = byDomain.get(s.domain) || { ofi: 0, complied: 0, na: 0 };
+    if (s.status === "Implemented") r.complied++;
+    else if (s.status === "N/A") r.na++;
+    else r.ofi++;
+    byDomain.set(s.domain, r);
+  }
+  const rows = Array.from(byDomain.entries());
+  return (
+    <Card><CardContent className="p-5">
+      <SectionHeader title="Technical Security Assessment" icon={ShieldCheck} to="/tsa" />
+      <table className="w-full text-xs">
+        <thead className="border-b text-muted-foreground">
+          <tr>
+            <th className="text-left font-medium py-1.5">Domain</th>
+            <th className="text-left font-medium py-1.5 w-20">Complied</th>
+            <th className="text-left font-medium py-1.5 w-16">OFI</th>
+            <th className="text-left font-medium py-1.5 w-16">N/A</th>
+            <th className="text-left font-medium py-1.5 w-20">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([d, r]) => (
+            <tr key={d} className="border-b last:border-0">
+              <td className="py-1.5">{d}</td>
+              <td className="py-1.5 font-mono text-emerald-600">{r.complied}</td>
+              <td className="py-1.5 font-mono text-amber-600">{r.ofi}</td>
+              <td className="py-1.5 font-mono text-muted-foreground">{r.na}</td>
+              <td className="py-1.5 font-mono">{r.complied + r.ofi + r.na}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </CardContent></Card>
+  );
+}
+
+function InspectionAnalyticsCard({ insps }: { insps: ReturnType<typeof loadInspections> }) {
+  return (
+    <Card><CardContent className="p-5">
+      <SectionHeader title="Physical Inspection" icon={Building2} to="/inspection" />
+      {insps.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No inspections recorded yet.</p>
+      ) : (
+        <table className="w-full text-xs">
+          <thead className="border-b text-muted-foreground">
+            <tr>
+              <th className="text-left font-medium py-1.5">Department / Area</th>
+              <th className="text-left font-medium py-1.5 w-20">Complied</th>
+              <th className="text-left font-medium py-1.5 w-16">OFI</th>
+              <th className="text-left font-medium py-1.5 w-16">N/A</th>
+              <th className="text-left font-medium py-1.5 w-20">Open</th>
+            </tr>
+          </thead>
+          <tbody>
+            {insps.map(i => {
+              const yes = i.rows.filter(r => r.answer === "Yes").length;
+              const no = i.rows.filter(r => r.answer === "No").length;
+              const na = i.rows.filter(r => r.answer === "N/A").length;
+              const open = i.rows.filter(r => !r.answer).length;
+              return (
+                <tr key={i.id} className="border-b last:border-0">
+                  <td className="py-1.5">{i.departmentArea}</td>
+                  <td className="py-1.5 font-mono text-emerald-600">{yes}</td>
+                  <td className="py-1.5 font-mono text-amber-600">{no}</td>
+                  <td className="py-1.5 font-mono text-muted-foreground">{na}</td>
+                  <td className="py-1.5 font-mono">{open}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </CardContent></Card>
+  );
+}
+
+const MANUALS_FOR_ANALYTICS = [
+  { name: "Privacy Manual", status: "Completed" },
+  { name: "Data Security Policy", status: "Completed" },
+  { name: "Acceptable Use Policy", status: "Ongoing" },
+  { name: "Retention and Disposal Policy", status: "Not Started" },
+  { name: "Business Continuity Plan", status: "Ongoing" },
+  { name: "Access Control Policy", status: "Completed" },
+  { name: "CCTV Policy", status: "Completed" },
+];
+
+function ManualsAnalyticsCard() {
+  const counts = { Completed: 0, Ongoing: 0, "Not Started": 0 } as Record<string, number>;
+  MANUALS_FOR_ANALYTICS.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
+  return (
+    <Card><CardContent className="p-5">
+      <SectionHeader title="Manuals & Deliverables" icon={BookOpen} to="/manuals" />
+      <div className="grid grid-cols-3 gap-3 text-sm">
+        <Tile label="Completed" value={counts.Completed} tone="bg-emerald-100 text-emerald-700" />
+        <Tile label="Ongoing" value={counts.Ongoing} tone="bg-blue-100 text-blue-700" />
+        <Tile label="Not Started" value={counts["Not Started"]} tone="bg-slate-100 text-slate-600" />
+      </div>
+    </CardContent></Card>
+  );
+}
+
+function DrlAnalyticsCard({ drlByStatus, total }: { drlByStatus: { name: string; value: number }[]; total: number }) {
+  return (
+    <Card><CardContent className="p-5">
+      <SectionHeader title="DRL / IRL" icon={ListChecks} to="/drl" />
+      {total === 0 ? (
+        <p className="text-xs text-muted-foreground">No DRL items recorded yet.</p>
+      ) : (
+        <div className="h-56">
+          <ResponsiveContainer>
+            <BarChart data={drlByStatus}>
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="value" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </CardContent></Card>
+  );
+}
+
+function Tile({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div className="border rounded-md p-3">
+      <div className={`inline-block text-[10px] px-1.5 py-0.5 rounded ${tone}`}>{label}</div>
+      <div className="text-2xl font-semibold tabular-nums mt-1">{value}</div>
+    </div>
   );
 }
