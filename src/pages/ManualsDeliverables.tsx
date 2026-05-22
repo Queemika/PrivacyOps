@@ -14,6 +14,7 @@ import { loadPias } from "@/lib/pia/store";
 import { loadDrl } from "@/lib/drl/store";
 import { loadNotices } from "@/lib/privacyNotice/store";
 import { loadInspections } from "@/lib/inspections/store";
+import { ReferencesPanel } from "@/components/ReferencesPanel";
 import { toast } from "sonner";
 import { Save, RotateCcw, BookOpen, Download, ChevronDown, FileText, FileSpreadsheet, ExternalLink } from "lucide-react";
 
@@ -44,7 +45,7 @@ export default function ManualsDeliverables() {
       </> : null}
     >
       <SectionTabs
-        tabs={[{ id: "manuals", label: "Manuals" }, { id: "outputs", label: "Outputs" }]}
+        tabs={[{ id: "manuals", label: "Manuals" }, { id: "outputs", label: "Outputs" }, { id: "refs", label: "References" }]}
         value={tab} onChange={setTab}
       />
 
@@ -75,6 +76,7 @@ export default function ManualsDeliverables() {
       )}
 
       {tab === "outputs" && <OutputsTab />}
+      {tab === "refs" && <ReferencesPanel moduleId="manuals" title="Manuals & Outputs References" />}
     </PageShell>
   );
 }
