@@ -109,6 +109,42 @@ function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
     a.click();
   };
 
+  const exportXLSX = (kind: Kind) => {
+    const fields = kind === "ropa" ? ROPA_FIELDS : NPC_FIELDS;
+    const include = kind === "ropa" ? includeRopa : includeNpc;
+    const rows = fields.filter(f => include[f.key]).map(f => ({ Field: f.label, Value: resolveValue(pia, f.key, kind) }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 50 }, { wch: 80 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, kind.toUpperCase());
+    XLSX.writeFile(wb, `${kind.toUpperCase()}_${pia.title.replace(/\s+/g, "_")}.xlsx`);
+    toast.success(`${kind.toUpperCase()} .xlsx exported`);
+  };
+
+  const exportPDF = (kind: Kind) => {
+    const fields = kind === "ropa" ? ROPA_FIELDS : NPC_FIELDS;
+    const include = kind === "ropa" ? includeRopa : includeNpc;
+    const rows = fields.filter(f => include[f.key]).map(f => ({ label: f.label, value: resolveValue(pia, f.key, kind) }));
+    const title = `${kind.toUpperCase()} — ${pia.title}`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+      <style>
+        body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:12px;color:#111;margin:32px}
+        h1{font-size:18px;margin:0 0 4px}.meta{color:#666;font-size:11px;margin-bottom:16px}
+        table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
+        th{background:#f3f4f6;width:34%}tr:nth-child(even){background:#fafafa}
+        @media print{button{display:none}}
+      </style></head><body>
+      <h1>${title}</h1>
+      <div class="meta">Engagement ${pia.engagementId} · PIA ${pia.id} · Generated ${new Date().toLocaleString()}</div>
+      <button onclick="window.print()" style="margin-bottom:12px;padding:6px 12px">Print / Save as PDF</button>
+      <table><tbody>
+        ${rows.map(r => `<tr><th>${r.label}</th><td>${(r.value||"").replace(/</g,"&lt;").replace(/\n/g,"<br>")}</td></tr>`).join("")}
+      </tbody></table>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
+  };
+
   return (
     <>
       <PageHeader
