@@ -43,7 +43,7 @@ export default function RopaGenerator() {
       )}
       <Tabs defaultValue="ropa">
         <TabsList>
-          <TabsTrigger value="ropa">COMPILATION</TabsTrigger>
+          <TabsTrigger value="ropa">RoPA</TabsTrigger>
           <TabsTrigger value="npc">NPC-RS</TabsTrigger>
         </TabsList>
         <TabsContent value="ropa">
