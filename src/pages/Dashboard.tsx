@@ -21,7 +21,7 @@ const quickActions = [
   { to: "/library", icon: Library, title: "PIA Library", desc: "View and manage all PIAs" },
   { to: "/compile", icon: FolderPlus, title: "Compilation Builder", desc: "Build Compilation & NPC-RS" },
   { to: "/drl", icon: FileCog, title: "DRL / IRL Generator", desc: "Generate document requests" },
-  { to: "/pradar", icon: ShieldCheck, title: "PRADAR", desc: "Compliance assessment" },
+  { to: "/pradar", icon: ShieldCheck, title: "PRADAR (5-in-1)", desc: "Compliance assessment" },
   { to: "/email", icon: Mail, title: "Email Generator", desc: "Create follow-up emails" },
 ];
 

@@ -15,7 +15,7 @@ import { loadTooltipOverrides, saveTooltipOverrides, defaultTooltips } from "@/l
 
 const ROLES = ["Intern", "Preparer/Associate", "Lead/Supervisor", "Approver/Manager"];
 const TABLES = [
-  { id: "pradar", label: "PRADAR — Working File" },
+  { id: "pradar", label: "PRADAR (5-in-1) — Working File" },
   { id: "drl", label: "DRL / IRL columns" },
   { id: "inspection", label: "Physical Inspection — Checklist" },
   { id: "notice", label: "Privacy Notice — Assessment" },
@@ -133,7 +133,7 @@ export default function Settings() {
                         <SelectContent>
                           <SelectItem value="/">Dashboard</SelectItem>
                           <SelectItem value="/library">PIA Library</SelectItem>
-                          <SelectItem value="/pradar">PRADAR</SelectItem>
+                          <SelectItem value="/pradar">PRADAR (5-in-1)</SelectItem>
                           <SelectItem value="/drl">DRL / IRL</SelectItem>
                           <SelectItem value="/analytics">Analytics</SelectItem>
                         </SelectContent>

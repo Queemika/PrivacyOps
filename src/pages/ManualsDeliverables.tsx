@@ -142,12 +142,12 @@ function OutputsTab() {
       rows: pias.map(p => ({ name: p.title, type: p.type, status: "Saved", updated: new Date(p.updatedAt).toLocaleDateString(), version: "v1", link: `/pia/${p.id}` })),
     },
     {
-      label: "Compilation / NPC-RS", route: "/ropa",
+      label: "Compilation", route: "/ropa",
       rows: [{ name: "ROPA Compilation", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" },
-             { name: "NPC-RS Compilation", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" }],
+             { name: "Records of Processing Activities (RoPA)", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" }],
     },
     {
-      label: "PRADAR", route: "/pradar",
+      label: "PRADAR (5-in-1)", route: "/pradar",
       rows: [{ name: "PRADAR Scoreboard", type: "Assessment", status: "Live", updated: new Date().toLocaleDateString(), version: "v1", link: "/pradar" }],
     },
     {
@@ -181,13 +181,15 @@ function OutputsTab() {
         <Collapsible key={g.label} defaultOpen>
           <Card>
             <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-3 flex items-center justify-between border-b">
-                <div className="flex items-center gap-2">
-                  <ChevronDown className="h-4 w-4" />
-                  <span className="font-semibold text-sm">{g.label}</span>
-                  <span className="text-xs text-muted-foreground">({g.rows.length})</span>
+              <div className="px-4 py-3 flex flex-col items-start gap-1 border-b">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <ChevronDown className="h-4 w-4" />
+                    <span className="font-semibold text-sm">{g.label}</span>
+                    <span className="text-xs text-muted-foreground">({g.rows.length})</span>
+                  </div>
                 </div>
-                <Link to={g.route} className="text-xs text-accent hover:underline">Open module →</Link>
+                <Link to={g.route} className="text-[11px] text-accent hover:underline ml-6">Open module →</Link>
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>

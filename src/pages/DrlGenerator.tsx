@@ -70,7 +70,7 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
   ],
   actions: [
     { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
-    { key: "tag", label: "Tag", width: 130, visible: true, kind: "select", options: ["PIA", "PRADAR", "TSA", "Privacy Notice", "Other"] },
+    { key: "tag", label: "Tag", width: 130, visible: true, kind: "select", options: ["PIA", "PRADAR (5-in-1)", "TSA", "Privacy Notice", "Other"] },
     { key: "item", label: "Action / Request", width: 280, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
@@ -106,7 +106,7 @@ export default function DrlGenerator() {
   const refresh = () => setRows(loadDrl());
 
   return (
-    <PageShell title="DRL / IRL" subtitle="Document and inquiry request lists across Tech Security, PRADAR, PIA, Privacy Notice, and Action Items.">
+    <PageShell title="DRL / IRL" subtitle="Document and inquiry request lists across Tech Security, PRADAR (5-in-1), PIA, Privacy Notice, and Action Items.">
       <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="tsa">Tech Security</TabsTrigger>

@@ -22,7 +22,7 @@ const items: Item[] = [
   { title: "PIA", url: "/library", icon: Library },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "DRL / IRL", url: "/drl", icon: ListChecks },
-  { title: "PRADAR", url: "/pradar", icon: Shield },
+  { title: "PRADAR (5-in-1)", url: "/pradar", icon: Shield },
   { title: "Tech Security", url: "/tsa", icon: Lock },
   { title: "Physical Inspection", url: "/inspection", icon: Camera },
   { title: "Privacy Notice", url: "/notice", icon: Eye },

@@ -11,7 +11,7 @@ export const MODULES: ModuleEntry[] = [
   { path: "/library",     title: "PIA" },
   { path: "/analytics",   title: "Analytics" },
   { path: "/drl",         title: "DRL / IRL" },
-  { path: "/pradar",      title: "PRADAR" },
+  { path: "/pradar",      title: "PRADAR (5-in-1)" },
   { path: "/tsa",         title: "Tech Security" },
   { path: "/inspection",  title: "Physical Inspection" },
   { path: "/notice",      title: "Privacy Notice" },
