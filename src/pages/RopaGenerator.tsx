@@ -166,6 +166,7 @@ function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
             kind="ropa" pia={pia} fields={ROPA_FIELDS}
             include={includeRopa} setInclude={setIncludeRopa}
             setOverride={setOverride} onExport={exportCSV} onExportJson={exportJSON}
+            onExportXlsx={exportXLSX} onExportPdf={exportPDF}
           />
         </TabsContent>
         <TabsContent value="npc">
@@ -173,6 +174,7 @@ function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
             kind="npc" pia={pia} fields={NPC_FIELDS}
             include={includeNpc} setInclude={setIncludeNpc}
             setOverride={setOverride} onExport={exportCSV} onExportJson={exportJSON}
+            onExportXlsx={exportXLSX} onExportPdf={exportPDF}
           />
         </TabsContent>
       </Tabs>
