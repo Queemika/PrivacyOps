@@ -212,6 +212,40 @@ export default function PradarChecklist() {
                   <CardContent className="p-0 divide-y">
                     {items.map(item => {
                       const e = entryFor(entries, item.id);
+                      const basisItems = parseBasis(item.basis);
+                      const checks = e.basisChecks || {};
+                      const autoScore = scoreFromChecks(checks, basisItems.length);
+                      const effectiveRating = e.rating ?? autoScore;
+
+                      const linkToDrl = () => {
+                        if (e.drlRowId) {
+                          updateDrlRow(e.drlRowId, {
+                            fields: {
+                              control: item.controlQuestion,
+                              proof: item.proof,
+                              gap: e.gap,
+                              actionItem: e.actionPlan,
+                              responsibleParty: e.responsibleParty || "",
+                              timeline: e.timeline || "",
+                            },
+                          });
+                          toast.success(`Updated DRL row for #${item.drlNo}`);
+                        } else {
+                          const row = addDrlRow("pradar", {
+                            fields: {
+                              control: item.controlQuestion,
+                              proof: item.proof,
+                              gap: e.gap,
+                              actionItem: e.actionPlan,
+                              responsibleParty: e.responsibleParty || "",
+                              timeline: e.timeline || "",
+                            },
+                          });
+                          update(item.id, { drlRowId: row.id });
+                          toast.success(`Created DRL row for #${item.drlNo}`);
+                        }
+                      };
+
                       return (
                         <div key={item.id} className="p-4 hover:bg-muted/10">
                           <div className="flex items-start gap-3 mb-3">
@@ -238,8 +272,8 @@ export default function PradarChecklist() {
                             </div>
                           </div>
 
-                          {/* Rating */}
-                          <div className="flex items-center gap-2 mb-3">
+                          {/* Rating with auto-score badge */}
+                          <div className="flex items-center gap-2 mb-3 flex-wrap">
                             <span className="text-xs text-muted-foreground w-20">Rating</span>
                             <div className="flex items-center gap-1">
                               {RATING_OPTIONS.map(r => (
@@ -248,7 +282,7 @@ export default function PradarChecklist() {
                                     <button
                                       onClick={() => update(item.id, { rating: e.rating === r ? null : r })}
                                       className={`text-[11px] px-2.5 py-1 rounded border transition ${
-                                        e.rating === r ? ratingTone(r) + " border-transparent" : "bg-background hover:bg-muted"
+                                        effectiveRating === r ? ratingTone(r) + " border-transparent" : "bg-background hover:bg-muted"
                                       }`}
                                     >
                                       {r} · {RATING_LABELS[r]}
@@ -260,10 +294,46 @@ export default function PradarChecklist() {
                                 </Popover>
                               ))}
                             </div>
-                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7">
-                              <Sparkles className="mr-1 h-3 w-3" />AI suggest
+                            {autoScore != null && e.rating == null && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="secondary" className="text-[10px]">Auto: {autoScore}</Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm text-xs">{SCORE_FORMULA_HELP}</TooltipContent>
+                              </Tooltip>
+                            )}
+                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7" onClick={linkToDrl}>
+                              <Link2 className="mr-1 h-3 w-3" />{e.drlRowId ? "Sync DRL" : "Add to DRL"}
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-xs h-7">
+                              <Sparkles className="mr-1 h-3 w-3" />AI assist
                             </Button>
                           </div>
+
+                          {/* Basis / minimum requirements checklist */}
+                          {basisItems.length > 0 && (
+                            <div className="mb-3 rounded border bg-muted/20 p-3">
+                              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
+                                Basis / Minimum Requirements ({Object.values(checks).filter(Boolean).length}/{basisItems.length})
+                              </div>
+                              <div className="space-y-1.5">
+                                {basisItems.map(b => (
+                                  <label key={b.index} className="flex items-start gap-2 text-xs cursor-pointer">
+                                    <Checkbox
+                                      checked={!!checks[b.index]}
+                                      onCheckedChange={(v) =>
+                                        update(item.id, {
+                                          basisChecks: { ...checks, [b.index]: !!v },
+                                        })
+                                      }
+                                      className="mt-0.5"
+                                    />
+                                    <span className="leading-snug">{b.text}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Core inputs */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
@@ -278,13 +348,31 @@ export default function PradarChecklist() {
                               />
                             </div>
                             <div>
-                              <label className="text-[11px] text-muted-foreground">Action Plan</label>
+                              <label className="text-[11px] text-muted-foreground">Action Item</label>
                               <Textarea
                                 rows={2}
                                 value={e.actionPlan}
                                 onChange={ev => update(item.id, { actionPlan: ev.target.value })}
-                                placeholder="Action: …\nResponsible: …\nTimeline: …"
+                                placeholder="What needs to be done…"
                                 className="text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] text-muted-foreground">Responsible Party</label>
+                              <Input
+                                value={e.responsibleParty || ""}
+                                onChange={ev => update(item.id, { responsibleParty: ev.target.value })}
+                                placeholder="Owner / team"
+                                className="text-xs h-8"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] text-muted-foreground">Timeline</label>
+                              <Input
+                                value={e.timeline || ""}
+                                onChange={ev => update(item.id, { timeline: ev.target.value })}
+                                placeholder="e.g. Q3 2026 or 30 days"
+                                className="text-xs h-8"
                               />
                             </div>
                             <div className="md:col-span-2">
@@ -297,6 +385,7 @@ export default function PradarChecklist() {
                               />
                             </div>
                           </div>
+
 
                           {/* Internal mode */}
                           {showInternal && (
