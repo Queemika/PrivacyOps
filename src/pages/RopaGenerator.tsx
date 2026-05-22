@@ -193,7 +193,7 @@ function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
 }
 
 function FieldTable({
-  kind, pia, fields, include, setInclude, setOverride, onExport, onExportJson,
+  kind, pia, fields, include, setInclude, setOverride, onExport, onExportJson, onExportXlsx, onExportPdf,
 }: {
   kind: Kind;
   pia: Pia;
@@ -203,20 +203,20 @@ function FieldTable({
   setOverride: (kind: Kind, key: string, val: string | null) => void;
   onExport: (kind: Kind) => void;
   onExportJson: (kind: Kind) => void;
+  onExportXlsx: (kind: Kind) => void;
+  onExportPdf: (kind: Kind) => void;
 }) {
   const overrides = kind === "ropa" ? pia.ropaOverrides || {} : pia.npcOverrides || {};
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="px-4 py-2.5 border-b bg-accent/5 flex items-center justify-between">
+        <div className="px-4 py-2.5 border-b bg-accent/5 flex items-center justify-between flex-wrap gap-2">
           <h3 className="text-sm font-semibold">{kind === "ropa" ? "ROPA Output Fields" : "NPC-RS Output Fields"}</h3>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => onExportJson(kind)}>
-              <Download className="h-3.5 w-3.5 mr-1" />JSON
-            </Button>
-            <Button size="sm" onClick={() => onExport(kind)}>
-              <Download className="h-3.5 w-3.5 mr-1" />Export CSV
-            </Button>
+            <Button size="sm" variant="outline" onClick={() => onExportJson(kind)}><Download className="h-3.5 w-3.5 mr-1" />JSON</Button>
+            <Button size="sm" variant="outline" onClick={() => onExport(kind)}><Download className="h-3.5 w-3.5 mr-1" />CSV</Button>
+            <Button size="sm" variant="outline" onClick={() => onExportPdf(kind)}><FileTextIcon className="h-3.5 w-3.5 mr-1" />PDF</Button>
+            <Button size="sm" onClick={() => onExportXlsx(kind)}><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Excel</Button>
           </div>
         </div>
         <table className="w-full text-sm">
