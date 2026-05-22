@@ -81,9 +81,9 @@ export default function Upload() {
         createdAt: new Date().toISOString(),
       };
       persistUpload(rec);
-      addTeamUpload({ id, fileName: name, uploader: user?.name || "You", tags: [] });
+      addTeamUpload({ id, fileName: name, uploader: `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "You", tags: [] });
 
-      const owner = user?.name || "You";
+      const owner = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "You";
       addActions([
         { source: "Transcript", sourceRef: id, text: "Provide updated DSA with payroll vendor", owner: "HR Lead", deadline: "" },
         { source: "Transcript", sourceRef: id, text: "Share SCC for cross-border BG-check provider", owner: "Legal", deadline: "" },
@@ -286,7 +286,7 @@ function PipelineMultiSelect({ uploadId, onLink }: { uploadId: string; onLink: (
     { id: "drl", tag: "DRL", title: "Create DRL items", desc: "Open document requests from action items.", run: () => { tagTeamUpload(uploadId, "DRL"); toast.success("3 DRL items created"); } },
     { id: "email", tag: "Email", title: "Draft follow-up email", desc: "Pre-fill an email with assigned action items.", run: () => {
         tagTeamUpload(uploadId, "Email");
-        addTodos([{ text: `Send follow-up email for ${uploadId}`, source: "Email", sourceRef: uploadId, owner: user?.name || "You" }]);
+        addTodos([{ text: `Send follow-up email for ${uploadId}`, source: "Email", sourceRef: uploadId, owner: `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "You" }]);
         toast.success("Follow-up email drafted; to-do added");
       } },
   ];
