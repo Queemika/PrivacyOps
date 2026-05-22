@@ -163,27 +163,21 @@ export default function Settings() {
             <div className="flex items-center gap-2 text-sm font-semibold"><MessageSquare className="h-4 w-4" /> Tooltips</div>
             <div className="flex items-center gap-2">
               <Label className="text-xs">Globally enabled</Label>
-              <Switch checked={!!tooltipCfg.enabled} onCheckedChange={(c) => saveTooltips({ ...tooltipCfg, enabled: c })} />
+              <Switch checked={tooltipsEnabled} onCheckedChange={toggleTooltips} />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Add, edit or remove tooltips that appear across modules.</p>
-          <div className="space-y-2">
-            {(tooltipCfg.items || []).map((t: any, i: number) => (
-              <div key={i} className="flex gap-2 items-start">
-                <Input className="h-8 text-xs flex-1" placeholder="Where (module/key)" value={t.key} onChange={(e) => {
-                  const next = { ...tooltipCfg }; next.items[i] = { ...t, key: e.target.value }; saveTooltips(next);
-                }} />
-                <Input className="h-8 text-xs flex-[2]" placeholder="Tooltip text" value={t.text} onChange={(e) => {
-                  const next = { ...tooltipCfg }; next.items[i] = { ...t, text: e.target.value }; saveTooltips(next);
-                }} />
-                <Button size="sm" variant="ghost" onClick={() => {
-                  const next = { ...tooltipCfg, items: tooltipCfg.items.filter((_: any, j: number) => j !== i) }; saveTooltips(next);
-                }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+          <p className="text-xs text-muted-foreground">Override default tooltip text. Empty = use built-in.</p>
+          <div className="space-y-1.5 max-h-96 overflow-auto">
+            {Object.keys(defaultTooltips).map((k) => (
+              <div key={k} className="flex gap-2 items-center">
+                <span className="text-[11px] font-mono w-44 truncate text-muted-foreground">{k}</span>
+                <Input className="h-8 text-xs flex-1" placeholder={defaultTooltips[k]}
+                  value={tooltipOverrides[k] ?? ""} onChange={(e) => updateOverride(k, e.target.value)} />
+                {tooltipOverrides[k] !== undefined && (
+                  <Button size="sm" variant="ghost" onClick={() => removeOverride(k)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                )}
               </div>
             ))}
-            <Button size="sm" variant="outline" onClick={() => saveTooltips({ ...tooltipCfg, items: [...(tooltipCfg.items || []), { key: "", text: "" }] })}>
-              + Add tooltip
-            </Button>
           </div>
           <Button asChild variant="ghost" size="sm"><Link to="/admin/tooltips">Open full tooltip configurator →</Link></Button>
         </CardContent></Card>
