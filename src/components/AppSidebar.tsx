@@ -1,12 +1,13 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Upload, Library, Layers, BarChart3, ListChecks,
+  LayoutDashboard, Upload, Library, BarChart3, ListChecks,
   Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { ensureSeedEngagement, loadEngagements, getActiveEngagementId } from "@/lib/pia/store";
+import { isPathVisible, getViewAsRole, setViewAsRole } from "@/lib/admin/roleVisibility";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -18,8 +19,7 @@ type Item = { title: string; url: string; icon: any };
 const items: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Transcript", url: "/upload", icon: Upload },
-  { title: "PIA Library", url: "/library", icon: Library },
-  { title: "ROPA / NPC-RS", url: "/ropa", icon: Layers },
+  { title: "PIA", url: "/library", icon: Library },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "DRL / IRL", url: "/drl", icon: ListChecks },
   { title: "PRADAR", url: "/pradar", icon: Shield },
@@ -38,6 +38,8 @@ export function AppSidebar() {
   const nav = useNavigate();
   const initials = user ? (user.firstName[0] + user.lastName[0]).toUpperCase() : "U";
   const [client, setClient] = useState<string>("");
+  const [viewAs, setViewAs] = useState(getViewAsRole());
+  const [, force] = useState(0);
 
   useEffect(() => {
     try {
@@ -54,11 +56,14 @@ export function AppSidebar() {
         if (e) setClient(e.clientName);
       } catch { /* noop */ }
     };
+    const onVis = () => { setViewAs(getViewAsRole()); force(n => n + 1); };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("pa:visibility-change", onVis);
+    return () => { window.removeEventListener("storage", onStorage); window.removeEventListener("pa:visibility-change", onVis); };
   }, [pathname]);
 
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
+  const visibleItems = items.filter(i => isPathVisible(i.url));
 
   return (
     <aside className="w-[240px] shrink-0 h-screen sticky top-0 z-40 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -75,8 +80,15 @@ export function AppSidebar() {
 
       <div className="h-px bg-sidebar-border mx-3" />
 
+      {viewAs && (
+        <div className="mx-3 my-2 text-[10px] rounded-md border border-warning/40 bg-warning/10 text-warning-foreground px-2 py-1.5 flex items-center justify-between">
+          <span>Viewing as <b>{viewAs}</b></span>
+          <button onClick={() => { setViewAsRole(null); setViewAs(null); }} className="underline hover:no-underline">Clear</button>
+        </div>
+      )}
+
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const on = isActive(item.url);
           return (
@@ -96,6 +108,7 @@ export function AppSidebar() {
           );
         })}
       </nav>
+
 
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
         <NavLink to="/settings" className="w-full flex items-center gap-2.5 px-2.5 h-9 rounded-md text-[13px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all">

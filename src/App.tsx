@@ -31,7 +31,8 @@ import AnalyticsHub from "./pages/AnalyticsHub";
 import ManualsDeliverables from "./pages/ManualsDeliverables";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
-import TooltipConfigurator from "./pages/admin/TooltipConfigurator";
+import TooltipManager from "./pages/admin/TooltipManager";
+import ViewAsSettings from "./pages/admin/ViewAsSettings";
 import ResetData from "./pages/admin/ResetData";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -73,7 +74,8 @@ const App = () => (
                 <Route path="/manuals" element={<ManualsDeliverables />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
-                <Route path="/admin/tooltips" element={<TooltipConfigurator />} />
+                <Route path="/admin/tooltips" element={<TooltipManager />} />
+                <Route path="/admin/view-as" element={<ViewAsSettings />} />
                 <Route path="/admin/reset" element={<ResetData />} />
               </Route>
               <Route path="*" element={<NotFound />} />

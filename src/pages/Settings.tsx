@@ -206,8 +206,9 @@ export default function Settings() {
       {tab === "admin" && isAdmin && (
         <Card><CardContent className="p-6 space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> Admin tools</div>
-          <div className="grid md:grid-cols-3 gap-3">
-            <Button asChild variant="outline"><Link to="/admin/tooltips">Tooltip configurator</Link></Button>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Button asChild variant="outline"><Link to="/admin/view-as">View As — Role visibility</Link></Button>
+            <Button asChild variant="outline"><Link to="/admin/tooltips">Tooltip Manager</Link></Button>
             <Button asChild variant="outline"><Link to="/admin/reset">Reset data</Link></Button>
             <Button asChild variant="outline"><Link to="/audit">Audit log</Link></Button>
           </div>
