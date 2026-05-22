@@ -29,6 +29,10 @@ import PrivacyNoticeReview from "./pages/PrivacyNoticeReview";
 import TechnicalSecurityAssessment from "./pages/TechnicalSecurityAssessment";
 import AnalyticsHub from "./pages/AnalyticsHub";
 import ManualsDeliverables from "./pages/ManualsDeliverables";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help";
+import TooltipConfigurator from "./pages/admin/TooltipConfigurator";
+import ResetData from "./pages/admin/ResetData";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
