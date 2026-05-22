@@ -1,17 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
+import { PageShell } from "@/components/ui/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Pia } from "@/lib/pia/schema";
-import { getPia, upsertPia, loadPias } from "@/lib/pia/store";
-import { ROPA_FIELDS, NPC_FIELDS, FieldDef, resolveValue, deriveFieldValue, toCSV } from "@/lib/pia/ropaMap";
-import { Download, RotateCcw, FileText, ArrowLeft, Mail, ShieldAlert, BookOpen, FileSpreadsheet, FileText as FileTextIcon } from "lucide-react";
+import { loadPias } from "@/lib/pia/store";
+import { resolveValue } from "@/lib/pia/ropaMap";
+import { loadCols, saveCols, resetCols, RopaColumnConfig } from "@/lib/ropaCompilation";
+import { Download, FileSpreadsheet, FileText, RotateCcw, Settings2, ExternalLink, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { RelatedLinks } from "@/components/RelatedLinks";
 import * as XLSX from "xlsx";
 
 type Kind = "ropa" | "npc";
@@ -19,248 +20,225 @@ type Kind = "ropa" | "npc";
 export default function RopaGenerator() {
   const { piaId } = useParams();
   const navigate = useNavigate();
-  const [pia, setPia] = useState<Pia | null>(null);
-  const [allPias, setAllPias] = useState<Pia[]>([]);
+  const [pias, setPias] = useState<Pia[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setAllPias(loadPias());
-    if (piaId) {
-      const p = getPia(piaId);
-      if (p) setPia(p);
-    }
-  }, [piaId]);
-
-  // Library view
-  if (!piaId) {
-    return (
-      <>
-        <PageHeader title="ROPA & NPC-RS Generator" description="Generate regulatory outputs from PIA Phase 2 data." />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {allPias.length === 0 && (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground">No PIAs found. Create one first.</CardContent></Card>
-          )}
-          {allPias.map(p => (
-            <Card key={p.id} className="cursor-pointer hover:border-accent" onClick={() => navigate(`/ropa/${p.id}`)}>
-              <CardContent className="p-4 flex items-start justify-between">
-                <div>
-                  <div className="font-semibold text-sm">{p.title}</div>
-                  <div className="text-xs text-muted-foreground">{p.id} · {p.type} · {p.scope}</div>
-                </div>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </>
-    );
-  }
-
-  if (!pia) return null;
-
-  return <RopaEditor pia={pia} setPia={setPia} />;
-}
-
-function RopaEditor({ pia, setPia }: { pia: Pia; setPia: (p: Pia) => void }) {
-  // Track which fields to include in export per kind
-  const [includeRopa, setIncludeRopa] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(ROPA_FIELDS.map(f => [f.key, true]))
-  );
-  const [includeNpc, setIncludeNpc] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(NPC_FIELDS.map(f => [f.key, true]))
-  );
-
-  useEffect(() => {
-    const t = setTimeout(() => upsertPia(pia), 500);
-    return () => clearTimeout(t);
-  }, [pia]);
-
-  const setOverride = (kind: Kind, key: string, val: string | null) => {
-    const field = kind === "ropa" ? "ropaOverrides" : "npcOverrides";
-    const obj = { ...(pia[field] || {}) };
-    if (val == null) delete obj[key]; else obj[key] = val;
-    setPia({ ...pia, [field]: obj });
-  };
-
-  const exportCSV = (kind: Kind) => {
-    const fields = kind === "ropa" ? ROPA_FIELDS : NPC_FIELDS;
-    const include = kind === "ropa" ? includeRopa : includeNpc;
-    const rows = fields.filter(f => include[f.key]).map(f => ({ label: f.label, value: resolveValue(pia, f.key, kind) }));
-    const csv = `Field,Value\n${toCSV(rows)}\n\n# Traceability\nEngagement,${pia.engagementId}\nPIA,${pia.id}\nDPS,${pia.phase2.dpsName}`;
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${kind.toUpperCase()}_${pia.title.replace(/\s+/g, "_")}.csv`;
-    a.click();
-    toast.success(`${kind.toUpperCase()} exported`);
-  };
-
-  const exportJSON = (kind: Kind) => {
-    const fields = kind === "ropa" ? ROPA_FIELDS : NPC_FIELDS;
-    const include = kind === "ropa" ? includeRopa : includeNpc;
-    const data = {
-      kind, engagement: pia.engagementId, pia: pia.id, dps: pia.phase2.dpsName,
-      generated: new Date().toISOString(),
-      fields: fields.filter(f => include[f.key]).map(f => ({ key: f.key, label: f.label, value: resolveValue(pia, f.key, kind) })),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${kind.toUpperCase()}_${pia.title.replace(/\s+/g, "_")}.json`;
-    a.click();
-  };
-
-  const exportXLSX = (kind: Kind) => {
-    const fields = kind === "ropa" ? ROPA_FIELDS : NPC_FIELDS;
-    const include = kind === "ropa" ? includeRopa : includeNpc;
-    const rows = fields.filter(f => include[f.key]).map(f => ({ Field: f.label, Value: resolveValue(pia, f.key, kind) }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 50 }, { wch: 80 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, kind.toUpperCase());
-    XLSX.writeFile(wb, `${kind.toUpperCase()}_${pia.title.replace(/\s+/g, "_")}.xlsx`);
-    toast.success(`${kind.toUpperCase()} .xlsx exported`);
-  };
-
-  const exportPDF = (kind: Kind) => {
-    const fields = kind === "ropa" ? ROPA_FIELDS : NPC_FIELDS;
-    const include = kind === "ropa" ? includeRopa : includeNpc;
-    const rows = fields.filter(f => include[f.key]).map(f => ({ label: f.label, value: resolveValue(pia, f.key, kind) }));
-    const title = `${kind.toUpperCase()} — ${pia.title}`;
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
-      <style>
-        body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:12px;color:#111;margin:32px}
-        h1{font-size:18px;margin:0 0 4px}.meta{color:#666;font-size:11px;margin-bottom:16px}
-        table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
-        th{background:#f3f4f6;width:34%}tr:nth-child(even){background:#fafafa}
-        @media print{button{display:none}}
-      </style></head><body>
-      <h1>${title}</h1>
-      <div class="meta">Engagement ${pia.engagementId} · PIA ${pia.id} · Generated ${new Date().toLocaleString()}</div>
-      <button onclick="window.print()" style="margin-bottom:12px;padding:6px 12px">Print / Save as PDF</button>
-      <table><tbody>
-        ${rows.map(r => `<tr><th>${r.label}</th><td>${(r.value||"").replace(/</g,"&lt;").replace(/\n/g,"<br>")}</td></tr>`).join("")}
-      </tbody></table>
-      </body></html>`;
-    const w = window.open("", "_blank");
-    if (w) { w.document.write(html); w.document.close(); }
-  };
+    const all = loadPias();
+    setPias(all);
+    setSelected(new Set(all.map(p => p.id)));
+  }, []);
 
   return (
-    <>
-      <PageHeader
-        title={`${pia.title} — ROPA / NPC-RS`}
-        description={`Generated from Phase 2 data. Engagement ${pia.engagementId} · PIA ${pia.id}`}
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <a href={`/pia/${pia.id}`}><ArrowLeft className="h-3.5 w-3.5 mr-1" />Back to PIA</a>
-          </Button>
-        }
-      />
+    <PageShell
+      title="ROPA & NPC-RS — Compilation"
+      subtitle="Live compilation across all PIAs. Edit headers and column widths here; edit values in their source PIA."
+    >
+      {piaId && (
+        <div className="text-xs text-muted-foreground -mt-2">
+          Filtered focus on PIA {piaId}. <button className="underline" onClick={() => navigate("/ropa")}>Clear</button>
+        </div>
+      )}
       <Tabs defaultValue="ropa">
         <TabsList>
           <TabsTrigger value="ropa">ROPA</TabsTrigger>
           <TabsTrigger value="npc">NPC-RS</TabsTrigger>
         </TabsList>
         <TabsContent value="ropa">
-          <FieldTable
-            kind="ropa" pia={pia} fields={ROPA_FIELDS}
-            include={includeRopa} setInclude={setIncludeRopa}
-            setOverride={setOverride} onExport={exportCSV} onExportJson={exportJSON}
-            onExportXlsx={exportXLSX} onExportPdf={exportPDF}
-          />
+          <CompilationTable kind="ropa" pias={pias} selected={selected} setSelected={setSelected} focusPiaId={piaId} />
         </TabsContent>
         <TabsContent value="npc">
-          <FieldTable
-            kind="npc" pia={pia} fields={NPC_FIELDS}
-            include={includeNpc} setInclude={setIncludeNpc}
-            setOverride={setOverride} onExport={exportCSV} onExportJson={exportJSON}
-            onExportXlsx={exportXLSX} onExportPdf={exportPDF}
-          />
+          <CompilationTable kind="npc" pias={pias} selected={selected} setSelected={setSelected} focusPiaId={piaId} />
         </TabsContent>
       </Tabs>
-      <RelatedLinks
-        title="Related"
-        links={[
-          { to: `/pia/${pia.id}`, label: "Source PIA", icon: FileText },
-          { to: `/drl?piaId=${pia.id}`, label: "DRL items", icon: ShieldAlert },
-          { to: `/email?source=ropa&refId=${pia.id}`, label: "Email this output", icon: Mail },
-          { to: `/summary?piaId=${pia.id}`, label: "Executive Summary", icon: BookOpen },
-          { to: `/library`, label: "PIA Library", icon: FileText },
-        ]}
-      />
-    </>
+    </PageShell>
   );
 }
 
-function FieldTable({
-  kind, pia, fields, include, setInclude, setOverride, onExport, onExportJson, onExportXlsx, onExportPdf,
+function CompilationTable({
+  kind, pias, selected, setSelected, focusPiaId,
 }: {
-  kind: Kind;
-  pia: Pia;
-  fields: FieldDef[];
-  include: Record<string, boolean>;
-  setInclude: (v: Record<string, boolean>) => void;
-  setOverride: (kind: Kind, key: string, val: string | null) => void;
-  onExport: (kind: Kind) => void;
-  onExportJson: (kind: Kind) => void;
-  onExportXlsx: (kind: Kind) => void;
-  onExportPdf: (kind: Kind) => void;
+  kind: Kind; pias: Pia[]; selected: Set<string>; setSelected: (s: Set<string>) => void; focusPiaId?: string;
 }) {
-  const overrides = kind === "ropa" ? pia.ropaOverrides || {} : pia.npcOverrides || {};
+  const navigate = useNavigate();
+  const [cols, setCols] = useState<RopaColumnConfig[]>(() => loadCols(kind));
+  const focusRef = useRef<HTMLTableRowElement | null>(null);
+
+  useEffect(() => { setCols(loadCols(kind)); }, [kind]);
+  useEffect(() => { saveCols(kind, cols); }, [kind, cols]);
+  useEffect(() => { if (focusRef.current) focusRef.current.scrollIntoView({ behavior: "smooth", block: "center" }); }, [focusPiaId, pias.length]);
+
+  const visibleCols = useMemo(() => cols.filter(c => c.visible), [cols]);
+  const rows = pias.filter(p => selected.has(p.id));
+
+  const updateCol = (i: number, patch: Partial<RopaColumnConfig>) => {
+    const next = [...cols]; next[i] = { ...next[i], ...patch }; setCols(next);
+  };
+
+  const exportCSV = () => {
+    const esc = (s: string) => `"${(s || "").replace(/"/g, '""')}"`;
+    const header = ["PIA", ...visibleCols.map(c => c.label)].map(esc).join(",");
+    const body = rows.map(p => [p.title, ...visibleCols.map(c => resolveValue(p, c.key, kind))].map(esc).join(",")).join("\n");
+    const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${kind.toUpperCase()}_compilation.csv`;
+    a.click();
+    toast.success("CSV exported");
+  };
+
+  const exportXLSX = () => {
+    const data = rows.map(p => {
+      const o: Record<string, string> = { PIA: p.title };
+      for (const c of visibleCols) o[c.label] = resolveValue(p, c.key, kind);
+      return o;
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws["!cols"] = [{ wch: 30 }, ...visibleCols.map(c => ({ wch: Math.max(15, Math.round(c.width / 8)) }))];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, kind.toUpperCase());
+    XLSX.writeFile(wb, `${kind.toUpperCase()}_compilation.xlsx`);
+    toast.success("Excel exported");
+  };
+
+  const exportJSON = () => {
+    const data = {
+      kind, generated: new Date().toISOString(),
+      columns: visibleCols.map(c => ({ key: c.key, label: c.label })),
+      rows: rows.map(p => ({
+        piaId: p.id, title: p.title,
+        values: Object.fromEntries(visibleCols.map(c => [c.key, resolveValue(p, c.key, kind)])),
+      })),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${kind.toUpperCase()}_compilation.json`;
+    a.click();
+  };
+
+  const exportPDF = () => {
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${kind.toUpperCase()} Compilation</title>
+      <style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:10px;margin:24px}
+      h1{font-size:16px}table{width:100%;border-collapse:collapse;table-layout:fixed}
+      th,td{border:1px solid #ddd;padding:6px;vertical-align:top;word-wrap:break-word}
+      th{background:#f3f4f6}tr:nth-child(even){background:#fafafa}@media print{button{display:none}}</style>
+      </head><body><h1>${kind.toUpperCase()} Compilation</h1>
+      <button onclick="window.print()" style="margin:8px 0;padding:6px 12px">Print / Save as PDF</button>
+      <table><thead><tr><th style="width:140px">PIA</th>${visibleCols.map(c => `<th style="width:${c.width}px">${c.label}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map(p => `<tr><td><b>${p.title}</b><br><span style="color:#666">${p.id}</span></td>${visibleCols.map(c => `<td>${(resolveValue(p, c.key, kind) || "").replace(/</g,"&lt;").replace(/\n/g,"<br>")}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></body></html>`;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
+  };
+
+  const toggleAll = (on: boolean) => setSelected(new Set(on ? pias.map(p => p.id) : []));
+  const toggleOne = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
+
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="px-4 py-2.5 border-b bg-accent/5 flex items-center justify-between flex-wrap gap-2">
-          <h3 className="text-sm font-semibold">{kind === "ropa" ? "ROPA Output Fields" : "NPC-RS Output Fields"}</h3>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => onExportJson(kind)}><Download className="h-3.5 w-3.5 mr-1" />JSON</Button>
-            <Button size="sm" variant="outline" onClick={() => onExport(kind)}><Download className="h-3.5 w-3.5 mr-1" />CSV</Button>
-            <Button size="sm" variant="outline" onClick={() => onExportPdf(kind)}><FileTextIcon className="h-3.5 w-3.5 mr-1" />PDF</Button>
-            <Button size="sm" onClick={() => onExportXlsx(kind)}><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Excel</Button>
-          </div>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 justify-between">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline"><Settings2 className="h-3.5 w-3.5 mr-1" />Columns ({visibleCols.length}/{cols.length})</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 max-h-96 overflow-auto">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold">Edit columns</h4>
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { resetCols(kind); setCols(loadCols(kind)); }}>
+                  <RotateCcw className="h-3 w-3 mr-1" />Reset
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {cols.map((c, i) => (
+                  <div key={c.key} className="flex items-center gap-2">
+                    <Checkbox checked={c.visible} onCheckedChange={(v) => updateCol(i, { visible: !!v })} />
+                    <Input value={c.label} onChange={(e) => updateCol(i, { label: e.target.value })} className="h-7 text-xs flex-1" />
+                    <Input type="number" value={c.width} onChange={(e) => updateCol(i, { width: parseInt(e.target.value) || 100 })} className="h-7 text-xs w-16" />
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline">PIAs ({selected.size}/{pias.length})</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 max-h-96 overflow-auto">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold">Select PIAs</h4>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => toggleAll(true)}>All</Button>
+                  <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => toggleAll(false)}>None</Button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {pias.map(p => (
+                  <label key={p.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1 rounded">
+                    <Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggleOne(p.id)} />
+                    <span className="truncate">{p.title}</span>
+                  </label>
+                ))}
+                {pias.length === 0 && <div className="text-xs text-muted-foreground p-2">No PIAs yet.</div>}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
-        <table className="w-full text-sm">
-          <thead className="text-xs text-muted-foreground bg-muted/40 border-b">
-            <tr>
-              <th className="px-3 py-2 w-12 text-left">Incl.</th>
-              <th className="px-3 py-2 w-1/3 text-left">Field</th>
-              <th className="px-3 py-2 text-left">Value</th>
-              <th className="px-3 py-2 w-24"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map(f => {
-              const isOverridden = overrides[f.key] != null;
-              const value = resolveValue(pia, f.key, kind);
-              return (
-                <tr key={f.key} className="border-b last:border-0 align-top">
-                  <td className="px-3 py-2">
-                    <Checkbox checked={!!include[f.key]} onCheckedChange={(b) => setInclude({ ...include, [f.key]: !!b })} />
-                  </td>
-                  <td className="px-3 py-2 text-xs font-medium">{f.label}</td>
-                  <td className="px-3 py-2">
-                    <Textarea
-                      value={value}
-                      onChange={(e) => setOverride(kind, f.key, e.target.value)}
-                      className={`min-h-[40px] text-xs ${isOverridden ? "border-accent" : ""}`}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    {isOverridden && (
-                      <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => setOverride(kind, f.key, null)}>
-                        <RotateCcw className="h-3 w-3 mr-1" />Reset
-                      </Button>
-                    )}
-                    {!isOverridden && <span className="text-[10px] text-muted-foreground">From Phase 2</span>}
-                    {/* eslint-disable-next-line @typescript-eslint/no-unused-expressions */}
-                    {void deriveFieldValue}
-                  </td>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={exportJSON}><Download className="h-3.5 w-3.5 mr-1" />JSON</Button>
+          <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-3.5 w-3.5 mr-1" />CSV</Button>
+          <Button size="sm" variant="outline" onClick={exportPDF}><FileText className="h-3.5 w-3.5 mr-1" />PDF</Button>
+          <Button size="sm" onClick={exportXLSX}><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Excel</Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-0 overflow-x-auto">
+          {rows.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">No PIAs selected or none exist.</div>
+          ) : (
+            <table className="text-xs" style={{ width: "max-content", minWidth: "100%" }}>
+              <thead className="bg-muted/40 border-b sticky top-0 z-10">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium w-40 sticky left-0 bg-muted/40 z-20">PIA</th>
+                  {visibleCols.map(c => (
+                    <th key={c.key} className="px-3 py-2 text-left font-medium border-l" style={{ width: c.width, minWidth: c.width }}>
+                      {c.label}
+                    </th>
+                  ))}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </CardContent>
-    </Card>
+              </thead>
+              <tbody>
+                {rows.map(p => (
+                  <tr key={p.id} ref={p.id === focusPiaId ? focusRef : undefined} className={`border-b align-top hover:bg-muted/20 ${p.id === focusPiaId ? "bg-accent/10" : ""}`}>
+                    <td className="px-3 py-2 sticky left-0 bg-background z-10 border-r">
+                      <div className="font-medium">{p.title}</div>
+                      <div className="text-[10px] text-muted-foreground">{p.type} · {p.scope}</div>
+                    </td>
+                    {visibleCols.map(c => (
+                      <td key={c.key} className="px-3 py-2 border-l group" style={{ width: c.width, minWidth: c.width, maxWidth: c.width }}>
+                        <div className="whitespace-pre-wrap break-words">{resolveValue(p, c.key, kind) || <span className="text-muted-foreground italic">—</span>}</div>
+                        <button
+                          onClick={() => navigate(`/pia/${p.id}`)}
+                          className="opacity-0 group-hover:opacity-100 mt-1 text-[10px] text-accent hover:underline inline-flex items-center gap-0.5"
+                        >
+                          <ExternalLink className="h-2.5 w-2.5" />Edit in PIA
+                        </button>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
