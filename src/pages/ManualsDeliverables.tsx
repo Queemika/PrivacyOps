@@ -181,13 +181,15 @@ function OutputsTab() {
         <Collapsible key={g.label} defaultOpen>
           <Card>
             <CollapsibleTrigger className="w-full">
-              <div className="px-4 py-3 flex items-center justify-between border-b">
-                <div className="flex items-center gap-2">
-                  <ChevronDown className="h-4 w-4" />
-                  <span className="font-semibold text-sm">{g.label}</span>
-                  <span className="text-xs text-muted-foreground">({g.rows.length})</span>
+              <div className="px-4 py-3 flex flex-col items-start gap-1 border-b">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <ChevronDown className="h-4 w-4" />
+                    <span className="font-semibold text-sm">{g.label}</span>
+                    <span className="text-xs text-muted-foreground">({g.rows.length})</span>
+                  </div>
                 </div>
-                <Link to={g.route} className="text-xs text-accent hover:underline">Open module →</Link>
+                <Link to={g.route} className="text-[11px] text-accent hover:underline ml-6">Open module →</Link>
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
