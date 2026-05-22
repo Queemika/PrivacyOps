@@ -121,32 +121,73 @@ export default function PradarChecklist() {
       {/* Scoreboard */}
       <Card className="mb-6">
         <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
-            <div className="md:col-span-2">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">Overall Maturity</div>
-              <div className="text-3xl font-semibold mt-1">
-                {overall != null ? overall.toFixed(2) : "—"}
-                {overall != null && (
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    {MATURITY_LABELS[Math.round(overall)] ?? ""}
-                  </span>
-                )}
+          <div className="flex flex-wrap gap-6 items-center mb-5">
+            <div className="border rounded-xl px-6 py-4 text-center min-w-[160px]" style={{ background: "hsl(var(--accent-soft))" }}>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Overall Maturity</div>
+              <div className="text-4xl font-bold tabular-nums mt-1" style={{ color: overall == null ? undefined : overall >= 3.5 ? "hsl(var(--success))" : overall >= 2.5 ? "hsl(var(--accent))" : overall >= 1.5 ? "hsl(var(--warning))" : "hsl(var(--destructive))" }}>
+                {overall != null ? overall.toFixed(1) : "—"}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">{overall != null ? (MATURITY_LABELS[Math.round(overall)] ?? "") : "Not yet rated"}</div>
+            </div>
+            <div className="flex-1 min-w-[240px]">
+              <p className="text-xs text-muted-foreground mb-2">
+                Status as of {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} · Scores 1 (Non-Compliant) → 4 (Fully Compliant)
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-[12px]">
+                {[
+                  ["1.0–1.4", "Non-Compliant", "hsl(var(--destructive))"],
+                  ["1.5–2.4", "Partially Compliant", "hsl(var(--warning))"],
+                  ["2.5–3.4", "Substantially Compliant", "hsl(var(--accent))"],
+                  ["3.5–4.0", "Fully Compliant", "hsl(var(--success))"],
+                ].map(([range, label, color]) => (
+                  <div key={range as string} className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: color as string }} />
+                    <span className="text-muted-foreground tabular-nums">{range}</span>
+                    <span>{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-5 gap-2">
-              {PRADAR_DOMAINS.map(d => {
-                const avg = domainAverage(d, entries);
-                return (
-                  <div key={d} className="rounded-md border p-2 text-xs">
-                    <div className="text-[10px] text-muted-foreground line-clamp-2 min-h-[28px]">{d}</div>
-                    <div className="mt-1 font-semibold tabular-nums">
-                      {avg != null ? avg.toFixed(1) : "—"}
-                      <span className="text-muted-foreground"> / 4</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          </div>
+
+          <div className="border rounded-md overflow-hidden">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/40 border-b text-muted-foreground">
+                <tr>
+                  <th className="text-left font-medium px-3 py-2">Privacy Domain</th>
+                  <th className="text-left font-medium px-3 py-2 w-20">Avg</th>
+                  <th className="text-left font-medium px-3 py-2 w-56">Visual</th>
+                  <th className="text-left font-medium px-3 py-2 w-48">Compliance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PRADAR_DOMAINS.map((d) => {
+                  const avg = domainAverage(d, entries);
+                  const color = avg == null ? "hsl(var(--muted))"
+                    : avg >= 3.5 ? "hsl(var(--success))"
+                    : avg >= 2.5 ? "hsl(var(--accent))"
+                    : avg >= 1.5 ? "hsl(var(--warning))"
+                    : "hsl(var(--destructive))";
+                  const label = avg == null ? "—"
+                    : avg >= 3.5 ? "Fully Compliant"
+                    : avg >= 2.5 ? "Substantially Compliant"
+                    : avg >= 1.5 ? "Partially Compliant"
+                    : "Non-Compliant";
+                  return (
+                    <tr key={d} className="border-b last:border-0 hover:bg-muted/20">
+                      <td className="px-3 py-2 font-medium">{d}</td>
+                      <td className="px-3 py-2 font-mono font-semibold tabular-nums" style={{ color }}>{avg != null ? avg.toFixed(1) : "—"}</td>
+                      <td className="px-3 py-2">
+                        <div className="h-1.5 rounded bg-muted overflow-hidden">
+                          <div className="h-full rounded transition-all" style={{ width: `${avg != null ? (avg / 4) * 100 : 0}%`, background: color }} />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground">{label}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
