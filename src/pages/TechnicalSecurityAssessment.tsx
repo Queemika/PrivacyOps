@@ -131,6 +131,7 @@ export default function TechnicalSecurityAssessment() {
             </tbody>
           </table>
         </CardContent></Card>
+        </>
       )}
 
       {tab === "wf" && (
