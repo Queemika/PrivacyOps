@@ -41,7 +41,8 @@ export default function Settings() {
   const [role, setRole] = useState<string>(localStorage.getItem("pa_role") || "user");
   const [roleUx, setRoleUx] = useState<RoleUx>(loadRoleUx());
   const [locks, setLocks] = useState<TableLocks>(loadLocks());
-  const [tooltipCfg, setTooltipCfg] = useState(loadTooltipConfig());
+  const [tooltipOverrides, setTooltipOverrides] = useState<Record<string, string>>(loadTooltipOverrides());
+  const [tooltipsEnabled, setTooltipsEnabled] = useState(localStorage.getItem("pa_tooltips_enabled") !== "false");
 
   const applyTheme = (t: "light" | "dark") => {
     setTheme(t);
@@ -57,7 +58,15 @@ export default function Settings() {
     const next = { ...locks, [id]: !locks[id] };
     setLocks(next); localStorage.setItem("pa_table_locks", JSON.stringify(next));
   };
-  const saveTooltips = (cfg: any) => { setTooltipCfg(cfg); saveTooltipConfig(cfg); };
+  const updateOverride = (k: string, v: string) => {
+    const next = { ...tooltipOverrides, [k]: v };
+    setTooltipOverrides(next); saveTooltipOverrides(next);
+  };
+  const removeOverride = (k: string) => {
+    const next = { ...tooltipOverrides }; delete next[k];
+    setTooltipOverrides(next); saveTooltipOverrides(next);
+  };
+  const toggleTooltips = (c: boolean) => { setTooltipsEnabled(c); localStorage.setItem("pa_tooltips_enabled", String(c)); };
 
   const isAdmin = role === "admin";
 
