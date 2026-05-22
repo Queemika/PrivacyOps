@@ -80,8 +80,15 @@ export function AppSidebar() {
 
       <div className="h-px bg-sidebar-border mx-3" />
 
+      {viewAs && (
+        <div className="mx-3 my-2 text-[10px] rounded-md border border-warning/40 bg-warning/10 text-warning-foreground px-2 py-1.5 flex items-center justify-between">
+          <span>Viewing as <b>{viewAs}</b></span>
+          <button onClick={() => { setViewAsRole(null); setViewAs(null); }} className="underline hover:no-underline">Clear</button>
+        </div>
+      )}
+
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const on = isActive(item.url);
           return (
@@ -101,6 +108,7 @@ export function AppSidebar() {
           );
         })}
       </nav>
+
 
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
         <NavLink to="/settings" className="w-full flex items-center gap-2.5 px-2.5 h-9 rounded-md text-[13px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all">
