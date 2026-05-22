@@ -267,3 +267,14 @@ function PipelineChecklist({ uploadId, onLink }: { uploadId: string; onLink: () 
     </ul>
   );
 }
+
+function PipelineRow({ label, active, done }: { label: string; active: boolean; done: boolean }) {
+  return (
+    <div className="flex items-center gap-3">
+      {done ? <CheckCircle2 className="h-4 w-4 text-success" />
+        : active ? <Loader2 className="h-4 w-4 animate-spin text-accent" />
+        : <div className="h-4 w-4 rounded-full border-2 border-muted" />}
+      <span className={done || active ? "text-foreground" : "text-muted-foreground"}>{label}</span>
+    </div>
+  );
+}
