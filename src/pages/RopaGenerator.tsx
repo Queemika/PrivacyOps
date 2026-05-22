@@ -33,7 +33,6 @@ export default function RopaGenerator() {
     <PageShell
       title="ROPA & NPC-RS — Compilation"
       subtitle="Live compilation across all PIAs. Edit headers and column widths here; edit values in their source PIA."
-      back
     >
       {piaId && (
         <div className="text-xs text-muted-foreground -mt-2">
