@@ -5,11 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { StatusChip } from "@/components/StatusChip";
-import { mockPIAs } from "@/lib/mockData";
-import { loadPias, createPia, savePias, getActiveEngagementId, ensureSeedEngagement } from "@/lib/pia/store";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  loadPias, savePias, getActiveEngagementId, ensureSeedEngagement, createPia,
+} from "@/lib/pia/store";
 import { Pia } from "@/lib/pia/schema";
-import { Search, Upload, Layers, FilePlus2, Table2, ShieldAlert, BookOpen, Mail } from "lucide-react";
+import { resolveValue, ROPA_FIELDS, toCSV } from "@/lib/pia/ropaMap";
+import {
+  Search, Upload, Layers, FilePlus2, Pencil, Trash2, Download, Mail, Table2, ShieldAlert, BookOpen,
+} from "lucide-react";
 import { RelatedLinks } from "@/components/RelatedLinks";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -31,22 +38,22 @@ function piaStatus(p: Pia): string {
 export default function PIALibrary() {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [storePias, setStorePias] = useState<Pia[]>([]);
+  const [pias, setPias] = useState<Pia[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<Pia | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => { setStorePias(loadPias()); }, []);
+  const refresh = () => setPias(loadPias());
+  useEffect(() => { refresh(); }, []);
 
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-
-  const filteredMock = mockPIAs.filter((p) => p.dpsName.toLowerCase().includes(q.toLowerCase()));
-  const filteredStore = storePias.filter((p) => (p.title || "").toLowerCase().includes(q.toLowerCase()));
+  const filtered = pias.filter((p) => (p.title || "").toLowerCase().includes(q.toLowerCase()));
 
   const onImport = async (file: File) => {
     try {
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf);
       const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
       const engagementId = getActiveEngagementId() || ensureSeedEngagement().id;
       const created: Pia[] = [];
       rows.forEach((r) => {
@@ -54,13 +61,30 @@ export default function PIALibrary() {
         const p = createPia(engagementId, { title, type: "Full", dpsStatus: "New", scope: "Individual" });
         created.push(p);
       });
-      const all = [...created, ...loadPias().filter((p) => !created.some((c) => c.id === p.id))];
-      savePias(all);
-      setStorePias(loadPias());
+      refresh();
       toast.success(`Imported ${created.length} PIA${created.length === 1 ? "" : "s"} from ${file.name}`);
-    } catch (e) {
+    } catch {
       toast.error("Could not parse the Excel file");
     }
+  };
+
+  const handleDelete = (p: Pia) => {
+    savePias(loadPias().filter((x) => x.id !== p.id));
+    setConfirmDelete(null);
+    setSelected((s) => s.filter((id) => id !== p.id));
+    refresh();
+    toast.success(`Deleted ${p.title}`);
+  };
+
+  const handleDownload = (p: Pia) => {
+    const rows = ROPA_FIELDS.map(f => ({ label: f.label, value: resolveValue(p, f.key, "ropa") }));
+    const csv = `Field,Value\n${toCSV(rows)}`;
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${p.title.replace(/\s+/g, "_")}.csv`;
+    a.click();
+    toast.success("PIA exported");
   };
 
   return (
@@ -92,10 +116,9 @@ export default function PIALibrary() {
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by DPS, owner..." className="pl-9" />
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="status-chip bg-muted text-muted-foreground border-border">Total ({mockPIAs.length + storePias.length})</span>
-              <span className="status-chip bg-accent/10 text-accent border-accent/30">Live ({storePias.length})</span>
-              <span className="status-chip bg-[hsl(var(--tile-amber-bg))] text-[hsl(var(--tile-amber-fg))] border-[hsl(var(--tile-amber-fg))]/30">Finalization ({mockPIAs.filter((p) => p.status === "For Finalization").length})</span>
-              <span className="status-chip bg-[hsl(var(--tile-green-bg))] text-[hsl(var(--tile-green-fg))] border-[hsl(var(--tile-green-fg))]/30">Final ({mockPIAs.filter((p) => p.status === "Final").length})</span>
+              <span className="status-chip bg-muted text-muted-foreground border-border">Total ({pias.length})</span>
+              <span className="status-chip bg-[hsl(var(--tile-amber-bg))] text-[hsl(var(--tile-amber-fg))] border-[hsl(var(--tile-amber-fg))]/30">In Review ({pias.filter(p => piaStatus(p) === "In Review").length})</span>
+              <span className="status-chip bg-[hsl(var(--tile-green-bg))] text-[hsl(var(--tile-green-fg))] border-[hsl(var(--tile-green-fg))]/30">Final ({pias.filter(p => piaStatus(p) === "Final").length})</span>
             </div>
           </div>
 
@@ -106,42 +129,40 @@ export default function PIALibrary() {
                 <th className="text-left font-medium px-4 py-2.5">PIA ID</th>
                 <th className="text-left font-medium px-4 py-2.5">DPS Name</th>
                 <th className="text-left font-medium px-4 py-2.5">Type</th>
-                <th className="text-left font-medium px-4 py-2.5">Pipeline</th>
                 <th className="text-left font-medium px-4 py-2.5">Status</th>
-                <th className="text-right font-medium px-4 py-2.5">Action</th>
+                <th className="text-left font-medium px-4 py-2.5">Updated</th>
+                <th className="text-right font-medium px-4 py-2.5">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredStore.map((p) => {
+              {filtered.length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  No PIAs yet. Click <strong>New PIA</strong> or upload an .xlsx to get started.
+                </td></tr>
+              )}
+              {filtered.map((p) => {
                 const status = piaStatus(p);
                 return (
-                  <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20 bg-accent/5">
+                  <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20">
                     <td className="px-4 py-3"><Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} /></td>
                     <td className="px-4 py-3 font-mono text-xs">{p.id}</td>
-                    <td className="px-4 py-3 font-medium"><Link to={`/pia/${p.id}`} className="hover:text-accent transition-colors">{p.title || "Untitled"}</Link></td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link to={`/pia/${p.id}`} className="hover:text-accent transition-colors">{p.title || "Untitled"}</Link>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{p.type}</td>
                     <td className="px-4 py-3"><span className={`status-chip ${STATUS_TONES[status]}`}>{status}</span></td>
-                    <td className="px-4 py-3"><span className="status-chip bg-accent/10 text-accent border-accent/30">Live</span></td>
-                    <td className="px-4 py-3 text-right space-x-1">
-                      <Button asChild variant="ghost" size="sm"><Link to={`/ropa/${p.id}`}><Table2 className="h-3.5 w-3.5" /></Link></Button>
-                      <Button asChild variant="ghost" size="sm"><Link to={`/drl?piaId=${p.id}`}><ShieldAlert className="h-3.5 w-3.5" /></Link></Button>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(p.updatedAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <Button asChild variant="ghost" size="sm" title="Edit"><Link to={`/pia/${p.id}`}><Pencil className="h-3.5 w-3.5" /></Link></Button>
+                        <Button variant="ghost" size="sm" title="Download" onClick={() => handleDownload(p)}><Download className="h-3.5 w-3.5" /></Button>
+                        <Button asChild variant="ghost" size="sm" title="Send email"><Link to={`/email?source=pia&refId=${p.id}`}><Mail className="h-3.5 w-3.5" /></Link></Button>
+                        <Button variant="ghost" size="sm" title="Delete" onClick={() => setConfirmDelete(p)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                      </div>
                     </td>
                   </tr>
                 );
               })}
-              {filteredMock.map((p) => (
-                <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20">
-                  <td className="px-4 py-3"><Checkbox checked={selected.includes(p.id)} onCheckedChange={() => toggle(p.id)} /></td>
-                  <td className="px-4 py-3 font-mono text-xs">{p.id}</td>
-                  <td className="px-4 py-3 font-medium"><Link to="/pia" className="hover:text-accent transition-colors">{p.dpsName}</Link></td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
-                  <td className="px-4 py-3"><span className={`status-chip ${STATUS_TONES[p.status === "Final" ? "Final" : p.status === "For Finalization" ? "Approved" : "Draft"]}`}>{p.status}</span></td>
-                  <td className="px-4 py-3"><StatusChip status={p.status} /></td>
-                  <td className="px-4 py-3 text-right">
-                    <Button asChild variant="ghost" size="sm"><Link to="/pia">Open</Link></Button>
-                  </td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </CardContent>
@@ -157,6 +178,21 @@ export default function PIALibrary() {
           { to: "/email", label: "Email Generator", icon: Mail },
         ]}
       />
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete PIA?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes <strong>{confirmDelete?.title}</strong> from your library. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDelete && handleDelete(confirmDelete)}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }
