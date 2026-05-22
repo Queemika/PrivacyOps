@@ -38,6 +38,8 @@ export function AppSidebar() {
   const nav = useNavigate();
   const initials = user ? (user.firstName[0] + user.lastName[0]).toUpperCase() : "U";
   const [client, setClient] = useState<string>("");
+  const [viewAs, setViewAs] = useState(getViewAsRole());
+  const [, force] = useState(0);
 
   useEffect(() => {
     try {
@@ -54,11 +56,14 @@ export function AppSidebar() {
         if (e) setClient(e.clientName);
       } catch { /* noop */ }
     };
+    const onVis = () => { setViewAs(getViewAsRole()); force(n => n + 1); };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("pa:visibility-change", onVis);
+    return () => { window.removeEventListener("storage", onStorage); window.removeEventListener("pa:visibility-change", onVis); };
   }, [pathname]);
 
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
+  const visibleItems = items.filter(i => isPathVisible(i.url));
 
   return (
     <aside className="w-[240px] shrink-0 h-screen sticky top-0 z-40 bg-sidebar border-r border-sidebar-border flex flex-col">
