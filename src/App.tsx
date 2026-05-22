@@ -14,6 +14,8 @@ import UploadTranscript from "./pages/UploadTranscript";
 import GeneratedPIA from "./pages/GeneratedPIA";
 import PiaWorkspace from "./pages/PiaWorkspace";
 import PIALibrary from "./pages/PIALibrary";
+import PiaShell from "./pages/PiaShell";
+import PradarShell from "./pages/PradarShell";
 import CompilationBuilder from "./pages/CompilationBuilder";
 import RopaPreview from "./pages/RopaPreview";
 import RopaGenerator from "./pages/RopaGenerator";
@@ -55,14 +57,16 @@ const App = () => (
                 <Route path="/pia" element={<GeneratedPIA />} />
                 <Route path="/pia/new" element={<PiaWorkspace />} />
                 <Route path="/pia/:id" element={<PiaWorkspace />} />
-                <Route path="/library" element={<PIALibrary />} />
+                <Route path="/library" element={<PiaShell />} />
+                <Route path="/library-classic" element={<PIALibrary />} />
                 <Route path="/compile" element={<CompilationBuilder />} />
                 <Route path="/ropa" element={<RopaGenerator />} />
                 <Route path="/ropa/:piaId" element={<RopaGenerator />} />
                 <Route path="/ropa-legacy" element={<RopaPreview />} />
                 <Route path="/summary" element={<ExecutiveSummary />} />
                 <Route path="/drl" element={<DrlGenerator />} />
-                <Route path="/pradar" element={<PradarChecklist />} />
+                <Route path="/pradar" element={<PradarShell />} />
+                <Route path="/pradar-classic" element={<PradarChecklist />} />
                 <Route path="/consistency" element={<ConsistencyChecker />} />
                 <Route path="/email" element={<EmailGenerator />} />
                 <Route path="/audit" element={<AuditLog />} />
