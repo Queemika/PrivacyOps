@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { addActions } from "@/lib/actionsStore";
 import { addTodos } from "@/lib/todosStore";
 import { loadTeamUploads, addTeamUpload, tagTeamUpload, type TeamUpload } from "@/lib/teamUploadsStore";
+import { TranscriptPreviewModal, type PreviewTranscript } from "@/components/TranscriptPreviewModal";
 
 export interface UploadRecord {
   id: string;
@@ -64,6 +65,7 @@ export default function Upload() {
   const [linkPiaId, setLinkPiaId] = useState<string>("");
   const [anonMode, setAnonMode] = useState<AnonMode>("standard");
   const [team, setTeam] = useState<TeamUpload[]>([]);
+  const [previewing, setPreviewing] = useState<PreviewTranscript | null>(null);
 
   useEffect(() => { setTeam(loadTeamUploads()); }, []);
 
@@ -228,8 +230,13 @@ export default function Upload() {
                   {team.map((t) => (
                     <tr key={t.id} className="border-b last:border-0 hover:bg-muted/20">
                       <td className="px-3 py-2.5">
-                        <div className="font-medium text-xs">{t.fileName}</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">{t.id}</div>
+                        <button
+                          onClick={() => setPreviewing({ id: t.id, fileName: t.fileName, content: transcriptSample, tags: t.tags })}
+                          className="text-left hover:text-accent"
+                        >
+                          <div className="font-medium text-xs">{t.fileName}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">{t.id}</div>
+                        </button>
                       </td>
                       <td className="px-3 py-2.5 text-xs">{t.uploader}</td>
                       <td className="px-3 py-2.5 text-xs text-muted-foreground">{t.uploadedAt}</td>
@@ -287,7 +294,15 @@ export default function Upload() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TranscriptPreviewModal
+        open={!!previewing}
+        onClose={() => setPreviewing(null)}
+        transcript={previewing}
+        onSave={(next) => setPreviewing(next)}
+      />
     </>
+
   );
 }
 

@@ -1,6 +1,8 @@
 export type DrlCategory = "tsa" | "pradar" | "pia" | "notice" | "actions";
 export type DrlStatus = "Open" | "Partially Received" | "Under Inspection" | "Closed" | "Not Applicable" | "Completed";
 
+export interface DrlAttachment { name: string; mime: string; dataUrl: string }
+
 export interface DrlRow {
   id: string;
   category: DrlCategory;
@@ -10,7 +12,8 @@ export interface DrlRow {
   dateRequested?: string;
   dateReceived?: string;
   remarks?: string;
-  attachment?: string;
+  attachment?: string;             // legacy free-text note
+  attachments?: DrlAttachment[];   // multi-file uploads
   tag?: string;     // for action items
   coListWith?: DrlCategory[]; // mirrors
   createdAt: string;

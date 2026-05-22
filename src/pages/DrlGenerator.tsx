@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Settings2, Download, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Settings2, RotateCcw } from "lucide-react";
 import { addRow, deleteRow, DrlCategory, DrlColumnConfig, DrlRow, DrlStatus, loadCols, loadDrl, saveCols, saveDrl, updateRow } from "@/lib/drl/store";
 import { PRADAR_SEEDS } from "@/lib/drl/seeds";
 import { loadPias } from "@/lib/pia/store";
 import { toast } from "sonner";
+import { DrlAttachmentCell } from "@/components/DrlAttachmentCell";
+import { ExportMenu } from "@/components/ExportMenu";
 
 const STATUSES: DrlStatus[] = ["Open", "Partially Received", "Under Inspection", "Closed", "Not Applicable", "Completed"];
 
@@ -146,13 +148,11 @@ function DrlTable({ category, rows, refresh, piaFilter }: { category: DrlCategor
 
   const handleAdd = () => { addRow(category); refresh(); };
 
-  const exportCSV = () => {
-    const esc = (s: string) => `"${(s || "").replace(/"/g, '""')}"`;
-    const header = visibleCols.map(c => esc(c.label)).join(",");
-    const body = myRows.map(r => visibleCols.map(c => esc(getCell(r, c))).join(",")).join("\n");
-    const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `DRL_${category}.csv`; a.click();
-  };
+  const exportColumns = visibleCols.map(c => ({ header: c.label, key: c.key, width: c.width }));
+  const exportRows = myRows.map(r => Object.fromEntries(visibleCols.map(c => [c.key, getCell(r, c)])));
+  const attachments = myRows.flatMap(r =>
+    (r.attachments || []).map(a => ({ name: `${r.no}_${a.name}`, dataUrl: a.dataUrl }))
+  );
 
   const addCustomColumn = (label: string, computed?: "daysOutstanding") => {
     if (!label.trim()) return;
@@ -167,7 +167,7 @@ function DrlTable({ category, rows, refresh, piaFilter }: { category: DrlCategor
           <Button size="sm" onClick={handleAdd}><Plus className="h-3.5 w-3.5 mr-1" />Add row</Button>
           <ColumnConfig cols={cols} setCols={setCols} addCustomColumn={addCustomColumn} onReset={() => setCols(baseSpec)} />
         </div>
-        <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-3.5 w-3.5 mr-1" />Export CSV</Button>
+        <ExportMenu filename={`DRL_${category}`} columns={exportColumns} rows={exportRows} attachments={attachments} formats={["excel", "pdf", "csv", "zip"]} />
       </div>
 
       <Card>
@@ -255,6 +255,9 @@ function CellEditor({ row, col, onChange }: { row: DrlRow; col: ColSpec; onChang
         <SelectContent>{col.options.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
       </Select>
     );
+  }
+  if (col.key === "attachment") {
+    return <DrlAttachmentCell row={row} onChange={onChange} />;
   }
   if (col.kind === "date") {
     return <Input type="date" value={value} onChange={(e) => commit(e.target.value)} className="h-7 text-xs" />;

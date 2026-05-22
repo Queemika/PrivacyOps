@@ -52,7 +52,8 @@ const ratingTone = (r: number | null) => {
   return "bg-success text-success-foreground";
 };
 
-export default function PradarChecklist() {
+interface PradarChecklistProps { hideScoreboard?: boolean; hideControls?: boolean }
+export default function PradarChecklist({ hideScoreboard = false, hideControls = false }: PradarChecklistProps = {}) {
   const [entries, setEntries] = useState<Record<string, PradarEntry>>({});
   const [showInternal, setShowInternal] = useState(false);
   const [showClient, setShowClient] = useState(false);
@@ -119,6 +120,7 @@ export default function PradarChecklist() {
       />
 
       {/* Scoreboard */}
+      {!hideScoreboard && (
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-6 items-center mb-5">
@@ -191,6 +193,9 @@ export default function PradarChecklist() {
           </div>
         </CardContent>
       </Card>
+      )}
+      {hideControls ? null : (<>
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4 items-center">
@@ -466,7 +471,9 @@ export default function PradarChecklist() {
         <FileSpreadsheet className="h-3.5 w-3.5" />
         Export writes back into your original PRADAR template — Scoreboard and DRL formulas recalculate when opened in Excel.
       </div>
+      </>)}
     </TooltipProvider>
+
   );
 }
 

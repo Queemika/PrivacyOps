@@ -11,9 +11,11 @@ import { Pia } from "@/lib/pia/schema";
 import { loadPias } from "@/lib/pia/store";
 import { resolveValue } from "@/lib/pia/ropaMap";
 import { loadCols, saveCols, resetCols, RopaColumnConfig } from "@/lib/ropaCompilation";
-import { Download, FileSpreadsheet, FileText, RotateCcw, Settings2, ExternalLink, ArrowLeft } from "lucide-react";
+import { RotateCcw, Settings2, ExternalLink, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import { ResizableTh } from "@/components/ResizableTh";
+import { ColumnFilter } from "@/components/ColumnFilter";
+import { ExportMenu } from "@/components/ExportMenu";
 
 type Kind = "ropa" | "npc";
 
@@ -75,61 +77,10 @@ function CompilationTable({
     const next = [...cols]; next[i] = { ...next[i], ...patch }; setCols(next);
   };
 
-  const exportCSV = () => {
-    const esc = (s: string) => `"${(s || "").replace(/"/g, '""')}"`;
-    const header = ["PIA", ...visibleCols.map(c => c.label)].map(esc).join(",");
-    const body = rows.map(p => [p.title, ...visibleCols.map(c => resolveValue(p, c.key, kind))].map(esc).join(",")).join("\n");
-    const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${kind.toUpperCase()}_compilation.csv`;
-    a.click();
-    toast.success("CSV exported");
-  };
+  const [filters, setFilters] = useState<Record<string, Set<string>>>({});
 
-  const exportXLSX = () => {
-    const data = rows.map(p => {
-      const o: Record<string, string> = { PIA: p.title };
-      for (const c of visibleCols) o[c.label] = resolveValue(p, c.key, kind);
-      return o;
-    });
-    const ws = XLSX.utils.json_to_sheet(data);
-    ws["!cols"] = [{ wch: 30 }, ...visibleCols.map(c => ({ wch: Math.max(15, Math.round(c.width / 8)) }))];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, kind.toUpperCase());
-    XLSX.writeFile(wb, `${kind.toUpperCase()}_compilation.xlsx`);
-    toast.success("Excel exported");
-  };
-
-  const exportJSON = () => {
-    const data = {
-      kind, generated: new Date().toISOString(),
-      columns: visibleCols.map(c => ({ key: c.key, label: c.label })),
-      rows: rows.map(p => ({
-        piaId: p.id, title: p.title,
-        values: Object.fromEntries(visibleCols.map(c => [c.key, resolveValue(p, c.key, kind)])),
-      })),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${kind.toUpperCase()}_compilation.json`;
-    a.click();
-  };
-
-  const exportPDF = () => {
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${kind.toUpperCase()} Compilation</title>
-      <style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:10px;margin:24px}
-      h1{font-size:16px}table{width:100%;border-collapse:collapse;table-layout:fixed}
-      th,td{border:1px solid #ddd;padding:6px;vertical-align:top;word-wrap:break-word}
-      th{background:#f3f4f6}tr:nth-child(even){background:#fafafa}@media print{button{display:none}}</style>
-      </head><body><h1>${kind.toUpperCase()} Compilation</h1>
-      <button onclick="window.print()" style="margin:8px 0;padding:6px 12px">Print / Save as PDF</button>
-      <table><thead><tr><th style="width:140px">PIA</th>${visibleCols.map(c => `<th style="width:${c.width}px">${c.label}</th>`).join("")}</tr></thead>
-      <tbody>${rows.map(p => `<tr><td><b>${p.title}</b><br><span style="color:#666">${p.id}</span></td>${visibleCols.map(c => `<td>${(resolveValue(p, c.key, kind) || "").replace(/</g,"&lt;").replace(/\n/g,"<br>")}</td>`).join("")}</tr>`).join("")}</tbody>
-      </table></body></html>`;
-    const w = window.open("", "_blank");
-    if (w) { w.document.write(html); w.document.close(); }
+  const setFilter = (key: string, next: Set<string>) => {
+    setFilters(f => ({ ...f, [key]: next }));
   };
 
   const toggleAll = (on: boolean) => setSelected(new Set(on ? pias.map(p => p.id) : []));
@@ -138,6 +89,24 @@ function CompilationTable({
     if (next.has(id)) next.delete(id); else next.add(id);
     setSelected(next);
   };
+
+  // Apply column filters
+  const filteredRows = rows.filter(p =>
+    visibleCols.every(c => {
+      const f = filters[c.key];
+      if (!f || f.size === 0) return true;
+      return f.has(resolveValue(p, c.key, kind) || "(empty)");
+    })
+  );
+
+  const exportColumns = [
+    { header: "PIA", key: "__pia" },
+    ...visibleCols.map(c => ({ header: c.label, key: c.key, width: c.width })),
+  ];
+  const exportRows = filteredRows.map(p => ({
+    __pia: p.title,
+    ...Object.fromEntries(visibleCols.map(c => [c.key, resolveValue(p, c.key, kind)])),
+  }));
 
   return (
     <div className="space-y-3">
@@ -189,33 +158,46 @@ function CompilationTable({
               </div>
             </PopoverContent>
           </Popover>
+          {Object.values(filters).some(s => s && s.size) && (
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setFilters({})}>Clear filters</Button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={exportJSON}><Download className="h-3.5 w-3.5 mr-1" />JSON</Button>
-          <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-3.5 w-3.5 mr-1" />CSV</Button>
-          <Button size="sm" variant="outline" onClick={exportPDF}><FileText className="h-3.5 w-3.5 mr-1" />PDF</Button>
-          <Button size="sm" onClick={exportXLSX}><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Excel</Button>
-        </div>
+        <ExportMenu filename={`${kind.toUpperCase()}_compilation`} columns={exportColumns} rows={exportRows} formats={["excel", "pdf", "csv"]} />
       </div>
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          {rows.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">No PIAs selected or none exist.</div>
+          {filteredRows.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">No PIAs match current filters.</div>
           ) : (
             <table className="text-xs" style={{ width: "max-content", minWidth: "100%" }}>
               <thead className="bg-muted/40 border-b sticky top-0 z-10">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium w-40 sticky left-0 bg-muted/40 z-20">PIA</th>
-                  {visibleCols.map(c => (
-                    <th key={c.key} className="px-3 py-2 text-left font-medium border-l" style={{ width: c.width, minWidth: c.width }}>
-                      {c.label}
-                    </th>
-                  ))}
+                  {visibleCols.map((c, i) => {
+                    const colIdx = cols.findIndex(x => x.key === c.key);
+                    return (
+                      <ResizableTh
+                        key={c.key}
+                        width={c.width}
+                        onResize={(w) => updateCol(colIdx, { width: w })}
+                        className="px-3 py-2 text-left font-medium border-l align-top"
+                      >
+                        <div className="flex items-center">
+                          <span className="truncate">{c.label}</span>
+                          <ColumnFilter
+                            values={rows.map(p => resolveValue(p, c.key, kind))}
+                            active={filters[c.key] || new Set()}
+                            onChange={(s) => setFilter(c.key, s)}
+                          />
+                        </div>
+                      </ResizableTh>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                {rows.map(p => (
+                {filteredRows.map(p => (
                   <tr key={p.id} ref={p.id === focusPiaId ? focusRef : undefined} className={`border-b align-top hover:bg-muted/20 ${p.id === focusPiaId ? "bg-accent/10" : ""}`}>
                     <td className="px-3 py-2 sticky left-0 bg-background z-10 border-r">
                       <div className="font-medium">{p.title}</div>
@@ -242,3 +224,4 @@ function CompilationTable({
     </div>
   );
 }
+
