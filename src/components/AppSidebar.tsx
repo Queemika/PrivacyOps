@@ -1,12 +1,13 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Upload, Library, Layers, BarChart3, ListChecks,
+  LayoutDashboard, Upload, Library, BarChart3, ListChecks,
   Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { ensureSeedEngagement, loadEngagements, getActiveEngagementId } from "@/lib/pia/store";
+import { isPathVisible, getViewAsRole, setViewAsRole } from "@/lib/admin/roleVisibility";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -18,8 +19,7 @@ type Item = { title: string; url: string; icon: any };
 const items: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Transcript", url: "/upload", icon: Upload },
-  { title: "PIA Library", url: "/library", icon: Library },
-  { title: "ROPA / NPC-RS", url: "/ropa", icon: Layers },
+  { title: "PIA", url: "/library", icon: Library },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "DRL / IRL", url: "/drl", icon: ListChecks },
   { title: "PRADAR", url: "/pradar", icon: Shield },
