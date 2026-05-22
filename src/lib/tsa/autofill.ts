@@ -2,7 +2,13 @@
 // vendor / tool keywords and returns suggested patches keyed by Tech Stack row id.
 // Pure string matching — no AI calls — so it is safe to run on every paste.
 
-import { TECH_STACK_FULL } from "@/lib/templates/techStackFull";
+import { defaultTechStackFull } from "@/lib/templates/techStackFull";
+
+const TECH_STACK_FULL = defaultTechStackFull.map(r => ({
+  id: r.id,
+  dpaRequirement: r.requirement,
+  component: r.system,
+}));
 
 export interface TsaSuggestion {
   rowId: string;
