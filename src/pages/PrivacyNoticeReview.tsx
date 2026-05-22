@@ -51,7 +51,7 @@ export default function PrivacyNoticeReview() {
       actions={<Button onClick={() => setNewDlg(true)}><Plus className="mr-2 h-4 w-4" />New notice</Button>}
     >
       <SectionTabs
-        tabs={[{ id: "summary", label: "Summary" }, { id: "drl", label: "DRL" }, { id: "ref", label: "References" }]}
+        tabs={[{ id: "summary", label: "Summary" }, { id: "wf", label: "Working File", count: notices.length }, { id: "drl", label: "DRL" }, { id: "ref", label: "References" }]}
         value={tab} onChange={setTab}
       />
 
@@ -112,12 +112,9 @@ export default function PrivacyNoticeReview() {
         </>
       )}
 
-      {tab === "drl" && (
-        <Card><CardContent className="p-6 text-sm">
-          DRL items linked to Privacy Notices.{" "}
-          <Link className="text-accent underline" to="/drl?tab=notice">Open in DRL / IRL →</Link>
-        </CardContent></Card>
-      )}
+      {tab === "wf" && <WorkingFileTab notices={notices} onOpen={(id) => setParams({ id })} />}
+
+      {tab === "drl" && <DrlInlinePanel category="notice" title="Privacy Notice DRL items" />}
 
       {tab === "ref" && (
         <Card><CardContent className="p-6 text-sm space-y-2">
