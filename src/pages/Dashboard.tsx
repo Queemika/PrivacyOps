@@ -25,7 +25,7 @@ export default function Dashboard() {
   const livePias = loadPias();
   const actions = loadActions();
   const totalPias = mockPIAs.length + livePias.length;
-  const drafts = mockPIAs.filter((p) => p.status === "Draft").length + livePias.filter((p) => (p.statusLabel || "Draft") === "Draft").length;
+  const drafts = mockPIAs.filter((p) => p.status === "Draft").length + livePias.length;
   const finalized = mockPIAs.filter((p) => p.status === "Final").length;
   const openActions = actions.filter((a) => a.status === "Open").length;
 
