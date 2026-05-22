@@ -1,19 +1,39 @@
-import { PageHeader } from "@/components/PageHeader";
+import { useEffect, useState } from "react";
+import { PageShell } from "@/components/ui/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
-import { auditTrail } from "@/lib/mockData";
-import { ScrollText } from "lucide-react";
+import { ScrollText, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { auditTrail } from "@/lib/mockData";
+import { loadAudit, clearAudit, AuditEntry } from "@/lib/auditLog";
+import { Button } from "@/components/ui/button";
 
 export default function AuditLog() {
-  const { auditLog } = useAuth();
-  const merged = [...auditLog, ...auditTrail];
+  const { user, auditLog } = useAuth();
+  const [client, setClient] = useState<AuditEntry[]>([]);
+  useEffect(() => { setClient(loadAudit()); }, []);
+  const isAdmin = (localStorage.getItem("pa_role") || "user") === "admin";
+
+  if (!isAdmin) {
+    return (
+      <PageShell title="Audit Log" subtitle="Admin only">
+        <Card><CardContent className="p-10 text-center text-sm text-muted-foreground">
+          You don't have permission to view the audit log. Switch to the Admin role in <a href="/settings" className="text-accent underline">Settings</a>.
+        </CardContent></Card>
+      </PageShell>
+    );
+  }
+
+  const merged = [
+    ...client.map(c => ({ ts: c.ts, user: c.user, action: c.action, target: c.target })),
+    ...auditLog,
+    ...auditTrail,
+  ];
 
   return (
-    <>
-      <PageHeader
-        title="Audit Log"
-        description="Tamper-evident audit trail of every action — uploads, generations, validations, anonymization, and forwards. Each action is associated with the signed-in user."
-      />
+    <PageShell title="Audit Log" subtitle="Tamper-evident trail of every action performed in the platform."
+      actions={<Button variant="outline" onClick={() => { clearAudit(); setClient([]); }}>
+        <Trash2 className="h-4 w-4 mr-1.5" />Clear client log
+      </Button>}>
       <Card>
         <CardContent className="p-0">
           <table className="w-full text-sm">
@@ -38,6 +58,6 @@ export default function AuditLog() {
           </table>
         </CardContent>
       </Card>
-    </>
+    </PageShell>
   );
 }

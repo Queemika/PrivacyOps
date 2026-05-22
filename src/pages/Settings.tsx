@@ -1,37 +1,84 @@
 import { useState } from "react";
 import { PageShell } from "@/components/ui/PageShell";
+import { SectionTabs } from "@/components/ui/SectionTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2, Users, Lock as LockIcon, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { loadTooltipConfig, saveTooltipConfig } from "@/lib/tooltipStore";
+
+const ROLES = ["Intern", "Preparer/Associate", "Lead/Supervisor", "Approver/Manager"];
+const TABLES = [
+  { id: "pradar", label: "PRADAR — Working File" },
+  { id: "drl", label: "DRL / IRL columns" },
+  { id: "inspection", label: "Physical Inspection — Checklist" },
+  { id: "notice", label: "Privacy Notice — Assessment" },
+  { id: "tsa", label: "Tech Security — Tech Stack" },
+  { id: "ropa", label: "ROPA / NPC-RS — Columns" },
+];
+
+type RoleUx = Record<string, { landing: string; density: string }>;
+type TableLocks = Record<string, boolean>;
+
+function loadRoleUx(): RoleUx {
+  try { return JSON.parse(localStorage.getItem("pa_role_ux") || "{}"); } catch { return {}; }
+}
+function loadLocks(): TableLocks {
+  try { return JSON.parse(localStorage.getItem("pa_table_locks") || "{}"); } catch { return {}; }
+}
 
 export default function Settings() {
+  const [tab, setTab] = useState("general");
   const [theme, setTheme] = useState<"light" | "dark">(
     typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light",
   );
   const [role, setRole] = useState<string>(localStorage.getItem("pa_role") || "user");
+  const [roleUx, setRoleUx] = useState<RoleUx>(loadRoleUx());
+  const [locks, setLocks] = useState<TableLocks>(loadLocks());
+  const [tooltipCfg, setTooltipCfg] = useState(loadTooltipConfig());
 
   const applyTheme = (t: "light" | "dark") => {
     setTheme(t);
     document.documentElement.classList.toggle("dark", t === "dark");
     localStorage.setItem("pa_theme", t);
   };
-
-  const saveRole = (r: string) => {
-    setRole(r);
-    localStorage.setItem("pa_role", r);
-    toast.success(`Role set to ${r}`);
+  const saveRole = (r: string) => { setRole(r); localStorage.setItem("pa_role", r); toast.success(`Role set to ${r}`); };
+  const updateRoleUx = (r: string, patch: Partial<{ landing: string; density: string }>) => {
+    const next = { ...roleUx, [r]: { landing: "/", density: "comfortable", ...(roleUx[r] || {}), ...patch } };
+    setRoleUx(next); localStorage.setItem("pa_role_ux", JSON.stringify(next));
   };
+  const toggleLock = (id: string) => {
+    const next = { ...locks, [id]: !locks[id] };
+    setLocks(next); localStorage.setItem("pa_table_locks", JSON.stringify(next));
+  };
+  const saveTooltips = (cfg: any) => { setTooltipCfg(cfg); saveTooltipConfig(cfg); };
+
+  const isAdmin = role === "admin";
 
   return (
-    <PageShell title="Settings" subtitle="Theme, role and admin controls">
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-6 space-y-4">
+    <PageShell title="Settings" subtitle="Personal preferences, role-based UX, tables, and tooltip configuration.">
+      <SectionTabs
+        tabs={[
+          { id: "general", label: "General" },
+          ...(isAdmin ? [
+            { id: "roles", label: "Roles" },
+            { id: "tooltips", label: "Tooltips" },
+            { id: "tables", label: "Tables & Fields" },
+            { id: "admin", label: "Admin Tools" },
+          ] : []),
+        ]}
+        value={tab} onChange={setTab}
+      />
+
+      {tab === "general" && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card><CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4" /> Appearance</div>
             <div className="flex items-center justify-between">
               <Label className="text-sm">Dark theme</Label>
@@ -41,11 +88,8 @@ export default function Settings() {
               {theme === "dark" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
               {theme} mode active
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6 space-y-4">
+          </CardContent></Card>
+          <Card><CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold"><ShieldAlert className="h-4 w-4" /> Role</div>
             <Select value={role} onValueChange={saveRole}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -55,21 +99,116 @@ export default function Settings() {
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Admin role unlocks tooltip configuration and data-reset tools.</p>
-          </CardContent>
-        </Card>
-      </div>
+            <p className="text-xs text-muted-foreground">Admin unlocks the audit log, tooltip and tables configuration.</p>
+          </CardContent></Card>
+        </div>
+      )}
 
-      {role === "admin" && (
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> Admin tools</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <Button asChild variant="outline"><Link to="/admin/tooltips">Configure tooltips</Link></Button>
-              <Button asChild variant="outline"><Link to="/admin/reset">Reset data</Link></Button>
+      {tab === "roles" && isAdmin && (
+        <Card><CardContent className="p-6 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold"><Users className="h-4 w-4" /> Role-based UX</div>
+          <p className="text-xs text-muted-foreground">Choose the default landing screen and density for each role.</p>
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground border-b">
+              <tr><th className="text-left py-2">Role</th><th className="text-left py-2">Landing</th><th className="text-left py-2">Density</th></tr>
+            </thead>
+            <tbody>
+              {ROLES.map(r => {
+                const cur = roleUx[r] || { landing: "/", density: "comfortable" };
+                return (
+                  <tr key={r} className="border-b">
+                    <td className="py-2 font-medium">{r}</td>
+                    <td className="py-2">
+                      <Select value={cur.landing} onValueChange={(v) => updateRoleUx(r, { landing: v })}>
+                        <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="/">Dashboard</SelectItem>
+                          <SelectItem value="/library">PIA Library</SelectItem>
+                          <SelectItem value="/pradar">PRADAR</SelectItem>
+                          <SelectItem value="/drl">DRL / IRL</SelectItem>
+                          <SelectItem value="/analytics">Analytics</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="py-2">
+                      <Select value={cur.density} onValueChange={(v) => updateRoleUx(r, { density: v })}>
+                        <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="compact">Compact</SelectItem>
+                          <SelectItem value="comfortable">Comfortable</SelectItem>
+                          <SelectItem value="spacious">Spacious</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </CardContent></Card>
+      )}
+
+      {tab === "tooltips" && isAdmin && (
+        <Card><CardContent className="p-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold"><MessageSquare className="h-4 w-4" /> Tooltips</div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs">Globally enabled</Label>
+              <Switch checked={!!tooltipCfg.enabled} onCheckedChange={(c) => saveTooltips({ ...tooltipCfg, enabled: c })} />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <p className="text-xs text-muted-foreground">Add, edit or remove tooltips that appear across modules.</p>
+          <div className="space-y-2">
+            {(tooltipCfg.items || []).map((t: any, i: number) => (
+              <div key={i} className="flex gap-2 items-start">
+                <Input className="h-8 text-xs flex-1" placeholder="Where (module/key)" value={t.key} onChange={(e) => {
+                  const next = { ...tooltipCfg }; next.items[i] = { ...t, key: e.target.value }; saveTooltips(next);
+                }} />
+                <Input className="h-8 text-xs flex-[2]" placeholder="Tooltip text" value={t.text} onChange={(e) => {
+                  const next = { ...tooltipCfg }; next.items[i] = { ...t, text: e.target.value }; saveTooltips(next);
+                }} />
+                <Button size="sm" variant="ghost" onClick={() => {
+                  const next = { ...tooltipCfg, items: tooltipCfg.items.filter((_: any, j: number) => j !== i) }; saveTooltips(next);
+                }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+              </div>
+            ))}
+            <Button size="sm" variant="outline" onClick={() => saveTooltips({ ...tooltipCfg, items: [...(tooltipCfg.items || []), { key: "", text: "" }] })}>
+              + Add tooltip
+            </Button>
+          </div>
+          <Button asChild variant="ghost" size="sm"><Link to="/admin/tooltips">Open full tooltip configurator →</Link></Button>
+        </CardContent></Card>
+      )}
+
+      {tab === "tables" && isAdmin && (
+        <Card><CardContent className="p-6 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-semibold"><LockIcon className="h-4 w-4" /> Tables & Fields</div>
+          <p className="text-xs text-muted-foreground">Lock a table to prevent editing in the workspace. Locked tables become read-only.</p>
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground border-b">
+              <tr><th className="text-left py-2">Table</th><th className="text-right py-2 w-24">Locked</th></tr>
+            </thead>
+            <tbody>
+              {TABLES.map(t => (
+                <tr key={t.id} className="border-b">
+                  <td className="py-2">{t.label}</td>
+                  <td className="py-2 text-right"><Checkbox checked={!!locks[t.id]} onCheckedChange={() => toggleLock(t.id)} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent></Card>
+      )}
+
+      {tab === "admin" && isAdmin && (
+        <Card><CardContent className="p-6 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> Admin tools</div>
+          <div className="grid md:grid-cols-3 gap-3">
+            <Button asChild variant="outline"><Link to="/admin/tooltips">Tooltip configurator</Link></Button>
+            <Button asChild variant="outline"><Link to="/admin/reset">Reset data</Link></Button>
+            <Button asChild variant="outline"><Link to="/audit">Audit log</Link></Button>
+          </div>
+        </CardContent></Card>
       )}
     </PageShell>
   );
