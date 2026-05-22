@@ -19,10 +19,10 @@ export default function CompilationBuilder() {
     <>
       <PageHeader
         title="Compilation Builder"
-        description="Group PIAs into a compilation set to auto-generate RoPA, NPC-RS, and the Executive Summary."
+        description="Group PIAs into a compilation set to auto-generate Compilation, NPC-RS, and the Executive Summary."
         actions={
           <Button asChild disabled={ids.length === 0}>
-            <Link to="/ropa"><Layers className="mr-2 h-4 w-4" />Generate RoPA & NPC-RS <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Link to="/ropa"><Layers className="mr-2 h-4 w-4" />Generate Compilation & NPC-RS <ArrowRight className="ml-2 h-4 w-4" /></Link>
           </Button>
         }
       />
@@ -65,7 +65,7 @@ export default function CompilationBuilder() {
               </div>
             </div>
             <div className="pt-3 border-t space-y-2 text-xs">
-              <Row k="Outputs" v="RoPA · NPC-RS · Exec Summary" />
+              <Row k="Outputs" v="Compilation · NPC-RS · Exec Summary" />
               <Row k="Format" v="Excel (.xlsx) + PDF" />
               <Row k="Compliance" v="NPC PH · GDPR overlay" />
             </div>

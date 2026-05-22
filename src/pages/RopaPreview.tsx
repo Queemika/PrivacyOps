@@ -10,19 +10,19 @@ export default function RopaPreview() {
   return (
     <>
       <PageHeader
-        title="RoPA & NPC-RS Preview"
-        description="Auto-generated Records of Processing Activities and NPC Registration System dataset from the compilation."
+        title="Compilation & NPC-RS Preview"
+        description="Auto-generated Compilation of Processing Activities and NPC Registration System dataset from the compilation."
         actions={
           <>
             <Button variant="outline"><Download className="mr-2 h-4 w-4" />Export NPC-RS (.xlsx)</Button>
-            <Button><FileSpreadsheet className="mr-2 h-4 w-4" />Export RoPA (.xlsx)</Button>
+            <Button><FileSpreadsheet className="mr-2 h-4 w-4" />Export Compilation (.xlsx)</Button>
           </>
         }
       />
 
       <Tabs defaultValue="ropa">
         <TabsList>
-          <TabsTrigger value="ropa">RoPA</TabsTrigger>
+          <TabsTrigger value="ropa">Compilation</TabsTrigger>
           <TabsTrigger value="npc">NPC-RS</TabsTrigger>
         </TabsList>
 

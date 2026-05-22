@@ -33,7 +33,7 @@ export default function RopaGenerator() {
 
   return (
     <PageShell
-      title="ROPA & NPC-RS — Compilation"
+      title="ROPA & NPC-RS"
       subtitle="Live compilation across all PIAs. Edit headers and column widths here; edit values in their source PIA."
     >
       {piaId && (
@@ -43,7 +43,7 @@ export default function RopaGenerator() {
       )}
       <Tabs defaultValue="ropa">
         <TabsList>
-          <TabsTrigger value="ropa">ROPA</TabsTrigger>
+          <TabsTrigger value="ropa">COMPILATION</TabsTrigger>
           <TabsTrigger value="npc">NPC-RS</TabsTrigger>
         </TabsList>
         <TabsContent value="ropa">
