@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2, Users, Lock as LockIcon, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
-import { loadTooltipConfig, saveTooltipConfig } from "@/lib/tooltipStore";
+import { loadTooltipOverrides, saveTooltipOverrides, defaultTooltips } from "@/lib/tooltipStore";
 
 const ROLES = ["Intern", "Preparer/Associate", "Lead/Supervisor", "Approver/Manager"];
 const TABLES = [
