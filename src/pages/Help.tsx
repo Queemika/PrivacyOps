@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 const faqs = [
   { q: "How do I generate a PIA from a transcript?", a: "Go to Transcript → upload the file → review the anonymized preview → click Process PIA → choose Generate new PIA or link to an existing one." },
-  { q: "What's the difference between ROPA and NPC-RS?", a: "ROPA (Records of Processing Activities) is the GDPR-style inventory. NPC-RS is the Philippine NPC Registration System format with additional fields like consolidated DPS and lawful basis details." },
+  { q: "What's the difference between Compilation and NPC-RS?", a: "Compilation (Records of Processing Activities) is the GDPR-style inventory. NPC-RS is the Philippine NPC Registration System format with additional fields like consolidated DPS and lawful basis details." },
   { q: "Who can edit tooltips?", a: "Only Admins. Go to Settings → set role to Admin → Configure tooltips." },
   { q: "Where do action items appear?", a: "Action items extracted from transcripts surface in the DRL module under the Action Items tab, and in the Email Generator as pre-filled items." },
   { q: "Is my data secure?", a: "This is a prototype using localStorage for persistence. All transcripts are anonymized before storage. Production deployment will use Lovable Cloud." },
