@@ -124,18 +124,15 @@ export default function Upload() {
 
   const handleLinkExisting = () => {
     if (!linkPiaId) { toast.error("Please select a PIA to link"); return; }
-    // Ensure the target PIA is upgraded to the latest template
-    // (Phase 1 desc + threshold + stakeholders, Phase 2 data mapping,
-    // Phase 3 principles/rights/security/cross-border).
+    // Ensure the target PIA is upgraded to the latest template before linking.
     const target = getPia(linkPiaId);
     if (target) normalizePiaToLatestTemplate(target);
-    logAction_link();
+    logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`);
     tagTeamUpload(uploadId, "PIA");
     toast.success(`Linked to ${linkPiaId} and upgraded to latest PIA template`);
     setProcessOpen(false);
     navigate(`/pia/${linkPiaId}?uploadId=${uploadId}`);
   };
-  function logAction_link() { logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`); }
 
   const beforeUpload = step === "idle";
 
