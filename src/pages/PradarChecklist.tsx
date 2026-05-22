@@ -471,7 +471,9 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
         <FileSpreadsheet className="h-3.5 w-3.5" />
         Export writes back into your original PRADAR template — Scoreboard and DRL formulas recalculate when opened in Excel.
       </div>
+      </>)}
     </TooltipProvider>
+
   );
 }
 
