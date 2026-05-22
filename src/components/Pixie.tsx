@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Sparkles, X, Send, Globe, BookMarked, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { hintForPath } from "@/lib/pixieHints";
 
 type Lang = "EN" | "FIL" | "Taglish";
 type Source = "PH" | "GDPR" | "CCPA";
@@ -8,10 +10,13 @@ type Msg = { role: "bot" | "user"; text: string };
 
 export default function Pixie() {
   const [open, setOpen] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(false);
   const [input, setInput] = useState("");
   const [lang, setLang] = useState<Lang>("EN");
   const [source, setSource] = useState<Source>("PH");
   const [loading, setLoading] = useState(false);
+  const { pathname } = useLocation();
+  const hint = hintForPath(pathname);
   const [messages, setMessages] = useState<Msg[]>([
     { role: "bot", text: "Hi! I'm Pixie. Ask me about PIAs, ROPA, NPC-RS, or how to navigate the app." },
   ]);
@@ -88,8 +93,20 @@ export default function Pixie() {
 
   return (
     <>
+      {!open && !hintDismissed && (
+        <div className="fixed bottom-20 right-6 z-50 max-w-[280px] bg-[hsl(var(--sidebar-background))] text-white rounded-2xl rounded-br-sm px-4 py-3 text-[13px] leading-relaxed shadow-xl">
+          <button
+            onClick={() => setHintDismissed(true)}
+            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-white text-foreground border shadow flex items-center justify-center hover:scale-110 transition"
+            aria-label="Dismiss hint"
+          >
+            <X className="h-3 w-3" />
+          </button>
+          {hint}
+        </div>
+      )}
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => { setOpen((o) => !o); setHintDismissed(true); }}
         className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full flex items-center justify-center shadow-lg bg-gradient-to-br from-accent to-accent/80 hover:scale-105 transition-transform"
         aria-label="Open Pixie assistant"
         title="Pixie · Data Privacy Guide"

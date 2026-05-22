@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,21 +26,22 @@
     --muted: 210 22% 96%;
     --muted-foreground: 218 12% 45%;
 
-    --accent: 244 75% 61%;
+    /* Prototype: bright blue accent (#3B82F6) */
+    --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 244 100% 97%;
+    --accent-soft: 214 95% 93%;
 
-    --success: 152 55% 38%;
+    --success: 152 60% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 35 90% 50%;
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 10%;
-    --destructive: 0 70% 52%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --info: 215 75% 50%;
+    --info: 217 91% 60%;
 
     --border: 215 20% 90%;
     --input: 215 20% 90%;
-    --ring: 244 75% 61%;
+    --ring: 217 91% 60%;
 
     --radius: 0.625rem;
 
@@ -61,10 +64,10 @@
     --sidebar-ring: 0 0% 60%;
 
     --gradient-primary: linear-gradient(135deg, hsl(222 30% 16%), hsl(222 28% 28%));
-    --gradient-accent: linear-gradient(135deg, hsl(244 75% 61%), hsl(252 80% 68%));
-    --shadow-elegant: 0 12px 32px -16px hsl(244 50% 30% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.06);
+    --gradient-accent: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
+    --shadow-elegant: 0 12px 32px -16px hsl(217 60% 30% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.06);
     --shadow-card: 0 1px 2px hsl(215 30% 20% / 0.04), 0 1px 1px hsl(215 30% 20% / 0.03);
-    --shadow-soft: 0 8px 28px -12px hsl(244 30% 30% / 0.12);
+    --shadow-soft: 0 8px 28px -12px hsl(217 50% 30% / 0.12);
   }
 
   .dark {
@@ -81,20 +84,21 @@
     --secondary-foreground: 210 30% 96%;
     --muted: 222 30% 16%;
     --muted-foreground: 215 18% 65%;
-    --accent: 244 75% 65%;
+    --accent: 217 91% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 30% 20%;
     --input: 222 30% 20%;
-    --ring: 244 75% 65%;
+    --ring: 217 91% 65%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; font-feature-settings: "cv02","cv03","cv04","cv11"; }
-  h1,h2,h3,h4 { @apply tracking-tight; }
+  body { @apply bg-background text-foreground antialiased; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; font-feature-settings: "cv02","cv03","cv04","cv11"; }
+  h1,h2,h3,h4 { @apply tracking-tight; font-family: 'DM Sans', system-ui, sans-serif; }
+  code, pre, .font-mono, .tabular-nums { font-family: 'DM Mono', ui-monospace, SFMono-Regular, monospace; }
 }
 
 @layer components {

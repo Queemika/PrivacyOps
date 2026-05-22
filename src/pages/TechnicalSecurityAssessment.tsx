@@ -65,6 +65,28 @@ export default function TechnicalSecurityAssessment() {
       )}
 
       {tab === "stack" && (
+        <>
+          {(() => {
+            const compl = stack.filter(s => s.status === "Implemented").length;
+            const ofi = stack.filter(s => s.status === "Partial" || s.status === "Not Implemented").length;
+            const na = stack.filter(s => s.status === "N/A").length;
+            const tiles: { label: string; value: number; color: string }[] = [
+              { label: "Compliant", value: compl, color: "hsl(var(--success))" },
+              { label: "OFI (Partial / Not Implemented)", value: ofi, color: "hsl(var(--warning))" },
+              { label: "Not Applicable", value: na, color: "hsl(var(--muted-foreground))" },
+              { label: "Total Tools / Requirements", value: stack.length, color: "hsl(var(--accent))" },
+            ];
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                {tiles.map(t => (
+                  <div key={t.label} className="bg-card border rounded-lg p-4" style={{ borderTop: `3px solid ${t.color}` }}>
+                    <div className="text-2xl font-bold tabular-nums" style={{ color: t.color }}>{t.value}</div>
+                    <div className="text-[11px] text-muted-foreground mt-1">{t.label}</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         <Card><CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-muted/40 border-b">
@@ -109,6 +131,7 @@ export default function TechnicalSecurityAssessment() {
             </tbody>
           </table>
         </CardContent></Card>
+        </>
       )}
 
       {tab === "wf" && (
