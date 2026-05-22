@@ -64,10 +64,10 @@
     --sidebar-ring: 0 0% 60%;
 
     --gradient-primary: linear-gradient(135deg, hsl(222 30% 16%), hsl(222 28% 28%));
-    --gradient-accent: linear-gradient(135deg, hsl(244 75% 61%), hsl(252 80% 68%));
-    --shadow-elegant: 0 12px 32px -16px hsl(244 50% 30% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.06);
+    --gradient-accent: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
+    --shadow-elegant: 0 12px 32px -16px hsl(217 60% 30% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.06);
     --shadow-card: 0 1px 2px hsl(215 30% 20% / 0.04), 0 1px 1px hsl(215 30% 20% / 0.03);
-    --shadow-soft: 0 8px 28px -12px hsl(244 30% 30% / 0.12);
+    --shadow-soft: 0 8px 28px -12px hsl(217 50% 30% / 0.12);
   }
 
   .dark {
