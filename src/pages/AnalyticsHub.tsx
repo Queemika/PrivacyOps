@@ -42,7 +42,7 @@ export default function AnalyticsHub() {
   const totalHighRisks = agg.topRisks.principles.length + agg.topRisks.rights.length + agg.topRisks.security.length + agg.topRisks.crossBorder.length;
 
   return (
-    <PageShell title="Analytics" subtitle="Cross-module compliance signal — PIAs, PRADAR, DRL, Privacy Notice, TSA, Physical Inspection, and Manuals.">
+    <PageShell title="Analytics" subtitle="Cross-module compliance signal — PIAs, PRADAR (5-in-1), DRL, Privacy Notice, TSA, Physical Inspection, and Manuals.">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile label="PIAs assessed" value={pias.length} icon={FileText} accent="blue" />
         <StatTile label="High / Critical risks" value={totalHighRisks} icon={AlertTriangle} accent="rose" />
@@ -103,7 +103,7 @@ function PradarScoreboardCard({ pradar, overall }: { pradar: ReturnType<typeof l
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   return (
     <Card><CardContent className="p-5">
-      <SectionHeader title="PRADAR Scoreboard" icon={ClipboardCheck} to="/pradar" />
+      <SectionHeader title="PRADAR (5-in-1) Scoreboard" icon={ClipboardCheck} to="/pradar" />
       <p className="text-[11px] text-muted-foreground mb-3">Status as of {today}</p>
       <div className="mb-4 grid grid-cols-3 gap-3 text-sm">
         <div><div className="text-[10px] uppercase text-muted-foreground">Overall Maturity Level</div>

@@ -39,7 +39,7 @@ export default function PradarShell() {
       <TabsContent value="scoreboard" className="mt-0"><PradarChecklist hideControls /></TabsContent>
       <TabsContent value="working" className="mt-0"><PradarChecklist hideScoreboard /></TabsContent>
       <TabsContent value="guide" className="mt-0">
-        <PageShell title="PRADAR — Rating Guide" subtitle="Maturity bands used to grade each control question (1.0 → 4.0).">
+        <PageShell title="PRADAR (5-in-1) — Rating Guide" subtitle="Maturity bands used to grade each control question (1.0 → 4.0).">
           <div className="grid md:grid-cols-2 gap-3">
             {BANDS.map(b => (
               <Card key={b.range}>
@@ -57,12 +57,12 @@ export default function PradarShell() {
         </PageShell>
       </TabsContent>
       <TabsContent value="drl" className="mt-0">
-        <PageShell title="PRADAR — DRL items" subtitle="Document requests linked to PRADAR controls.">
-          <DrlInlinePanel category="pradar" title="PRADAR DRL items" />
+        <PageShell title="PRADAR (5-in-1) — DRL items" subtitle="Document requests linked to PRADAR controls.">
+          <DrlInlinePanel category="pradar" title="PRADAR (5-in-1) DRL items" />
         </PageShell>
       </TabsContent>
       <TabsContent value="refs" className="mt-0">
-        <PageShell title="PRADAR — References" subtitle="Standards and issuances underpinning PRADAR.">
+        <PageShell title="PRADAR (5-in-1) — References" subtitle="Standards and issuances underpinning PRADAR.">
           <Card>
             <CardContent className="p-0 divide-y">
               {REFS.map(r => (
