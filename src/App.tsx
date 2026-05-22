@@ -31,7 +31,8 @@ import AnalyticsHub from "./pages/AnalyticsHub";
 import ManualsDeliverables from "./pages/ManualsDeliverables";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
-import TooltipConfigurator from "./pages/admin/TooltipConfigurator";
+import TooltipManager from "./pages/admin/TooltipManager";
+import ViewAsSettings from "./pages/admin/ViewAsSettings";
 import ResetData from "./pages/admin/ResetData";
 import NotFound from "./pages/NotFound.tsx";
 
