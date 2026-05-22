@@ -186,6 +186,8 @@ export default function Upload() {
 
         {step === "done" && (
           <>
+            <ExtractionPreview />
+
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-1">
