@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles, Link2, FilePlus2, ShieldAlert, Mail } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Upload as UploadIcon, FileText, Loader2, CheckCircle2, ShieldCheck, Sparkles,
+  Link2, FilePlus2, Mail, Users, Play,
+} from "lucide-react";
 import { transcriptSample, mockPIAs } from "@/lib/mockData";
 import { anonymizeText } from "@/lib/anonymize";
 import { toast } from "sonner";
@@ -11,10 +15,9 @@ import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addActions } from "@/lib/actionsStore";
-import { RelatedLinks } from "@/components/RelatedLinks";
+import { addTodos } from "@/lib/todosStore";
+import { loadTeamUploads, addTeamUpload, tagTeamUpload, type TeamUpload } from "@/lib/teamUploadsStore";
 
-// Mock "uploads" store — in a real backend this would be a DB row.
-// IMPORTANT: only the anonymized content is ever persisted.
 export interface UploadRecord {
   id: string;
   fileName: string;
@@ -36,9 +39,16 @@ function persistUpload(rec: UploadRecord) {
 
 type AnonMode = "off" | "standard" | "strict";
 
+const TAG_TONE: Record<string, string> = {
+  PIA: "bg-[hsl(var(--tile-blue-bg))] text-[hsl(var(--tile-blue-fg))]",
+  TSA: "bg-[hsl(var(--tile-amber-bg))] text-[hsl(var(--tile-amber-fg))]",
+  DRL: "bg-[hsl(var(--tile-violet-bg))] text-[hsl(var(--tile-violet-fg))]",
+  Email: "bg-[hsl(var(--tile-green-bg))] text-[hsl(var(--tile-green-fg))]",
+};
+
 export default function Upload() {
   const navigate = useNavigate();
-  const { logAction } = useAuth();
+  const { user, logAction } = useAuth();
   const [file, setFile] = useState<{ name: string; size: number } | null>(null);
   const [step, setStep] = useState<"idle" | "uploading" | "anon" | "done">("idle");
   const [anonymized, setAnonymized] = useState<string>("");
@@ -46,6 +56,9 @@ export default function Upload() {
   const [processOpen, setProcessOpen] = useState(false);
   const [linkPiaId, setLinkPiaId] = useState<string>("");
   const [anonMode, setAnonMode] = useState<AnonMode>("standard");
+  const [team, setTeam] = useState<TeamUpload[]>([]);
+
+  useEffect(() => { setTeam(loadTeamUploads()); }, []);
 
   const onPick = (name: string, size = 12400) => {
     setFile({ name, size });
@@ -58,47 +71,49 @@ export default function Upload() {
     }, 700);
 
     setTimeout(() => {
-      const text = anonMode === "off" ? transcriptSample : anonymizeText(transcriptSample, anonMode === "strict").text;
       const result = anonMode === "off"
-        ? { text, replacements: [], speakerMap: {}, stats: { emails: 0, phones: 0, ids: 0, persons: 0 } }
+        ? { text: transcriptSample, replacements: [], speakerMap: {}, stats: { emails: 0, phones: 0, ids: 0, persons: 0 } }
         : anonymizeText(transcriptSample, anonMode === "strict");
       const id = `UPL-${Date.now()}`;
       const rec: UploadRecord = {
-        id,
-        fileName: name,
-        fileSize: size,
-        fileType: name.split(".").pop() || "txt",
-        anonymizedContent: result.text,
-        speakerMap: result.speakerMap,
-        stats: result.stats,
+        id, fileName: name, fileSize: size, fileType: name.split(".").pop() || "txt",
+        anonymizedContent: result.text, speakerMap: result.speakerMap, stats: result.stats,
         createdAt: new Date().toISOString(),
       };
       persistUpload(rec);
-      // Extract sample action items to shared store → surfaces in DRL + Email Generator
+      addTeamUpload({ id, fileName: name, uploader: user?.name || "You", tags: [] });
+
+      const owner = user?.name || "You";
       addActions([
         { source: "Transcript", sourceRef: id, text: "Provide updated DSA with payroll vendor", owner: "HR Lead", deadline: "" },
         { source: "Transcript", sourceRef: id, text: "Share SCC for cross-border BG-check provider", owner: "Legal", deadline: "" },
         { source: "Transcript", sourceRef: id, text: "Submit latest access review report", owner: "IT Security", deadline: "" },
       ]);
+      // Auto-add a to-do for the uploader so action items land on their dashboard
+      addTodos([
+        { text: `Review action items extracted from ${name}`, source: "Transcript", sourceRef: id, owner },
+        { text: `Confirm anonymization output for ${name}`, source: "Transcript", sourceRef: id, owner },
+      ]);
+
       setAnonymized(result.text);
       setUploadId(id);
       setStep("done");
+      setTeam(loadTeamUploads());
     }, 1700);
   };
 
   const handleGenerateNew = () => {
     logAction("Generated new PIA from transcript", file?.name ?? "");
+    tagTeamUpload(uploadId, "PIA");
     toast.success("Generating new PIA from anonymized transcript");
     setProcessOpen(false);
     navigate(`/pia/new?uploadId=${uploadId}`);
   };
 
   const handleLinkExisting = () => {
-    if (!linkPiaId) {
-      toast.error("Please select a PIA to link");
-      return;
-    }
+    if (!linkPiaId) { toast.error("Please select a PIA to link"); return; }
     logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`);
+    tagTeamUpload(uploadId, "PIA");
     toast.success(`Linked to ${linkPiaId}`);
     setProcessOpen(false);
     navigate(`/pia?uploadId=${uploadId}&piaId=${linkPiaId}`);
@@ -113,7 +128,7 @@ export default function Upload() {
         description="Upload meeting transcripts to generate a Privacy Impact Assessment (PIA)."
       />
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Upload card */}
         <Card>
           <CardContent className="p-8">
@@ -162,22 +177,6 @@ export default function Upload() {
           </CardContent>
         </Card>
 
-        {/* Pre-upload info box only */}
-        {beforeUpload && (
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-sm font-semibold mb-3">What this will generate</h3>
-              <ul className="text-sm text-muted-foreground space-y-1.5 list-disc pl-5">
-                <li>Data Processing System (DPS) details</li>
-                <li>Personal &amp; sensitive data categories</li>
-                <li>Legal basis</li>
-                <li>Risks and security controls</li>
-                <li>Data sharing and retention</li>
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
         {step === "done" && (
           <>
             <Card>
@@ -194,12 +193,52 @@ export default function Upload() {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Sparkles className="h-4 w-4 text-accent" /> Process pipeline</h3>
-                <p className="text-xs text-muted-foreground mb-4">Run any combination of downstream actions from this transcript.</p>
-                <PipelineChecklist uploadId={uploadId} onLink={() => setProcessOpen(true)} />
+                <p className="text-xs text-muted-foreground mb-4">Select the steps you want to run, then click <em>Run selected</em>. Modules won't auto-open.</p>
+                <PipelineMultiSelect uploadId={uploadId} onLink={() => setProcessOpen(true)} />
               </CardContent>
             </Card>
           </>
         )}
+
+        {/* Team transcripts */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Team transcripts</h3>
+            <p className="text-xs text-muted-foreground mb-4">Transcripts uploaded by your team. Tags show which modules were processed from each.</p>
+            <div className="border rounded-md overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground bg-muted/40 border-b">
+                  <tr>
+                    <th className="text-left font-medium px-3 py-2">File</th>
+                    <th className="text-left font-medium px-3 py-2">Uploader</th>
+                    <th className="text-left font-medium px-3 py-2">Date</th>
+                    <th className="text-left font-medium px-3 py-2">Processed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {team.map((t) => (
+                    <tr key={t.id} className="border-b last:border-0 hover:bg-muted/20">
+                      <td className="px-3 py-2.5">
+                        <div className="font-medium text-xs">{t.fileName}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">{t.id}</div>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs">{t.uploader}</td>
+                      <td className="px-3 py-2.5 text-xs text-muted-foreground">{t.uploadedAt}</td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {t.tags.length === 0 && <span className="text-[10px] text-muted-foreground">—</span>}
+                          {t.tags.map((tag) => (
+                            <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded ${TAG_TONE[tag] || "bg-muted text-muted-foreground"}`}>{tag}</span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog open={processOpen} onOpenChange={setProcessOpen}>
@@ -236,35 +275,52 @@ export default function Upload() {
   );
 }
 
-function PipelineChecklist({ uploadId, onLink }: { uploadId: string; onLink: () => void }) {
-  const nav = useNavigate();
+function PipelineMultiSelect({ uploadId, onLink }: { uploadId: string; onLink: () => void }) {
+  const { user } = useAuth();
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [done, setDone] = useState<Record<string, boolean>>({});
-  const mark = (id: string) => setDone((d) => ({ ...d, [id]: true }));
 
-  const steps = [
-    { id: "pia",   title: "Generate / link PIA",       desc: "Create a new PIA or attach to an existing one.", action: () => { onLink(); mark("pia"); } },
-    { id: "tsa",   title: "Push to Tech Security",     desc: "Autofill remarks for relevant TSA controls.",     action: () => { toast.success("Tech Security remarks updated"); mark("tsa"); setTimeout(() => nav(`/tsa?uploadId=${uploadId}`), 600); } },
-    { id: "drl",   title: "Create DRL items",          desc: "Open document requests from action items.",       action: () => { toast.success("3 DRL items created"); mark("drl"); setTimeout(() => nav(`/drl?source=transcript&refId=${uploadId}`), 600); } },
-    { id: "email", title: "Draft follow-up email",      desc: "Pre-fill an email with assigned action items.",   action: () => { mark("email"); nav(`/email?source=transcript&refId=${uploadId}`); } },
+  const steps: { id: string; tag?: string; title: string; desc: string; run: () => void }[] = [
+    { id: "pia", tag: "PIA", title: "Generate / link PIA", desc: "Create a new PIA or attach to existing.", run: () => onLink() },
+    { id: "tsa", tag: "TSA", title: "Push to Tech Security", desc: "Autofill remarks for relevant TSA controls.", run: () => { tagTeamUpload(uploadId, "TSA"); toast.success("Tech Security remarks updated"); } },
+    { id: "drl", tag: "DRL", title: "Create DRL items", desc: "Open document requests from action items.", run: () => { tagTeamUpload(uploadId, "DRL"); toast.success("3 DRL items created"); } },
+    { id: "email", tag: "Email", title: "Draft follow-up email", desc: "Pre-fill an email with assigned action items.", run: () => {
+        tagTeamUpload(uploadId, "Email");
+        addTodos([{ text: `Send follow-up email for ${uploadId}`, source: "Email", sourceRef: uploadId, owner: user?.name || "You" }]);
+        toast.success("Follow-up email drafted; to-do added");
+      } },
   ];
 
+  const toggle = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+
+  const runSelected = () => {
+    if (selectedCount === 0) { toast.error("Select at least one process"); return; }
+    steps.filter(s => selected[s.id]).forEach((s) => { s.run(); setDone((d) => ({ ...d, [s.id]: true })); });
+  };
+
   return (
-    <ul className="divide-y border rounded-md">
-      {steps.map((s) => (
-        <li key={s.id} className="flex items-center gap-3 p-3">
-          <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${done[s.id] ? "bg-success border-success" : "border-muted-foreground/40"}`}>
-            {done[s.id] && <CheckCircle2 className="h-3 w-3 text-success-foreground" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium">{s.title}</div>
-            <div className="text-xs text-muted-foreground">{s.desc}</div>
-          </div>
-          <Button size="sm" variant={done[s.id] ? "outline" : "default"} onClick={s.action}>
-            {done[s.id] ? "Re-run" : "Run"}
-          </Button>
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-3">
+      <ul className="divide-y border rounded-md">
+        {steps.map((s) => (
+          <li key={s.id} className="flex items-center gap-3 p-3">
+            <Checkbox checked={!!selected[s.id]} onCheckedChange={() => toggle(s.id)} />
+            <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${done[s.id] ? "bg-success border-success" : "border-muted-foreground/40"}`}>
+              {done[s.id] && <CheckCircle2 className="h-3 w-3 text-success-foreground" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium flex items-center gap-2">{s.title}
+                {s.tag && <span className={`text-[10px] px-1.5 py-0.5 rounded ${TAG_TONE[s.tag] || ""}`}>{s.tag}</span>}
+              </div>
+              <div className="text-xs text-muted-foreground">{s.desc}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="flex justify-end">
+        <Button onClick={runSelected} disabled={selectedCount === 0}><Play className="h-3.5 w-3.5 mr-1.5" />Run selected ({selectedCount})</Button>
+      </div>
+    </div>
   );
 }
 
