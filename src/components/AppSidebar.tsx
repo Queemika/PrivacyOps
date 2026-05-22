@@ -97,10 +97,10 @@ export function AppSidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
-        <button className="w-full flex items-center gap-2.5 px-2.5 h-9 rounded-md text-[13px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all">
+        <NavLink to="/settings" className="w-full flex items-center gap-2.5 px-2.5 h-9 rounded-md text-[13px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all">
           <Settings className="h-[15px] w-[15px] text-sidebar-foreground/60" />
           <span>Settings</span>
-        </button>
+        </NavLink>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-2.5 px-2 h-11 rounded-md hover:bg-sidebar-accent/50 transition-all">
