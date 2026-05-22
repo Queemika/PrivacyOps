@@ -142,12 +142,12 @@ function OutputsTab() {
       rows: pias.map(p => ({ name: p.title, type: p.type, status: "Saved", updated: new Date(p.updatedAt).toLocaleDateString(), version: "v1", link: `/pia/${p.id}` })),
     },
     {
-      label: "Compilation / NPC-RS", route: "/ropa",
+      label: "Compilation", route: "/ropa",
       rows: [{ name: "ROPA Compilation", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" },
-             { name: "NPC-RS Compilation", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" }],
+             { name: "Records of Processing Activities (RoPA)", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" }],
     },
     {
-      label: "PRADAR", route: "/pradar",
+      label: "PRADAR (5-in-1)", route: "/pradar",
       rows: [{ name: "PRADAR Scoreboard", type: "Assessment", status: "Live", updated: new Date().toLocaleDateString(), version: "v1", link: "/pradar" }],
     },
     {
