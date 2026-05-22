@@ -50,40 +50,11 @@ export default function ManualsDeliverables() {
 
       {tab === "manuals" && (
         <>
-          <Card><CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted-foreground bg-muted/30 border-b">
-                <tr>
-                  <th className="text-left font-medium px-4 py-2.5">Manual / Policy</th>
-                  <th className="text-left font-medium px-4 py-2.5">Type</th>
-                  <th className="text-left font-medium px-4 py-2.5">Status</th>
-                  <th className="text-left font-medium px-4 py-2.5">Last Updated</th>
-                  <th className="text-left font-medium px-4 py-2.5">Version</th>
-                  <th className="text-right font-medium px-4 py-2.5">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sections.map(s => (
-                  <tr key={s.id} className="border-b last:border-0 hover:bg-muted/20">
-                    <td className="px-4 py-3 font-medium">
-                      <button className="hover:text-accent" onClick={() => setActive(s.id)}>{s.title}</button>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">Privacy Manual</td>
-                    <td className="px-4 py-3"><span className="status-chip bg-muted text-muted-foreground border-border">Editable</span></td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{new Date().toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-xs">v1.0</td>
-                    <td className="px-4 py-3 text-right">
-                      <Button size="sm" variant="ghost" onClick={() => setActive(s.id)}>Edit</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent></Card>
+          <ManualsRegistry />
 
           <div className="grid lg:grid-cols-[260px_1fr] gap-4">
             <Card><CardContent className="p-3">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-2 pt-1 pb-2 flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Sections</div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-2 pt-1 pb-2 flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Privacy Manual Sections</div>
               <ul className="space-y-0.5">
                 {sections.map((s) => (
                   <li key={s.id}>
