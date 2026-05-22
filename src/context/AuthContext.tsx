@@ -15,6 +15,7 @@ export interface AuditEntry {
 
 interface AuthCtx {
   user: AuthUser | null;
+  ready: boolean;
   login: (email: string, password: string) => { ok: boolean; error?: string };
   signup: (u: AuthUser & { password: string }) => { ok: boolean; error?: string };
   logout: () => void;
@@ -31,26 +32,49 @@ export function validateCorporateEmail(email: string): string | null {
   return null;
 }
 
+const readUser = (): AuthUser | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const u = localStorage.getItem("pa_user");
+    return u ? JSON.parse(u) : null;
+  } catch {
+    return null;
+  }
+};
+
+const readAudit = (): AuditEntry[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const a = localStorage.getItem("pa_audit");
+    return a ? JSON.parse(a) : [];
+  } catch {
+    return [];
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  // Hydrate synchronously from localStorage so ProtectedRoute doesn't redirect
+  // on first render before an effect could populate the session.
+  const [user, setUser] = useState<AuthUser | null>(() => readUser());
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>(() => readAudit());
+  const [ready] = useState(true);
 
   useEffect(() => {
-    // Seed default admin account
-    const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
-    if (!accounts["admin@kpmg.com"]) {
-      accounts["admin@kpmg.com"] = {
-        firstName: "Admin",
-        lastName: "User",
-        email: "admin@kpmg.com",
-        password: "admin1234",
-      };
-      localStorage.setItem("pa_accounts", JSON.stringify(accounts));
+    // Seed default admin account (non-blocking)
+    try {
+      const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
+      if (!accounts["admin@kpmg.com"]) {
+        accounts["admin@kpmg.com"] = {
+          firstName: "Admin",
+          lastName: "User",
+          email: "admin@kpmg.com",
+          password: "admin1234",
+        };
+        localStorage.setItem("pa_accounts", JSON.stringify(accounts));
+      }
+    } catch {
+      /* noop */
     }
-    const u = localStorage.getItem("pa_user");
-    if (u) setUser(JSON.parse(u));
-    const a = localStorage.getItem("pa_audit");
-    if (a) setAuditLog(JSON.parse(a));
   }, []);
 
   const persistUser = (u: AuthUser | null) => {
@@ -113,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistUser(null);
   };
 
-  return <Ctx.Provider value={{ user, login, signup, logout, logAction, auditLog }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, ready, login, signup, logout, logAction, auditLog }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
