@@ -14,10 +14,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { addActions } from "@/lib/actionsStore";
 import { addTodos } from "@/lib/todosStore";
 import { loadTeamUploads, addTeamUpload, tagTeamUpload, type TeamUpload } from "@/lib/teamUploadsStore";
 import { TranscriptPreviewModal, type PreviewTranscript } from "@/components/TranscriptPreviewModal";
+import { getPia, normalizePiaToLatestTemplate } from "@/lib/pia/store";
+import { ChevronDown } from "lucide-react";
 
 export interface UploadRecord {
   id: string;
@@ -121,12 +124,18 @@ export default function Upload() {
 
   const handleLinkExisting = () => {
     if (!linkPiaId) { toast.error("Please select a PIA to link"); return; }
-    logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`);
+    // Ensure the target PIA is upgraded to the latest template
+    // (Phase 1 desc + threshold + stakeholders, Phase 2 data mapping,
+    // Phase 3 principles/rights/security/cross-border).
+    const target = getPia(linkPiaId);
+    if (target) normalizePiaToLatestTemplate(target);
+    logAction_link();
     tagTeamUpload(uploadId, "PIA");
-    toast.success(`Linked to ${linkPiaId}`);
+    toast.success(`Linked to ${linkPiaId} and upgraded to latest PIA template`);
     setProcessOpen(false);
-    navigate(`/pia?uploadId=${uploadId}&piaId=${linkPiaId}`);
+    navigate(`/pia/${linkPiaId}?uploadId=${uploadId}`);
   };
+  function logAction_link() { logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`); }
 
   const beforeUpload = step === "idle";
 
