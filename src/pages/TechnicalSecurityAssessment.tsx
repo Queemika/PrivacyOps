@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { defaultTechStack, TechItem } from "@/lib/templates/techStack";
+import { DrlInlinePanel } from "@/components/DrlInlinePanel";
 import { loadTechStackFull, saveTechStackFull, TechStackRow } from "@/lib/templates/techStackFull";
 import { toast } from "sonner";
 import { Lock, ShieldCheck, AlertCircle, ListChecks } from "lucide-react";
@@ -147,11 +148,7 @@ export default function TechnicalSecurityAssessment() {
         </CardContent></Card>
       )}
 
-      {tab === "drl" && (
-        <Card><CardContent className="p-6 text-sm">
-          DRL items for Tech Security — <Link className="text-accent underline" to="/drl?tab=tsa">Open in DRL / IRL →</Link>
-        </CardContent></Card>
-      )}
+      {tab === "drl" && <DrlInlinePanel category="tsa" title="Tech Security DRL items" />}
     </PageShell>
   );
 }
