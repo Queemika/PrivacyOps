@@ -5,7 +5,19 @@ import Pixie from "./Pixie";
 
 export default function AppLayout() {
   const { pathname } = useLocation();
-  const showBack = pathname !== "/" && pathname !== "/engagements";
+  const isEngagements = pathname === "/engagements";
+  const showBack = pathname !== "/" && !isEngagements;
+
+  // Engagement screen: no sidebar, clean canvas
+  if (isEngagements) {
+    return (
+      <div className="min-h-screen w-full bg-background">
+        <main className="max-w-5xl mx-auto px-6 py-12">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex w-full bg-background">
