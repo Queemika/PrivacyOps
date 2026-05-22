@@ -120,6 +120,7 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
       />
 
       {/* Scoreboard */}
+      {!hideScoreboard && (
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-6 items-center mb-5">
@@ -192,6 +193,9 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
           </div>
         </CardContent>
       </Card>
+      )}
+      {hideControls ? null : (<>
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4 items-center">
