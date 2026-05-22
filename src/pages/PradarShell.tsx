@@ -3,21 +3,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageShell } from "@/components/ui/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { ReferencesPanel } from "@/components/ReferencesPanel";
 import PradarChecklist from "./PradarChecklist";
-import { BookOpen, ExternalLink } from "lucide-react";
 
 const BANDS = [
   { range: "1.0 – 1.4", label: "Non-Compliant", color: "hsl(var(--destructive))", desc: "Controls largely absent or undocumented; gaps create material risk." },
   { range: "1.5 – 2.4", label: "Partially Compliant", color: "hsl(var(--warning))", desc: "Some controls in place but inconsistent application or evidence gaps." },
   { range: "2.5 – 3.4", label: "Substantially Compliant", color: "hsl(var(--accent))", desc: "Controls documented and routinely applied; minor improvement opportunities." },
   { range: "3.5 – 4.0", label: "Fully Compliant", color: "hsl(var(--success))", desc: "Mature, monitored, and continuously improved with auditable evidence." },
-];
-
-const REFS = [
-  { title: "NPC Circular 2022-01 — PIA", url: "https://privacy.gov.ph/circulars/" },
-  { title: "ISO/IEC 27701 — Privacy Information Management", url: "https://www.iso.org/standard/71670.html" },
-  { title: "ISO/IEC 29100 — Privacy framework", url: "https://www.iso.org/standard/45123.html" },
-  { title: "NIST Privacy Framework v1.0", url: "https://www.nist.gov/privacy-framework" },
 ];
 
 export default function PradarShell() {
@@ -63,16 +56,7 @@ export default function PradarShell() {
       </TabsContent>
       <TabsContent value="refs" className="mt-0">
         <PageShell title="PRADAR (5-in-1) — References" subtitle="Standards and issuances underpinning PRADAR.">
-          <Card>
-            <CardContent className="p-0 divide-y">
-              {REFS.map(r => (
-                <a key={r.url} href={r.url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 hover:bg-muted/30">
-                  <div className="flex items-center gap-3"><BookOpen className="h-4 w-4 text-accent" /><span className="text-sm font-medium">{r.title}</span></div>
-                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                </a>
-              ))}
-            </CardContent>
-          </Card>
+          <ReferencesPanel moduleId="pradar" title="PRADAR References" />
         </PageShell>
       </TabsContent>
     </Tabs>

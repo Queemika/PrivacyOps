@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { defaultTechStack, TechItem } from "@/lib/templates/techStack";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { ReferencesPanel } from "@/components/ReferencesPanel";
 import { loadTechStackFull, saveTechStackFull, TechStackRow } from "@/lib/templates/techStackFull";
 import { toast } from "sonner";
 import { Lock, ShieldCheck, AlertCircle, ListChecks } from "lucide-react";
@@ -51,6 +52,7 @@ export default function TechnicalSecurityAssessment() {
           { id: "stack", label: "Tech Stack", count: stack.length },
           { id: "wf", label: "Working File", count: items.length },
           { id: "drl", label: "DRL/IRL" },
+          { id: "refs", label: "References" },
         ]}
         value={tab} onChange={setTab}
       />
@@ -172,6 +174,7 @@ export default function TechnicalSecurityAssessment() {
       )}
 
       {tab === "drl" && <DrlInlinePanel category="tsa" title="Tech Security DRL items" />}
+      {tab === "refs" && <ReferencesPanel moduleId="tsa" title="Tech Security References" />}
     </PageShell>
   );
 }
