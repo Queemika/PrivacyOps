@@ -178,98 +178,93 @@ export default function Upload() {
           </Card>
         )}
 
-        {/* Anonymized preview + Generate PIA */}
         {step === "done" && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-1">
-                <ShieldCheck className="h-4 w-4 text-success" />
-                <h3 className="text-sm font-semibold">Anonymized Transcript Preview</h3>
-              </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                All personal data has been automatically anonymized.
-              </p>
-              <pre className="text-xs leading-relaxed bg-muted/30 border rounded-md p-4 whitespace-pre-wrap font-mono max-h-96 overflow-auto">
-                {anonymized}
-              </pre>
+          <>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="h-4 w-4 text-success" />
+                  <h3 className="text-sm font-semibold">Anonymized Transcript Preview</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">All personal data has been automatically anonymized.</p>
+                <pre className="text-xs leading-relaxed bg-muted/30 border rounded-md p-4 whitespace-pre-wrap font-mono max-h-72 overflow-auto">{anonymized}</pre>
+              </CardContent>
+            </Card>
 
-              <div className="mt-6 flex justify-end">
-                <Button size="lg" onClick={() => setProcessOpen(true)}>
-                  <Sparkles className="h-4 w-4 mr-2" />Process PIA
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {step === "done" && (
-          <RelatedLinks
-            title="From this transcript"
-            links={[
-              { to: `/pia/new?uploadId=${uploadId}`, label: "Generate new PIA", icon: FilePlus2 },
-              { to: `/drl?source=transcript&refId=${uploadId}`, label: "Action items → DRL", icon: ShieldAlert, hint: "3 created" },
-              { to: `/email?source=transcript&refId=${uploadId}`, label: "Draft email", icon: Mail },
-              { to: `/tsa?uploadId=${uploadId}`, label: "Tech Security autofill", icon: ShieldCheck },
-            ]}
-          />
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Sparkles className="h-4 w-4 text-accent" /> Process pipeline</h3>
+                <p className="text-xs text-muted-foreground mb-4">Run any combination of downstream actions from this transcript.</p>
+                <PipelineChecklist uploadId={uploadId} onLink={() => setProcessOpen(true)} />
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
 
       <Dialog open={processOpen} onOpenChange={setProcessOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Process PIA</DialogTitle>
-            <DialogDescription>
-              Choose how to process this anonymized transcript.
-            </DialogDescription>
+            <DialogTitle>Link or Generate PIA</DialogTitle>
+            <DialogDescription>Create a new PIA or link this transcript to an existing one.</DialogDescription>
           </DialogHeader>
-
           <div className="grid sm:grid-cols-2 gap-3 py-2">
-            <button
-              onClick={handleGenerateNew}
-              className="text-left border rounded-lg p-4 hover:border-accent hover:bg-accent/5 transition-colors"
-            >
-              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3">
-                <FilePlus2 className="h-4 w-4" />
-              </div>
+            <button onClick={handleGenerateNew} className="text-left border rounded-lg p-4 hover:border-accent hover:bg-accent/5 transition-colors">
+              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3"><FilePlus2 className="h-4 w-4" /></div>
               <div className="text-sm font-semibold">Generate New PIA</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Create a brand new PIA from this transcript.
-              </div>
+              <div className="text-xs text-muted-foreground mt-1">Create a brand new PIA from this transcript.</div>
             </button>
-
             <div className="border rounded-lg p-4">
-              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3">
-                <Link2 className="h-4 w-4" />
-              </div>
+              <div className="h-9 w-9 rounded-md bg-primary/5 text-primary flex items-center justify-center mb-3"><Link2 className="h-4 w-4" /></div>
               <div className="text-sm font-semibold">Link to Existing PIA</div>
-              <div className="text-xs text-muted-foreground mt-1 mb-3">
-                Attach this transcript to a PIA in the library.
-              </div>
+              <div className="text-xs text-muted-foreground mt-1 mb-3">Attach this transcript to a PIA in the library.</div>
               <Select value={linkPiaId} onValueChange={setLinkPiaId}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select PIA…" />
-                </SelectTrigger>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Select PIA…" /></SelectTrigger>
                 <SelectContent>
-                  {mockPIAs.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.id} — {p.dpsName}
-                    </SelectItem>
-                  ))}
+                  {mockPIAs.map((p) => (<SelectItem key={p.id} value={p.id}>{p.id} — {p.dpsName}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setProcessOpen(false)}>Cancel</Button>
-            <Button onClick={handleLinkExisting} disabled={!linkPiaId}>
-              <Link2 className="h-4 w-4 mr-2" />Link Selected
-            </Button>
+            <Button onClick={handleLinkExisting} disabled={!linkPiaId}><Link2 className="h-4 w-4 mr-2" />Link Selected</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function PipelineChecklist({ uploadId, onLink }: { uploadId: string; onLink: () => void }) {
+  const nav = useNavigate();
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  const mark = (id: string) => setDone((d) => ({ ...d, [id]: true }));
+
+  const steps = [
+    { id: "pia",   title: "Generate / link PIA",       desc: "Create a new PIA or attach to an existing one.", action: () => { onLink(); mark("pia"); } },
+    { id: "tsa",   title: "Push to Tech Security",     desc: "Autofill remarks for relevant TSA controls.",     action: () => { toast.success("Tech Security remarks updated"); mark("tsa"); setTimeout(() => nav(`/tsa?uploadId=${uploadId}`), 600); } },
+    { id: "drl",   title: "Create DRL items",          desc: "Open document requests from action items.",       action: () => { toast.success("3 DRL items created"); mark("drl"); setTimeout(() => nav(`/drl?source=transcript&refId=${uploadId}`), 600); } },
+    { id: "email", title: "Draft follow-up email",      desc: "Pre-fill an email with assigned action items.",   action: () => { mark("email"); nav(`/email?source=transcript&refId=${uploadId}`); } },
+  ];
+
+  return (
+    <ul className="divide-y border rounded-md">
+      {steps.map((s) => (
+        <li key={s.id} className="flex items-center gap-3 p-3">
+          <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${done[s.id] ? "bg-success border-success" : "border-muted-foreground/40"}`}>
+            {done[s.id] && <CheckCircle2 className="h-3 w-3 text-success-foreground" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium">{s.title}</div>
+            <div className="text-xs text-muted-foreground">{s.desc}</div>
+          </div>
+          <Button size="sm" variant={done[s.id] ? "outline" : "default"} onClick={s.action}>
+            {done[s.id] ? "Re-run" : "Run"}
+          </Button>
+        </li>
+      ))}
+    </ul>
   );
 }
 

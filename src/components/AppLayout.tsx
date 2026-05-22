@@ -1,10 +1,9 @@
-import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
-import { ArrowLeft } from "lucide-react";
+import { BackButton } from "./BackButton";
 import Pixie from "./Pixie";
 
 export default function AppLayout() {
-  const nav = useNavigate();
   const { pathname } = useLocation();
   const showBack = pathname !== "/" && pathname !== "/engagements";
 
@@ -13,13 +12,9 @@ export default function AppLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 relative">
         {showBack && (
-          <button
-            onClick={() => nav(-1)}
-            className="absolute top-5 left-6 z-20 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
+          <div className="absolute top-5 left-6 z-20">
+            <BackButton />
+          </div>
         )}
         <main className="flex-1 p-8 overflow-x-hidden min-w-0">
           <Outlet />

@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Upload, Library, Layers, BarChart3, ListChecks,
-  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck,
+  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +19,7 @@ const items: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Transcript", url: "/upload", icon: Upload },
   { title: "PIA Library", url: "/library", icon: Library },
-  { title: "Compilation / RoPA / NPC-RS", url: "/ropa", icon: Layers },
+  { title: "ROPA / NPC-RS", url: "/ropa", icon: Layers },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "DRL / IRL", url: "/drl", icon: ListChecks },
   { title: "PRADAR", url: "/pradar", icon: Shield },
@@ -28,6 +28,7 @@ const items: Item[] = [
   { title: "Privacy Notice", url: "/notice", icon: Eye },
   { title: "Manuals", url: "/manuals", icon: BookOpen },
   { title: "Email Generator", url: "/email", icon: Mail },
+  { title: "Help & FAQ", url: "/help", icon: HelpCircle },
 ];
 
 export function AppSidebar() {
@@ -96,10 +97,10 @@ export function AppSidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
-        <button className="w-full flex items-center gap-2.5 px-2.5 h-9 rounded-md text-[13px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all">
+        <NavLink to="/settings" className="w-full flex items-center gap-2.5 px-2.5 h-9 rounded-md text-[13px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all">
           <Settings className="h-[15px] w-[15px] text-sidebar-foreground/60" />
           <span>Settings</span>
-        </button>
+        </NavLink>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-2.5 px-2 h-11 rounded-md hover:bg-sidebar-accent/50 transition-all">

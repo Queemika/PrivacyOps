@@ -29,6 +29,10 @@ import PrivacyNoticeReview from "./pages/PrivacyNoticeReview";
 import TechnicalSecurityAssessment from "./pages/TechnicalSecurityAssessment";
 import AnalyticsHub from "./pages/AnalyticsHub";
 import ManualsDeliverables from "./pages/ManualsDeliverables";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help";
+import TooltipConfigurator from "./pages/admin/TooltipConfigurator";
+import ResetData from "./pages/admin/ResetData";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -67,6 +71,10 @@ const App = () => (
                 <Route path="/tsa" element={<TechnicalSecurityAssessment />} />
                 <Route path="/analytics" element={<AnalyticsHub />} />
                 <Route path="/manuals" element={<ManualsDeliverables />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/admin/tooltips" element={<TooltipConfigurator />} />
+                <Route path="/admin/reset" element={<ResetData />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
