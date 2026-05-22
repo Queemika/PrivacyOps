@@ -1,99 +1,91 @@
-# Plan: Compilation Analytics + DRL/IRL Overhaul
+# Plan: Sample PIA Import + Module Overhaul
 
-## Scope
-Three connected workstreams. Read-only derivations from existing PIA store; new editable headers/columns; new DRL stores per category.
+## 1. Import sample PIAs into the Library
 
----
+Parse the 5 uploaded `.xlsx` files (University Information System, Birth/Marriage/Death, Feedback/Complaints/FOI, CHD Electronic Health Records, PWD Database) and seed them into the PIA store.
 
-## 1. ROPA / NPC-RS — Compilation across all PIAs
+- Create `src/lib/pia/sampleSeeds.ts` containing the 5 PIAs converted to the existing `Pia` schema (Phase 1–4 fields populated from the spreadsheets).
+- On `PIALibrary.tsx` first mount, if `loadPias()` is empty (or a `pia:seeded:v1` flag is unset), inject the seeds so RoPA, NPC-RS and Executive Summary have real data to aggregate.
+- Add a "Load sample PIAs" button so the user can re-seed on demand.
 
-**Current:** Single-PIA editor (`RopaGenerator.tsx` keyed by `piaId`).
-**New:** Always a compilation table. One row per PIA. Columns = ROPA/NPC fields.
+## 2. PRADAR redesign (`PradarChecklist.tsx`)
 
-- Remove "library picker → editor" flow. Route `/ropa` shows compiled table; `/ropa/:piaId` redirects to `/ropa` with that row scrolled into view.
-- **Editable:** column header label, column width (drag or numeric input), included/excluded columns, row order. Persist to `localStorage` (`ropaCompilationConfig`).
-- **Not editable inline:** cell values (derived from each PIA's Phase 2). Each cell shows value + small "Edit in PIA" link → navigates to `/pia/:id` at the relevant phase/field.
-- Tabs: **ROPA** | **NPC-RS** (same compilation idea, different field set).
-- Export buttons (CSV / JSON / Excel / PDF) export the full compilation matrix using current header labels/widths.
-- Multi-select PIAs to include in export.
+Restructure into 4 tabs: **Scoreboard · Working File · DRL · Rating Guide & References**.
 
-## 2. Executive Summary — derived analytics from Phase 2 & 3
+Working File becomes a 3-level collapsible (PMP Component → Sub-domain → Privacy Domain) with rows:
 
-Rebuild `ExecutiveSummary.tsx` to compute live aggregates from `loadPias()`.
+`Control Question | DRL No. & Proof | Attachment | DRL Status | Basis/Minimum Req (checklist) | Score | Gap | Action Item | Responsible Party | Timeline`
 
-**Controls:** PIA multi-select chips (default: all). All sections recompute on selection change.
+- Score auto-computes from checked/unchecked basis items using a configurable criteria (tooltip explains formula: `checked / total * weight`).
+- Two-way link with DRL: row's DRL No./Status/Attachment read from `loadDrl()` PRADAR rows; editing here writes back via `updateRow`.
+- "AI assist" button per row (stub, no backend call yet) → pre-checks basis items, fills Gap/Action/Responsible/Timeline placeholders, marks suggested status. Inline-editable afterward.
+- Attachment preview: click attachment chip → opens dialog showing filename + (placeholder) highlighted region.
+- Scoreboard: aggregate scores per PMP Component (existing logic, refreshed UI).
+- Rating Guide tab: static markdown (criteria, score bands, NPC references).
 
-**Sections (numbered as user spec):**
-- **PIA Status** — table: PIA Type (Phase-1 only vs Full), DPS Status (New/Existing), Assessment Scope (Individual/Consolidated + member list)
-- **01 Overview** — counts: # DPS, # Full PIA, # Phase-1
-- **01.1 Data Processing System** — breakdown by Existing/New, Consolidated/Individual
-- **02 Purpose / 03 Scope** — static template text (editable via tooltip configurator pattern)
-- **03.1 Collect** — totals of PI / SPI / Privileged records (sum Phase 2 record counts)
-- **03.1.1 Type of Personal Data** — split External / Internal / Both per data class
-- **03.1.2 Legal Basis** — counts per PI basis & SPI basis enums
-- **03.2 Use & Store** — repository completeness, retention completeness, electronic/physical/unspecified storage counts
-- **03.3 Disclose** — sharing yes/no, DSA yes/no, cross-border yes/no
-- **03.4 Retention** — distribution + avg days/years
-- **03.5 Disposal** — disposal yes/no/N-A, electronic/physical/unspecified methods
-- **06 Key Risks** — matrix from Phase 3 answers (Yes/No/N-A) across 4 domains (Gen Principles, DSR, Security, Cross-border) + top-5 per domain
-- **07 Mitigation** — top-5 actions aggregated
-- **08 Conclusion** — auto-fills risk band (High/Medium/Low) into template
-- **09 Annexes A–G** — pivot tables, exportable
+New files: `src/lib/pradar/workingFile.ts` (groups + score calc), small `PradarRowEditor` component.
 
-Each section: collapsible card; "Export section" button (CSV).
+## 3. Physical Inspection (`PhysicalInspection.tsx`)
 
-**Other Analytics tiles added to Analytics Hub:** PRADAR scoreboard, Privacy Notice compliance count, TSA OFI/Complied per domain, Physical Inspection OFI/Complied per area, Manuals status, DRL/IRL status. These link to their respective modules.
+Tabs: **Summary · Working File · Album · DRL/IRL**.
 
-## 3. DRL / IRL — 5-tab module
+- Top selector: Overall view / Per Department-Area dropdown / "Create new inspection" button.
+- Working File columns: `No. | Question | Yes/No/NA | Response | Actual Observation | Attachment (photos)`.
+- Upload checklist (.xlsx/.csv) → replaces/extends question list.
+- Template seeded from admin config; rows fully editable; "Download" exports CSV.
+- Album tab: grid of every photo attached across rows, click → opens row context.
+- DRL/IRL tab embeds the existing DRL table filtered to `category = "actions"` tagged Physical Inspection.
 
-Refactor `DrlGenerator.tsx` into tabbed workspace:
+Store: `src/lib/inspections/store.ts` (inspections keyed by department/area, photos as data-URLs in localStorage).
 
-```
-Tabs: [Tech Security] [PRADAR] [PIA] [Privacy Notice] [Action Items]
-```
+## 4. Technical Security Assessment
 
-Each tab = editable table with category-specific columns. Shared row schema in `src/lib/drl/store.ts` with `category` discriminator. Auto-numbered `DRL No.` per category.
+Add tabs: **Summary · Tech Stack · Working File · DRL/IRL** to existing page.
 
-**Tab a — Tech Security:** Domain | System | Requirement | Status | Tool | Version | Managed By | Direct Access | AD Integrated | Remarks. Status drives auto-generation of:
-- Guide Questions (Working File)
-- DRL items (Open/Closed)
-- IRL items — dedupe vs Guide Questions
+- Tech Stack tab: pre-seeded with the 24-row table provided (Domain/System/DPA Requirement/Status/Tool/Version/Managed By/Direct Access/AD Integrated/Remarks).
+- Working File tab: `Domain | Component | Material (Material/Best Practice/Compensating) | Applicability | Status | Guidance | Tester | Remarks` — reflects relevant DRL rows.
+- Summary tab: existing StatTiles.
+- DRL/IRL tab: embedded DRL filtered to TSA category.
+- Transcript autofill hook: when a transcript with `tags` includes "TSA", scan transcript text for system/component keywords → append to Remarks (stub matcher in `src/lib/tsa/autofill.ts`).
 
-**Tab b — PRADAR:** seeded with the 24 standard items from spec; columns: DRL No. | Proof of Compliance | Date Requested | Date Received (auto when Status=Completed) | Status | Remarks | Attachment. Mark items that are "co-listed" with Tech Security → if attachment uploaded in TS DRL with matching tag, auto-mirror here.
+New seed file: `src/lib/templates/techStackFull.ts`.
 
-**Tab c — PIA:** DRL No. | DPS Name | Phase | Field | Request | Dates | Status | Remarks | Attachment. Field selector pulls from active PIA schema; Privacy Notice fields tagged so they co-list to Privacy Notice tab.
+## 5. Privacy Notice Review
 
-**Tab d — Privacy Notice:** DRL No. | DPS Name | Dept/Issuer | Dates | Status | Remarks | Attachment (auto-reflected from PIA/PRADAR when tagged).
+Replace stub with full module. Tabs: **Summary · DRL · References**.
 
-**Tab e — Action Items & Others:** DRL No. | Tag (PIA/PRADAR/TSA/PN/Other) | Item | Dates | Status | Remarks | Attachment.
+- Summary lists notices (CCTV / Full / Just-in-Time / Layered) per client with status chips.
+- Clicking a notice opens working file editor with the four sections (Layered, Full, CCTV, DPO Contact) — each row: `Comply? checkbox | Description | Reason | Notes`.
+- Type selector switches which sections are required.
+- DRL tab: embedded DRL filtered to `notice` category.
+- References tab: admin-configurable static list (uses `tooltipStore`-style config).
 
-**Cross-cutting features (all tabs):**
-- Inline edit on all cells (dates, status, tags, remarks)
-- Date Received auto-fills when Status set to Completed
-- Column configurator: show/hide columns; add custom columns (Days Outstanding [computed], Remarks by Users, etc.)
-- Saved view per user in `localStorage`
+New files: `src/lib/privacyNotice/store.ts`, `src/lib/privacyNotice/template.ts` (the checklist from screenshot/text).
 
----
+## 6. Manuals → "Manuals and Outputs"
+
+Rename in sidebar + route label. Split into two sections:
+
+- **Manuals**: existing table (`Manual/Policy | Type | Status | Last Updated | Version | Actions`).
+- **Outputs**: collapsible per workable (PIA, PRADAR, TSA, Physical Inspection, DRL/IRL, RoPA/NPC-RS, Analytics) listing `File | Type | Status | Last Update | Version | Actions` with download/link actions wired to existing export functions where possible.
+
+## 7. Audit Log
+
+- New page `src/pages/AuditLog.tsx` already exists; flesh out with table reading from new `src/lib/auditLog.ts` (localStorage ring buffer).
+- Add `logAction(event, meta)` helper; wire into key mutations (PIA save, DRL row change, PRADAR edit). Lightweight; not retrofitted everywhere.
+- Route gated to Admin role (check `AuthContext`).
+
+## 8. Settings (Admin)
+
+Expand `Settings.tsx` with three sections:
+
+- **Role-based look**: choose default landing/density per role (Intern, Preparer/Associate, Lead/Supervisor, Approver/Manager) — saved to `localStorage` key `pa_role_ux`.
+- **Tooltips**: integrate existing `TooltipConfigurator` admin page inline — list all tooltips per module with add/remove/edit + global on/off toggle.
+- **Tables & Fields**: list configurable tables (PRADAR working file, DRL columns, Physical Inspection template, Privacy Notice checklist, TSA tech stack) with "Lock" toggle per field/row. Lock state stored in `pa_table_locks`; consumed by editor components to disable inputs when locked.
 
 ## Technical notes
 
-**New files:**
-- `src/lib/drl/store.ts`, `src/lib/drl/seeds.ts` (PRADAR 24-row seed)
-- `src/lib/analytics/executiveSummary.ts` (pure aggregator from `Pia[]`)
-- `src/lib/ropaCompilation.ts` (column config persistence)
-- `src/components/drl/DrlTable.tsx` (reusable editable table w/ column configurator)
-
-**Edited files:**
-- `src/pages/RopaGenerator.tsx` — replace with compilation table
-- `src/pages/ExecutiveSummary.tsx` — full rewrite, derived sections
-- `src/pages/AnalyticsHub.tsx` — add cross-module tiles
-- `src/pages/DrlGenerator.tsx` — 5-tab refactor
-
-**Out of scope (this iteration):**
-- File attachment upload (placeholder UI only; files stored as filename string in localStorage)
-- Real-time multi-user sync
-- Backend persistence (still `localStorage`)
-
-**Persistence:** All new state in `localStorage` keyed by `drl:*`, `ropa:compilation`, `execsum:selected`.
-
-**No schema/DB changes.**
+- All storage stays in `localStorage`; no DB migrations.
+- Re-use `PageShell`, `SectionTabs`, `StatTile`, `DrlTable` patterns already established.
+- Sidebar/router updates in `AppSidebar.tsx` + `App.tsx` for renamed Manuals and any new admin routes.
+- Verify with `tsc --noEmit` at the end.
