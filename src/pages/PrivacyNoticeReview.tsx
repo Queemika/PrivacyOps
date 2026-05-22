@@ -14,12 +14,14 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Eye, FileCheck2, Plus, Trash2, ShieldCheck, ListChecks, ArrowLeft } from "lucide-react";
+import { Eye, FileCheck2, Plus, Trash2, ShieldCheck, ListChecks, ArrowLeft, ChevronDown } from "lucide-react";
 import {
   loadNotices, upsertNotice, deleteNotice, newNotice, compliance, PrivacyNotice,
 } from "@/lib/privacyNotice/store";
 import { SECTIONS, sectionsFor, NoticeType } from "@/lib/privacyNotice/template";
 import { logAction } from "@/lib/auditLog";
+import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 
 const NOTICE_TYPES: NoticeType[] = ["Full", "Layered", "CCTV", "JustInTime"];
