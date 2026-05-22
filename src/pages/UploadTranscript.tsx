@@ -350,3 +350,80 @@ function PipelineRow({ label, active, done }: { label: string; active: boolean; 
     </div>
   );
 }
+
+// --- Auto-extracted PIA fields preview (mirrors prototype) ---
+const EXTRACTED = {
+  dps: "HR Information System (HRIS)",
+  purpose: "Employee data management for onboarding, payroll processing, performance evaluation, and leave management",
+  dataSubjects: "Employees (approx. 450)",
+  personalData: ["Full name", "Birthdate", "Address", "TIN", "Bank account details", "Performance ratings"],
+  sensitiveData: ["PhilHealth number", "SSS number", "Medical certificates"],
+  retention: "10 years after separation (per CSC rules)",
+  sharing: ["BIR", "SSS", "PhilHealth", "Pag-IBIG", "PayrollPro Inc."],
+  crossBorder: "AWS Singapore (backup storage)",
+};
+
+function ConfChip({ level }: { level: "high" | "med" | "low" }) {
+  const map = {
+    high: { text: "● High confidence", cls: "text-success" },
+    med: { text: "◐ Med confidence", cls: "text-warning" },
+    low: { text: "○ Low confidence", cls: "text-destructive" },
+  } as const;
+  return <span className={`text-[10px] font-medium ${map[level].cls}`}>{map[level].text}</span>;
+}
+
+function ExtractionPreview() {
+  const fields: [string, string, "high" | "med" | "low"][] = [
+    ["DPS Name", EXTRACTED.dps, "high"],
+    ["Purpose", EXTRACTED.purpose, "high"],
+    ["Data Subjects", EXTRACTED.dataSubjects, "high"],
+    ["Retention", EXTRACTED.retention, "med"],
+    ["Cross-Border Transfer", EXTRACTED.crossBorder, "med"],
+  ];
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-4 w-4 text-accent" />
+          <h3 className="text-sm font-semibold">AI Extraction Preview</h3>
+          <span className="ml-auto text-[11px] px-2 py-0.5 rounded-full bg-success/10 text-success font-medium">✓ Confidence: High (87%)</span>
+        </div>
+        <div className="grid md:grid-cols-2 gap-5">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-accent mb-3">Extracted PIA Fields</div>
+            <div className="space-y-3">
+              {fields.map(([label, val, conf]) => (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+                    <ConfChip level={conf} />
+                  </div>
+                  <div className="text-[13px] text-foreground">{val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-accent mb-3">Data Inventory</div>
+            <BadgeGroup label="Personal Information" items={EXTRACTED.personalData} tone="bg-[hsl(var(--tile-blue-bg))] text-[hsl(var(--tile-blue-fg))]" />
+            <BadgeGroup label="Sensitive Personal Information" items={EXTRACTED.sensitiveData} tone="bg-[hsl(var(--tile-rose-bg))] text-[hsl(var(--tile-rose-fg))]" />
+            <BadgeGroup label="Data Sharing Recipients" items={EXTRACTED.sharing} tone="bg-[hsl(var(--tile-violet-bg))] text-[hsl(var(--tile-violet-fg))]" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BadgeGroup({ label, items, tone }: { label: string; items: string[]; tone: string }) {
+  return (
+    <div className="mb-3">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{label}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map(i => (
+          <span key={i} className={`text-[11px] px-2 py-0.5 rounded-full ${tone}`}>{i}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
