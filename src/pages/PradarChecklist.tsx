@@ -38,6 +38,10 @@ import {
   type PradarEntry,
 } from "@/lib/pradarModel";
 import { exportPradarWorkbook, importPradarWorkbook } from "@/lib/pradarExport";
+import { parseBasis, scoreFromChecks, SCORE_FORMULA_HELP } from "@/lib/pradar/workingFile";
+import { addRow as addDrlRow, updateRow as updateDrlRow } from "@/lib/drl/store";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 const ratingTone = (r: number | null) => {
