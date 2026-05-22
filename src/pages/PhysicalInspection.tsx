@@ -15,6 +15,7 @@ import {
   loadInspections, saveInspections, upsertInspection, newInspection, deleteInspection,
   Inspection, InspectionRow, YNA,
 } from "@/lib/inspections/store";
+import { DrlInlinePanel } from "@/components/DrlInlinePanel";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -245,11 +246,7 @@ export default function PhysicalInspection() {
         </CardContent></Card>
       )}
 
-      {tab === "drl" && (
-        <Card><CardContent className="p-6 text-sm">
-          DRL items linked to Physical Inspection — <Link className="text-accent underline" to="/drl?tab=actions">Open in DRL / IRL →</Link>
-        </CardContent></Card>
-      )}
+      {tab === "drl" && <DrlInlinePanel category="actions" title="Physical Inspection DRL / Action items" />}
     </PageShell>
   );
 }

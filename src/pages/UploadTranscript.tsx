@@ -46,6 +46,13 @@ const TAG_TONE: Record<string, string> = {
   Email: "bg-[hsl(var(--tile-green-bg))] text-[hsl(var(--tile-green-fg))]",
 };
 
+const TAG_ROUTE: Record<string, string> = {
+  PIA: "/library",
+  TSA: "/tsa",
+  DRL: "/drl",
+  Email: "/email",
+};
+
 export default function Upload() {
   const navigate = useNavigate();
   const { user, logAction } = useAuth();
@@ -228,7 +235,14 @@ export default function Upload() {
                         <div className="flex flex-wrap gap-1">
                           {t.tags.length === 0 && <span className="text-[10px] text-muted-foreground">—</span>}
                           {t.tags.map((tag) => (
-                            <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded ${TAG_TONE[tag] || "bg-muted text-muted-foreground"}`}>{tag}</span>
+                            <button
+                              key={tag}
+                              onClick={() => navigate(TAG_ROUTE[tag] || "/")}
+                              title={`Open ${tag} module`}
+                              className={`text-[10px] px-1.5 py-0.5 rounded hover:ring-1 hover:ring-accent transition ${TAG_TONE[tag] || "bg-muted text-muted-foreground"}`}
+                            >
+                              {tag}
+                            </button>
                           ))}
                         </div>
                       </td>
