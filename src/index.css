@@ -96,8 +96,9 @@
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; font-feature-settings: "cv02","cv03","cv04","cv11"; }
-  h1,h2,h3,h4 { @apply tracking-tight; }
+  body { @apply bg-background text-foreground antialiased; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; font-feature-settings: "cv02","cv03","cv04","cv11"; }
+  h1,h2,h3,h4 { @apply tracking-tight; font-family: 'DM Sans', system-ui, sans-serif; }
+  code, pre, .font-mono, .tabular-nums { font-family: 'DM Mono', ui-monospace, SFMono-Regular, monospace; }
 }
 
 @layer components {
