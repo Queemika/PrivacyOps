@@ -294,7 +294,15 @@ export default function Upload() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TranscriptPreviewModal
+        open={!!previewing}
+        onClose={() => setPreviewing(null)}
+        transcript={previewing}
+        onSave={(next) => setPreviewing(next)}
+      />
     </>
+
   );
 }
 
