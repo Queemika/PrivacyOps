@@ -18,7 +18,7 @@ export default function Pixie() {
   const { pathname } = useLocation();
   const hint = hintForPath(pathname);
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "bot", text: "Hi! I'm Pixie. Ask me about PIAs, ROPA, NPC-RS, or how to navigate the app." },
+    { role: "bot", text: "Hi! I'm Pixie. Ask me about PIAs, Compilation, NPC-RS, or how to navigate the app." },
   ]);
 
   const send = async () => {

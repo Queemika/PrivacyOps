@@ -12,7 +12,7 @@ export const PIXIE_HINTS: Record<string, string> = {
   "/notice": "📄 A layered notice on the website plus a full notice in T&Cs is the NPC's recommended pattern.",
   "/manuals": "📚 Manuals & Outputs aggregates every signed deliverable. Use version numbers (v1.0, v1.1) to track revisions.",
   "/summary": "📈 The Executive Summary follows the NPC's recommended PIA report structure — sections 01–09.",
-  "/ropa": "📄 Under DPA IRR §52, PICs must maintain a RoPA. This module compiles Phase 2 fields from every PIA you've selected.",
+  "/ropa": "📄 Under DPA IRR §52, PICs must maintain a Compilation. This module compiles Phase 2 fields from every PIA you've selected.",
   "/email": "✉️ Generated emails pre-fill assigned action items per recipient. Review before sending — Pixie drafts, you sign off.",
   "/audit-log": "🗂️ Audit log is admin-only. Use it to verify who changed what when an approver questions a deliverable.",
   "/settings": "⚙️ Configure tooltip visibility, role views, and table locks here. Locked tables prevent edits below the Lead role.",

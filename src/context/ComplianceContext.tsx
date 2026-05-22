@@ -60,7 +60,7 @@ export const COMPLIANCE_TIPS: Record<ComplianceMode, { title: string; tips: { la
     tips: [
       { label: "Legal bases (Sec. 12/13)", body: "Consent · Contract · Legal obligation · Vital interests · National emergency · Legitimate interests (non-SPI)." },
       { label: "NPC registration", body: "Register your DPS via NPC-RS if processing involves SPI or ≥1,000 individuals." },
-      { label: "PIA & RoPA", body: "Conduct PIA per NPC Advisory 2017-03; maintain a Records of Processing Activities." },
+      { label: "PIA & Compilation", body: "Conduct PIA per NPC Advisory 2017-03; maintain a Records of Processing Activities." },
       { label: "Industry reminders", body: "LGUs: align with NPC Circular 2023-04. Private: PMP + DPO designation required." },
       { label: "Breach", body: "Notify NPC and affected subjects within 72 hours when sensitive data is involved." },
     ],

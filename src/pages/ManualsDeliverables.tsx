@@ -142,7 +142,7 @@ function OutputsTab() {
       rows: pias.map(p => ({ name: p.title, type: p.type, status: "Saved", updated: new Date(p.updatedAt).toLocaleDateString(), version: "v1", link: `/pia/${p.id}` })),
     },
     {
-      label: "RoPA / NPC-RS", route: "/ropa",
+      label: "Compilation / NPC-RS", route: "/ropa",
       rows: [{ name: "ROPA Compilation", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" },
              { name: "NPC-RS Compilation", type: "Compilation", status: pias.length ? "Ready" : "Empty", updated: new Date().toLocaleDateString(), version: "v1", link: "/ropa" }],
     },

@@ -19,7 +19,7 @@ import { Link } from "react-router-dom";
 const quickActions = [
   { to: "/upload", icon: Upload, title: "Upload Transcript", desc: "Generate PIA from meeting minutes" },
   { to: "/library", icon: Library, title: "PIA Library", desc: "View and manage all PIAs" },
-  { to: "/compile", icon: FolderPlus, title: "Compilation Builder", desc: "Build RoPA & NPC-RS" },
+  { to: "/compile", icon: FolderPlus, title: "Compilation Builder", desc: "Build Compilation & NPC-RS" },
   { to: "/drl", icon: FileCog, title: "DRL / IRL Generator", desc: "Generate document requests" },
   { to: "/pradar", icon: ShieldCheck, title: "PRADAR", desc: "Compliance assessment" },
   { to: "/email", icon: Mail, title: "Email Generator", desc: "Create follow-up emails" },

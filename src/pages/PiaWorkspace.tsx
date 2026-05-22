@@ -103,7 +103,7 @@ export default function PiaWorkspace() {
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={() => navigate(`/ropa/${pia.id}`)}>
-              <FileText className="h-4 w-4 mr-2" />ROPA / NPC-RS
+              <FileText className="h-4 w-4 mr-2" />Compilation / NPC-RS
             </Button>
             <Button variant="outline" onClick={() => { upsertPia(pia); toast.success("Saved"); }}>
               <Save className="h-4 w-4 mr-2" />Save
@@ -175,7 +175,7 @@ export default function PiaWorkspace() {
       <RelatedLinks
         title="Linked workables"
         links={[
-          { to: `/ropa/${pia.id}`, label: "ROPA / NPC-RS", icon: Table2 },
+          { to: `/ropa/${pia.id}`, label: "Compilation / NPC-RS", icon: Table2 },
           { to: `/drl?piaId=${pia.id}`, label: "DRL / IRL items", icon: ShieldAlert },
           { to: `/consistency?piaId=${pia.id}`, label: "Consistency Checker", icon: GitCompare },
           { to: `/email?source=pia&refId=${pia.id}`, label: "Email Generator", icon: Mail },

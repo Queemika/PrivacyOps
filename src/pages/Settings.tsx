@@ -20,7 +20,7 @@ const TABLES = [
   { id: "inspection", label: "Physical Inspection — Checklist" },
   { id: "notice", label: "Privacy Notice — Assessment" },
   { id: "tsa", label: "Tech Security — Tech Stack" },
-  { id: "ropa", label: "ROPA / NPC-RS — Columns" },
+  { id: "ropa", label: "Compilation / NPC-RS — Columns" },
 ];
 
 type RoleUx = Record<string, { landing: string; density: string }>;

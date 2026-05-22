@@ -27,7 +27,7 @@ export default function PiaShell() {
         <TabsList>
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="ropa">RoPA</TabsTrigger>
+          <TabsTrigger value="ropa">Compilation</TabsTrigger>
           <TabsTrigger value="npc">NPC-RS</TabsTrigger>
           <TabsTrigger value="drl">DRL</TabsTrigger>
           <TabsTrigger value="refs">References</TabsTrigger>

@@ -175,7 +175,7 @@ export default function PIALibrary() {
         title="Jump to"
         links={[
           { to: "/compile", label: "Compilation Builder", icon: Layers },
-          { to: "/ropa", label: "ROPA / NPC-RS", icon: Table2 },
+          { to: "/ropa", label: "Compilation / NPC-RS", icon: Table2 },
           { to: "/summary", label: "Executive Summary", icon: BookOpen },
           { to: "/drl", label: "DRL / IRL", icon: ShieldAlert },
           { to: "/email", label: "Email Generator", icon: Mail },
