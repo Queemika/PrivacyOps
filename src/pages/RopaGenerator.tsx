@@ -90,6 +90,23 @@ function CompilationTable({
     setSelected(next);
   };
 
+  // Apply column filters
+  const filteredRows = rows.filter(p =>
+    visibleCols.every(c => {
+      const f = filters[c.key];
+      if (!f || f.size === 0) return true;
+      return f.has(resolveValue(p, c.key, kind) || "(empty)");
+    })
+  );
+
+  const exportColumns = [
+    { header: "PIA", key: "__pia" },
+    ...visibleCols.map(c => ({ header: c.label, key: c.key, width: c.width })),
+  ];
+  const exportRows = filteredRows.map(p => ({
+    __pia: p.title,
+    ...Object.fromEntries(visibleCols.map(c => [c.key, resolveValue(p, c.key, kind)])),
+  }));
 
   return (
     <div className="space-y-3">
@@ -141,33 +158,46 @@ function CompilationTable({
               </div>
             </PopoverContent>
           </Popover>
+          {Object.values(filters).some(s => s && s.size) && (
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setFilters({})}>Clear filters</Button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={exportJSON}><Download className="h-3.5 w-3.5 mr-1" />JSON</Button>
-          <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-3.5 w-3.5 mr-1" />CSV</Button>
-          <Button size="sm" variant="outline" onClick={exportPDF}><FileText className="h-3.5 w-3.5 mr-1" />PDF</Button>
-          <Button size="sm" onClick={exportXLSX}><FileSpreadsheet className="h-3.5 w-3.5 mr-1" />Excel</Button>
-        </div>
+        <ExportMenu filename={`${kind.toUpperCase()}_compilation`} columns={exportColumns} rows={exportRows} formats={["excel", "pdf", "csv"]} />
       </div>
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          {rows.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">No PIAs selected or none exist.</div>
+          {filteredRows.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">No PIAs match current filters.</div>
           ) : (
             <table className="text-xs" style={{ width: "max-content", minWidth: "100%" }}>
               <thead className="bg-muted/40 border-b sticky top-0 z-10">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium w-40 sticky left-0 bg-muted/40 z-20">PIA</th>
-                  {visibleCols.map(c => (
-                    <th key={c.key} className="px-3 py-2 text-left font-medium border-l" style={{ width: c.width, minWidth: c.width }}>
-                      {c.label}
-                    </th>
-                  ))}
+                  {visibleCols.map((c, i) => {
+                    const colIdx = cols.findIndex(x => x.key === c.key);
+                    return (
+                      <ResizableTh
+                        key={c.key}
+                        width={c.width}
+                        onResize={(w) => updateCol(colIdx, { width: w })}
+                        className="px-3 py-2 text-left font-medium border-l align-top"
+                      >
+                        <div className="flex items-center">
+                          <span className="truncate">{c.label}</span>
+                          <ColumnFilter
+                            values={rows.map(p => resolveValue(p, c.key, kind))}
+                            active={filters[c.key] || new Set()}
+                            onChange={(s) => setFilter(c.key, s)}
+                          />
+                        </div>
+                      </ResizableTh>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                {rows.map(p => (
+                {filteredRows.map(p => (
                   <tr key={p.id} ref={p.id === focusPiaId ? focusRef : undefined} className={`border-b align-top hover:bg-muted/20 ${p.id === focusPiaId ? "bg-accent/10" : ""}`}>
                     <td className="px-3 py-2 sticky left-0 bg-background z-10 border-r">
                       <div className="font-medium">{p.title}</div>
@@ -194,3 +224,4 @@ function CompilationTable({
     </div>
   );
 }
+
