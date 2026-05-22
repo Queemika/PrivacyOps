@@ -244,3 +244,82 @@ function NoticeEditor({ notice, onBack }: { notice: PrivacyNotice; onBack: () =>
     </PageShell>
   );
 }
+
+function WorkingFileTab({ notices, onOpen }: { notices: PrivacyNotice[]; onOpen: (id: string) => void }) {
+  if (!notices.length) {
+    return (
+      <Card><CardContent className="p-6 text-sm text-muted-foreground">
+        No notices yet. Create a new notice from the Summary tab to begin filling out assessments.
+      </CardContent></Card>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {notices.map(n => {
+        const c = compliance(n);
+        const pct = c.total ? Math.round((c.complied / c.total) * 100) : 0;
+        const sections = sectionsFor(n.type);
+        return (
+          <Collapsible key={n.id} defaultOpen={false}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <div className="px-4 py-3 flex items-center justify-between border-b">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <ChevronDown className="h-4 w-4 shrink-0" />
+                    <span className="font-semibold text-sm truncate">{n.dpsName}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{n.type}</span>
+                    {n.department && <span className="text-xs text-muted-foreground hidden sm:inline">· {n.department}</span>}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span>{c.complied}/{c.total} ({pct}%)</span>
+                    <span className="status-chip bg-muted text-muted-foreground border-border">{n.status}</span>
+                    <button onClick={(e) => { e.stopPropagation(); onOpen(n.id); }} className="text-accent hover:underline">Edit →</button>
+                  </div>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="p-0">
+                  {sections.map(sid => {
+                    const sec = SECTIONS[sid];
+                    return (
+                      <div key={sid} className="border-b last:border-0">
+                        <div className="px-4 py-2 bg-muted/20 text-xs font-semibold">{sec.title}</div>
+                        <table className="w-full text-xs">
+                          <thead className="text-muted-foreground border-b">
+                            <tr>
+                              <th className="text-left font-medium px-3 py-1.5 w-16">Comply</th>
+                              <th className="text-left font-medium px-3 py-1.5">Description</th>
+                              <th className="text-left font-medium px-3 py-1.5 w-64">Reason</th>
+                              <th className="text-left font-medium px-3 py-1.5 w-64">Notes</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sec.items.map(it => {
+                              const a = n.answers[it.id] || { comply: false, reason: "", notes: "" };
+                              return (
+                                <tr key={it.id} className="border-b last:border-0">
+                                  <td className="px-3 py-1.5">
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${a.comply ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                      {a.comply ? "Yes" : "No"}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-1.5">{it.description}</td>
+                                  <td className="px-3 py-1.5 text-muted-foreground">{a.reason || "—"}</td>
+                                  <td className="px-3 py-1.5 text-muted-foreground">{a.notes || "—"}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        );
+      })}
+    </div>
+  );
+}
