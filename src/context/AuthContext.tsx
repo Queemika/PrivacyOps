@@ -1,36 +1,13 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode } from "react";
+import {
+  AuthContextObject,
+  AuthUser,
+  AuditEntry,
+  AuthCtx,
+} from "./auth-context-base";
 
-export interface AuthUser {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
-export interface AuditEntry {
-  ts: string;
-  user: string;
-  action: string;
-  target: string;
-}
-
-interface AuthCtx {
-  user: AuthUser | null;
-  ready: boolean;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  signup: (u: AuthUser & { password: string }) => { ok: boolean; error?: string };
-  logout: () => void;
-  logAction: (action: string, target: string) => void;
-  auditLog: AuditEntry[];
-}
-
-const Ctx = createContext<AuthCtx | null>(null);
-
-// Prototype: accept any well-formed email (demo mode).
-export function validateCorporateEmail(email: string): string | null {
-  const e = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return "Please enter a valid email address.";
-  return null;
-}
+export { useAuth, validateCorporateEmail } from "./auth-context-base";
+export type { AuthUser, AuditEntry } from "./auth-context-base";
 
 const readUser = (): AuthUser | null => {
   if (typeof window === "undefined") return null;
@@ -53,14 +30,11 @@ const readAudit = (): AuditEntry[] => {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Hydrate synchronously from localStorage so ProtectedRoute doesn't redirect
-  // on first render before an effect could populate the session.
   const [user, setUser] = useState<AuthUser | null>(() => readUser());
   const [auditLog, setAuditLog] = useState<AuditEntry[]>(() => readAudit());
   const [ready] = useState(true);
 
   useEffect(() => {
-    // Seed default admin account (non-blocking)
     try {
       const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
       if (!accounts["admin@kpmg.com"]) {
@@ -98,8 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup: AuthCtx["signup"] = ({ firstName, lastName, email, password }) => {
-    const err = validateCorporateEmail(email);
-    if (err) return { ok: false, error: err };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Please enter a valid email address." };
     if (!firstName.trim() || !lastName.trim()) return { ok: false, error: "First and last name are required." };
     if (password.length < 8) return { ok: false, error: "Password must be at least 8 characters." };
     const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
@@ -111,8 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login: AuthCtx["login"] = (email, password) => {
-    const err = validateCorporateEmail(email);
-    if (err) return { ok: false, error: err };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Please enter a valid email address." };
     const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
     const acc = accounts[email.toLowerCase()];
     if (!acc || acc.password !== password) return { ok: false, error: "Invalid email or password." };
@@ -137,11 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistUser(null);
   };
 
-  return <Ctx.Provider value={{ user, ready, login, signup, logout, logAction, auditLog }}>{children}</Ctx.Provider>;
-}
-
-export function useAuth() {
-  const c = useContext(Ctx);
-  if (!c) throw new Error("useAuth must be used within AuthProvider");
-  return c;
+  return (
+    <AuthContextObject.Provider value={{ user, ready, login, signup, logout, logAction, auditLog }}>
+      {children}
+    </AuthContextObject.Provider>
+  );
 }
