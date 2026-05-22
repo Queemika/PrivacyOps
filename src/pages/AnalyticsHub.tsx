@@ -246,10 +246,10 @@ function InspectionAnalyticsCard({ insps }: { insps: ReturnType<typeof loadInspe
           </thead>
           <tbody>
             {insps.map(i => {
-              const yes = i.rows.filter(r => r.answer === "Yes").length;
-              const no = i.rows.filter(r => r.answer === "No").length;
-              const na = i.rows.filter(r => r.answer === "N/A").length;
-              const open = i.rows.filter(r => !r.answer).length;
+              const yes = i.rows.filter(r => r.status === "Yes").length;
+              const no = i.rows.filter(r => r.status === "No").length;
+              const na = i.rows.filter(r => r.status === "N-A").length;
+              const open = i.rows.filter(r => !r.status).length;
               return (
                 <tr key={i.id} className="border-b last:border-0">
                   <td className="py-1.5">{i.departmentArea}</td>
