@@ -11,9 +11,11 @@ import { Pia } from "@/lib/pia/schema";
 import { loadPias } from "@/lib/pia/store";
 import { resolveValue } from "@/lib/pia/ropaMap";
 import { loadCols, saveCols, resetCols, RopaColumnConfig } from "@/lib/ropaCompilation";
-import { Download, FileSpreadsheet, FileText, RotateCcw, Settings2, ExternalLink, ArrowLeft } from "lucide-react";
+import { RotateCcw, Settings2, ExternalLink, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import { ResizableTh } from "@/components/ResizableTh";
+import { ColumnFilter } from "@/components/ColumnFilter";
+import { ExportMenu } from "@/components/ExportMenu";
 
 type Kind = "ropa" | "npc";
 
