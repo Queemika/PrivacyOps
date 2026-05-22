@@ -195,10 +195,13 @@ export function createPia(engagementId: string, opts: { title: string; type: Pia
   return pia;
 }
 
-// Migrate older PIAs to the current schema. Idempotent.
+// Migrate older PIAs to the current schema. Idempotent. Also seeds any
+// missing Phase 2 / Phase 3 structures so legacy/linked PIAs reflect the
+// latest template (Phase 1 project context, threshold, stakeholders;
+// Phase 2 data mapping; Phase 3 principles, rights, security, cross-border).
 export function migratePia(p: any): Pia {
   if (!p) return p;
-  // Phase 1 desc shape
+  // ---------- Phase 1 ----------
   const d = p.phase1?.desc || {};
   const newDesc = {
     systemType: d.systemType ?? d.systemIs ?? "",
@@ -221,24 +224,69 @@ export function migratePia(p: any): Pia {
   };
   p.phase1 = p.phase1 || { threshold: {}, stakeholders: [] };
   p.phase1.desc = newDesc;
-  // Threshold: drop N/A
   const thr = p.phase1.threshold || {};
-  for (const k of Object.keys(thr)) {
-    if (thr[k]?.yn === "N/A") thr[k] = { ...thr[k], yn: "" };
-  }
-  // Ensure all questions exist
-  for (const q of THRESHOLD_QUESTIONS) {
-    if (!thr[q.id]) thr[q.id] = { yn: "", response: "" };
-  }
+  for (const k of Object.keys(thr)) if (thr[k]?.yn === "N/A") thr[k] = { ...thr[k], yn: "" };
+  for (const q of THRESHOLD_QUESTIONS) if (!thr[q.id]) thr[q.id] = { yn: "", response: "" };
   p.phase1.threshold = thr;
-  // Stakeholders defaults
   const sh = p.phase1.stakeholders || [];
   const defaults = DEFAULT_STAKEHOLDERS();
-  for (const d2 of defaults) {
-    if (!sh.find((s: any) => s.id === d2.id)) sh.unshift(d2);
-  }
+  for (const d2 of defaults) if (!sh.find((s: any) => s.id === d2.id)) sh.unshift(d2);
   p.phase1.stakeholders = sh;
-  // Phase 4
+
+  // ---------- Phase 2 ----------
+  const p2: any = p.phase2 || {};
+  p.phase2 = {
+    dpsType: p2.dpsType ?? "",
+    dpsName: p2.dpsName ?? p.title ?? "",
+    basisPI: p2.basisPI ?? "",
+    basisSPI: p2.basisSPI ?? "",
+    purposeProcessing: p2.purposeProcessing ?? "",
+    futurePurpose: p2.futurePurpose ?? "",
+    dataSubjectsDesc: p2.dataSubjectsDesc ?? "",
+    categories: Array.isArray(p2.categories) ? p2.categories : [],
+    picOrPip: p2.picOrPip ?? "",
+    outsourced: p2.outsourced ?? "",
+    pipName: p2.pipName ?? "", pipEmail: p2.pipEmail ?? "", pipContact: p2.pipContact ?? "",
+    picName: p2.picName ?? "",
+    dpoName: p2.dpoName ?? "", dpoEmail: p2.dpoEmail ?? "", dpoContact: p2.dpoContact ?? "",
+    publicFacing: p2.publicFacing ?? "",
+    externalInternal: p2.externalInternal ?? "",
+    automatedDecisionNotice: p2.automatedDecisionNotice ?? "No",
+    lawfulBasis: p2.lawfulBasis ?? "",
+    otherBasisInfo: p2.otherBasisInfo ?? "",
+    consentUsed: p2.consentUsed ?? "",
+    consentProof: p2.consentProof ?? "",
+    retention: p2.retention ?? "",
+    automatedMethods: p2.automatedMethods ?? "N/A",
+    automatedDecisions: p2.automatedDecisions ?? "N/A",
+    securityOrg: p2.securityOrg ?? "",
+    securityPhysical: p2.securityPhysical ?? "",
+    securityTechnical: p2.securityTechnical ?? "",
+    collection: Array.isArray(p2.collection) ? p2.collection : [],
+    use: Array.isArray(p2.use) ? p2.use : [],
+    disclosure: Array.isArray(p2.disclosure) ? p2.disclosure : [],
+    repositories: Array.isArray(p2.repositories) ? p2.repositories : [],
+  };
+
+  // ---------- Phase 3 ----------
+  const p3: any = p.phase3 || {};
+  const ensureSection = (existing: any, seeds: ChecklistSeed[]) => {
+    const out: Record<string, ChecklistAnswer> = { ...(existing || {}) };
+    for (const s of seeds) if (!out[s.id]) out[s.id] = blankAnswerFromSeed(s);
+    return out;
+  };
+  p.phase3 = {
+    principles:     ensureSection(p3.principles,     PRINCIPLES_SEED),
+    rights:         ensureSection(p3.rights,         RIGHTS_SEED),
+    organizational: ensureSection(p3.organizational, ORG_SECURITY_SEED),
+    physical:       ensureSection(p3.physical,       PHY_SECURITY_SEED),
+    technical:      ensureSection(p3.technical,      TECH_SECURITY_SEED),
+    crossBorderEnabled: p3.crossBorderEnabled ?? false,
+    crossBorder:    ensureSection(p3.crossBorder,    CROSS_BORDER_SEED),
+    mitigation: Array.isArray(p3.mitigation) ? p3.mitigation : [],
+  };
+
+  // ---------- Phase 4 ----------
   if (!p.phase4) {
     p.phase4 = {
       prepared: { name: "", designation: "System / Process Owner", date: "", signature: "" },
@@ -249,7 +297,16 @@ export function migratePia(p: any): Pia {
   if (!p.consolidatedComponents) p.consolidatedComponents = [];
   if (!p.ropaOverrides) p.ropaOverrides = {};
   if (!p.npcOverrides) p.npcOverrides = {};
+  if (!Array.isArray(p.drlLinks)) p.drlLinks = [];
   return p as Pia;
+}
+
+// Explicit alias for callers that want intent-revealing naming
+// (e.g. when linking a transcript to an existing PIA).
+export function normalizePiaToLatestTemplate(p: Pia): Pia {
+  const migrated = migratePia(p);
+  upsertPia(migrated);
+  return migrated;
 }
 
 // Threshold logic: if any Yes -> PIA required.

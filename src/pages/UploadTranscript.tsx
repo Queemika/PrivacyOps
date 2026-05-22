@@ -14,10 +14,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { addActions } from "@/lib/actionsStore";
 import { addTodos } from "@/lib/todosStore";
 import { loadTeamUploads, addTeamUpload, tagTeamUpload, type TeamUpload } from "@/lib/teamUploadsStore";
 import { TranscriptPreviewModal, type PreviewTranscript } from "@/components/TranscriptPreviewModal";
+import { getPia, normalizePiaToLatestTemplate } from "@/lib/pia/store";
+import { ChevronDown } from "lucide-react";
 
 export interface UploadRecord {
   id: string;
@@ -121,11 +124,14 @@ export default function Upload() {
 
   const handleLinkExisting = () => {
     if (!linkPiaId) { toast.error("Please select a PIA to link"); return; }
+    // Ensure the target PIA is upgraded to the latest template before linking.
+    const target = getPia(linkPiaId);
+    if (target) normalizePiaToLatestTemplate(target);
     logAction("Linked transcript to existing PIA", `${file?.name ?? ""} → ${linkPiaId}`);
     tagTeamUpload(uploadId, "PIA");
-    toast.success(`Linked to ${linkPiaId}`);
+    toast.success(`Linked to ${linkPiaId} and upgraded to latest PIA template`);
     setProcessOpen(false);
-    navigate(`/pia?uploadId=${uploadId}&piaId=${linkPiaId}`);
+    navigate(`/pia/${linkPiaId}?uploadId=${uploadId}`);
   };
 
   const beforeUpload = step === "idle";
@@ -211,57 +217,70 @@ export default function Upload() {
           </>
         )}
 
-        {/* Team transcripts */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Team transcripts</h3>
-            <p className="text-xs text-muted-foreground mb-4">Transcripts uploaded by your team. Tags show which modules were processed from each.</p>
-            <div className="border rounded-md overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="text-xs text-muted-foreground bg-muted/40 border-b">
-                  <tr>
-                    <th className="text-left font-medium px-3 py-2">File</th>
-                    <th className="text-left font-medium px-3 py-2">Uploader</th>
-                    <th className="text-left font-medium px-3 py-2">Date</th>
-                    <th className="text-left font-medium px-3 py-2">Processed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {team.map((t) => (
-                    <tr key={t.id} className="border-b last:border-0 hover:bg-muted/20">
-                      <td className="px-3 py-2.5">
-                        <button
-                          onClick={() => setPreviewing({ id: t.id, fileName: t.fileName, content: transcriptSample, tags: t.tags })}
-                          className="text-left hover:text-accent"
-                        >
-                          <div className="font-medium text-xs">{t.fileName}</div>
-                          <div className="text-[10px] text-muted-foreground font-mono">{t.id}</div>
-                        </button>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs">{t.uploader}</td>
-                      <td className="px-3 py-2.5 text-xs text-muted-foreground">{t.uploadedAt}</td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex flex-wrap gap-1">
-                          {t.tags.length === 0 && <span className="text-[10px] text-muted-foreground">—</span>}
-                          {t.tags.map((tag) => (
+        {/* Team transcripts — collapsed automatically while a new upload is being processed */}
+        <Collapsible defaultOpen={step !== "uploading" && step !== "anon"} open={step === "uploading" || step === "anon" ? false : undefined}>
+          <Card>
+            <CollapsibleTrigger className="w-full">
+              <div className="p-4 flex items-center justify-between border-b">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-accent" />
+                  <h3 className="text-sm font-semibold">Team transcripts</h3>
+                  <span className="text-[10px] text-muted-foreground">({team.length})</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6">
+                <p className="text-xs text-muted-foreground mb-4">Transcripts uploaded by your team. Tags show which modules were processed from each.</p>
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="text-xs text-muted-foreground bg-muted/40 border-b">
+                      <tr>
+                        <th className="text-left font-medium px-3 py-2">File</th>
+                        <th className="text-left font-medium px-3 py-2">Uploader</th>
+                        <th className="text-left font-medium px-3 py-2">Date</th>
+                        <th className="text-left font-medium px-3 py-2">Processed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {team.map((t) => (
+                        <tr key={t.id} className="border-b last:border-0 hover:bg-muted/20">
+                          <td className="px-3 py-2.5">
                             <button
-                              key={tag}
-                              onClick={() => navigate(TAG_ROUTE[tag] || "/")}
-                              title={`Open ${tag} module`}
-                              className={`text-[10px] px-1.5 py-0.5 rounded hover:ring-1 hover:ring-accent transition ${TAG_TONE[tag] || "bg-muted text-muted-foreground"}`}
+                              onClick={() => setPreviewing({ id: t.id, fileName: t.fileName, content: transcriptSample, tags: t.tags })}
+                              className="text-left hover:text-accent"
                             >
-                              {tag}
+                              <div className="font-medium text-xs">{t.fileName}</div>
+                              <div className="text-[10px] text-muted-foreground font-mono">{t.id}</div>
                             </button>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                          </td>
+                          <td className="px-3 py-2.5 text-xs">{t.uploader}</td>
+                          <td className="px-3 py-2.5 text-xs text-muted-foreground">{t.uploadedAt}</td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex flex-wrap gap-1">
+                              {t.tags.length === 0 && <span className="text-[10px] text-muted-foreground">—</span>}
+                              {t.tags.map((tag) => (
+                                <button
+                                  key={tag}
+                                  onClick={() => navigate(TAG_ROUTE[tag] || "/")}
+                                  title={`Open ${tag} module`}
+                                  className={`text-[10px] px-1.5 py-0.5 rounded hover:ring-1 hover:ring-accent transition ${TAG_TONE[tag] || "bg-muted text-muted-foreground"}`}
+                                >
+                                  {tag}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
 
       <Dialog open={processOpen} onOpenChange={setProcessOpen}>

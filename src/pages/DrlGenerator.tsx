@@ -14,6 +14,7 @@ import { PRADAR_SEEDS } from "@/lib/drl/seeds";
 import { loadPias } from "@/lib/pia/store";
 import { toast } from "sonner";
 import { DrlAttachmentCell } from "@/components/DrlAttachmentCell";
+import { DateCell } from "@/components/DateCell";
 import { ExportMenu } from "@/components/ExportMenu";
 
 const STATUSES: DrlStatus[] = ["Open", "Partially Received", "Under Inspection", "Closed", "Not Applicable", "Completed"];
@@ -260,7 +261,7 @@ function CellEditor({ row, col, onChange }: { row: DrlRow; col: ColSpec; onChang
     return <DrlAttachmentCell row={row} onChange={onChange} />;
   }
   if (col.kind === "date") {
-    return <Input type="date" value={value} onChange={(e) => commit(e.target.value)} className="h-7 text-xs" />;
+    return <DateCell value={value} onChange={commit} />;
   }
   return <Input value={value} onChange={(e) => commit(e.target.value)} className="h-7 text-xs" />;
 }

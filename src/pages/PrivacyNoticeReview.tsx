@@ -21,6 +21,7 @@ import {
 import { SECTIONS, sectionsFor, NoticeType } from "@/lib/privacyNotice/template";
 import { logAction } from "@/lib/auditLog";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { ReferencesPanel } from "@/components/ReferencesPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 
@@ -119,15 +120,7 @@ export default function PrivacyNoticeReview() {
       {tab === "drl" && <DrlInlinePanel category="notice" title="Privacy Notice DRL items" />}
 
       {tab === "ref" && (
-        <Card><CardContent className="p-6 text-sm space-y-2">
-          <p className="font-semibold">References (admin-configurable)</p>
-          <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-            <li>Republic Act 10173 (Data Privacy Act of 2012) — § 16 (Rights of Data Subject)</li>
-            <li>NPC Circular 16-01 (Security of Personal Data)</li>
-            <li>NPC Advisory 2017-01 (Designation of Data Protection Officers)</li>
-            <li>NPC Privacy Notice Toolkit</li>
-          </ul>
-        </CardContent></Card>
+        <ReferencesPanel moduleId="privacyNotice" title="Privacy Notice References" />
       )}
 
       <Dialog open={newDlg} onOpenChange={setNewDlg}>

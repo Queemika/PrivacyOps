@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { PageShell } from "@/components/ui/PageShell";
 import { SectionTabs } from "@/components/ui/SectionTabs";
 import { StatTile } from "@/components/ui/StatTile";
@@ -7,246 +6,233 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, Download, Trash2, ChevronDown, Pencil, ListChecks, ShieldCheck, AlertCircle } from "lucide-react";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Plus, Download, Upload, Camera, ListChecks, ShieldCheck, AlertCircle, Trash2, X } from "lucide-react";
-import {
-  loadInspections, saveInspections, upsertInspection, newInspection, deleteInspection,
-  Inspection, InspectionRow, YNA,
+  loadAreas, saveAreas, InspectionArea, InspectionRow, YNA, DEFAULT_QUESTIONS,
 } from "@/lib/inspections/store";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { ReferencesPanel } from "@/components/ReferencesPanel";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 
-const YN_OPTS: YNA[] = ["Yes", "No", "N/A"];
+const YN_OPTS: YNA[] = ["Yes", "No", "N-A"];
 
 export default function PhysicalInspection() {
   const [tab, setTab] = useState("summary");
-  const [items, setItems] = useState<Inspection[]>([]);
-  const [activeId, setActiveId] = useState<string>("all");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [areas, setAreas] = useState<InspectionArea[]>([]);
 
-  const refresh = () => setItems(loadInspections());
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { setAreas(loadAreas()); }, []);
 
-  const active: Inspection | null = activeId === "all" ? null : items.find(i => i.id === activeId) || null;
+  const persist = (next: InspectionArea[]) => { setAreas(next); saveAreas(next); };
 
-  const allRows: InspectionRow[] = active ? active.rows : items.flatMap(i => i.rows);
-  const allPhotos = items.flatMap(i => i.rows.flatMap(r => r.photos.map(p => ({ src: p, ctx: `${i.departmentArea} · Q${r.no}` }))));
-
+  const allRows = areas.flatMap(a => a.rows);
   const counts = {
-    yes: allRows.filter(r => r.answer === "Yes").length,
-    no: allRows.filter(r => r.answer === "No").length,
-    na: allRows.filter(r => r.answer === "N/A").length,
-    open: allRows.filter(r => !r.answer).length,
+    yes: allRows.filter(r => r.status === "Yes").length,
+    no: allRows.filter(r => r.status === "No").length,
+    na: allRows.filter(r => r.status === "N-A").length,
+    open: allRows.filter(r => !r.status).length,
   };
 
-  const updateActive = (patch: Partial<Inspection>) => {
-    if (!active) return;
-    const next = { ...active, ...patch };
-    upsertInspection(next);
-    refresh();
-  };
-  const updateRow = (rid: string, patch: Partial<InspectionRow>) => {
-    if (!active) return;
-    const next = { ...active, rows: active.rows.map(r => r.id === rid ? { ...r, ...patch } : r) };
-    upsertInspection(next); refresh();
-  };
-  const addRow = () => {
-    if (!active) return;
-    const no = active.rows.length + 1;
-    updateActive({ rows: [...active.rows, { id: `q-${Date.now()}`, no, question: "", answer: "", response: "", observation: "", photos: [] }] });
-  };
-  const removeRow = (rid: string) => {
-    if (!active) return;
-    updateActive({ rows: active.rows.filter(r => r.id !== rid).map((r, i) => ({ ...r, no: i + 1 })) });
+  const updateArea = (id: string, patch: Partial<InspectionArea>) =>
+    persist(areas.map(a => a.id === id ? { ...a, ...patch } : a));
+
+  const updateRow = (areaId: string, rowId: string, patch: Partial<InspectionRow>) =>
+    persist(areas.map(a => a.id === areaId
+      ? { ...a, rows: a.rows.map(r => r.id === rowId ? { ...r, ...patch } : r) }
+      : a));
+
+  const addRow = (areaId: string) => {
+    persist(areas.map(a => a.id === areaId ? {
+      ...a, rows: [...a.rows, {
+        id: `q-${Date.now()}`, no: a.rows.length + 1,
+        question: "", status: "", remarks: "", observation: "", recommendation: "",
+      }],
+    } : a));
   };
 
-  const create = () => {
-    const name = prompt("Department / Area name?");
+  const removeRow = (areaId: string, rowId: string) => {
+    persist(areas.map(a => a.id === areaId ? {
+      ...a, rows: a.rows.filter(r => r.id !== rowId).map((r, i) => ({ ...r, no: i + 1 })),
+    } : a));
+  };
+
+  const addArea = () => {
+    const name = prompt("New area name?");
     if (!name) return;
-    const insp = newInspection(name.trim());
-    upsertInspection(insp); refresh(); setActiveId(insp.id);
+    persist([...areas, {
+      id: `AREA-${Date.now()}`, name: name.trim(),
+      rows: DEFAULT_QUESTIONS.map((q, i) => ({
+        id: `q-${i}-${Date.now()}`, no: i + 1, question: q,
+        status: "", remarks: "", observation: "", recommendation: "",
+      })),
+    }]);
   };
 
-  const onUploadChecklist = async (f: File) => {
-    if (!active) { toast.error("Select an inspection first"); return; }
-    try {
-      const buf = await f.arrayBuffer();
-      const wb = XLSX.read(buf);
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-      const newRows = rows.map((r, i) => ({
-        id: `q-${Date.now()}-${i}`, no: i + 1,
-        question: String(r.Question || r.question || Object.values(r)[0] || ""),
-        answer: "" as YNA, response: "", observation: "", photos: [],
-      })).filter(r => r.question);
-      updateActive({ rows: newRows });
-      toast.success(`Loaded ${newRows.length} questions`);
-    } catch { toast.error("Could not parse file"); }
+  const renameArea = (id: string) => {
+    const cur = areas.find(a => a.id === id);
+    const name = prompt("Rename area:", cur?.name || "");
+    if (name) updateArea(id, { name: name.trim() });
   };
 
-  const onUploadPhoto = (rid: string, f: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const row = active!.rows.find(r => r.id === rid)!;
-      updateRow(rid, { photos: [...row.photos, reader.result as string] });
-    };
-    reader.readAsDataURL(f);
+  const deleteArea = (id: string) => {
+    if (!confirm(`Delete area "${areas.find(a => a.id === id)?.name}"?`)) return;
+    persist(areas.filter(a => a.id !== id));
   };
 
   const exportCSV = () => {
-    const rows = (active ? active.rows : items.flatMap(i => i.rows.map(r => ({ ...r, area: i.departmentArea }))));
-    const head = ["Area", "No.", "Question", "Yes/No/NA", "Response", "Observation", "Photos"];
-    const body = rows.map((r: any) => [
-      r.area || active?.departmentArea || "", r.no, r.question, r.answer, r.response, r.observation, r.photos.length,
-    ]);
-    const csv = [head, ...body].map(r => r.map((c: any) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const head = ["Area", "No.", "Items for Checking / Question", "Compliance Status", "Remarks", "Observations", "Recommendations"];
+    const body = areas.flatMap(a => a.rows.map(r => [a.name, r.no, r.question, r.status, r.remarks, r.observation, r.recommendation]));
+    const csv = [head, ...body].map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `inspection_${active?.departmentArea || "all"}.csv`;
+    a.download = "physical_inspection.csv";
     a.click();
+    toast.success("Inspection exported");
   };
 
   return (
     <PageShell
       title="Physical Inspection"
-      subtitle="On-site walkthrough checklist with photo evidence."
+      subtitle="On-site walkthrough checklists organised by inspected area."
       actions={<>
-        <Select value={activeId} onValueChange={setActiveId}>
-          <SelectTrigger className="w-56 h-9"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Overall view</SelectItem>
-            {items.map(i => <SelectItem key={i.id} value={i.id}>{i.departmentArea}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Button variant="outline" onClick={create}><Plus className="h-4 w-4 mr-1.5" />New inspection</Button>
+        <Button variant="outline" onClick={addArea}><Plus className="h-4 w-4 mr-1.5" />New area</Button>
         <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1.5" />Download CSV</Button>
       </>}
     >
       <SectionTabs
         tabs={[
           { id: "summary", label: "Summary" },
-          { id: "wf", label: "Working File" },
-          { id: "album", label: "Album", count: allPhotos.length },
+          { id: "wf", label: "Working File", count: areas.length },
           { id: "drl", label: "DRL/IRL" },
+          { id: "refs", label: "References" },
         ]}
         value={tab} onChange={setTab}
       />
 
       {tab === "summary" && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatTile label="Questions" value={allRows.length} icon={ListChecks} accent="blue" />
-          <StatTile label="Compliant (Yes)" value={counts.yes} icon={ShieldCheck} accent="green" />
-          <StatTile label="Gaps (No)" value={counts.no} icon={AlertCircle} accent="rose" />
-          <StatTile label="Photos" value={allPhotos.length} icon={Camera} accent="violet" />
-        </div>
-      )}
-
-      {tab === "wf" && (
         <>
-          {!active ? (
-            <Card><CardContent className="p-6 text-sm text-muted-foreground">
-              Pick a department/area above or create a new inspection to start filling out the working file.
-            </CardContent></Card>
-          ) : (
-            <>
-              <Card><CardContent className="p-4 grid md:grid-cols-4 gap-3 text-sm">
-                <div><label className="text-xs text-muted-foreground">Inspector</label>
-                  <Input value={active.inspector} onChange={(e) => updateActive({ inspector: e.target.value })} className="h-9" />
-                </div>
-                <div><label className="text-xs text-muted-foreground">Date</label>
-                  <Input type="date" value={active.date} onChange={(e) => updateActive({ date: e.target.value })} className="h-9" />
-                </div>
-                <div><label className="text-xs text-muted-foreground">Department / Area</label>
-                  <Input value={active.departmentArea} onChange={(e) => updateActive({ departmentArea: e.target.value })} className="h-9" />
-                </div>
-                <div className="flex items-end gap-2">
-                  <input ref={fileRef} type="file" accept=".xlsx,.csv" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadChecklist(f); e.currentTarget.value = ""; }} />
-                  <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><Upload className="h-3.5 w-3.5 mr-1.5" />Upload checklist</Button>
-                  <Button variant="destructive" size="sm" onClick={() => { if (confirm("Delete this inspection?")) { deleteInspection(active.id); setActiveId("all"); refresh(); } }}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </CardContent></Card>
-
-              <Card><CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/40 border-b">
-                    <tr>
-                      <th className="text-left font-medium px-2 py-2 w-10">No.</th>
-                      <th className="text-left font-medium px-2 py-2">Question</th>
-                      <th className="text-left font-medium px-2 py-2 w-28">Yes/No/NA</th>
-                      <th className="text-left font-medium px-2 py-2 w-48">Response</th>
-                      <th className="text-left font-medium px-2 py-2 w-56">Actual Observation</th>
-                      <th className="text-left font-medium px-2 py-2 w-52">Attachments</th>
-                      <th className="px-2 py-2 w-8"></th>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatTile label="Items" value={allRows.length} icon={ListChecks} accent="blue" />
+            <StatTile label="Compliant (Yes)" value={counts.yes} icon={ShieldCheck} accent="green" />
+            <StatTile label="Gaps (No)" value={counts.no} icon={AlertCircle} accent="rose" />
+            <StatTile label="N-A" value={counts.na} icon={ListChecks} accent="violet" />
+          </div>
+          <Card><CardContent className="p-0">
+            <div className="px-4 py-2.5 border-b bg-muted/40 text-sm font-semibold">Per-area breakdown</div>
+            <table className="w-full text-xs">
+              <thead className="bg-muted/20 text-muted-foreground">
+                <tr>
+                  <th className="text-left px-3 py-2">Area</th>
+                  <th className="text-right px-3 py-2 w-20">Items</th>
+                  <th className="text-right px-3 py-2 w-20">Yes</th>
+                  <th className="text-right px-3 py-2 w-20">No</th>
+                  <th className="text-right px-3 py-2 w-20">N-A</th>
+                  <th className="text-right px-3 py-2 w-20">Open</th>
+                </tr>
+              </thead>
+              <tbody>
+                {areas.map(a => {
+                  const y = a.rows.filter(r => r.status === "Yes").length;
+                  const n = a.rows.filter(r => r.status === "No").length;
+                  const na = a.rows.filter(r => r.status === "N-A").length;
+                  const o = a.rows.filter(r => !r.status).length;
+                  return (
+                    <tr key={a.id} className="border-t">
+                      <td className="px-3 py-2 font-medium">{a.name}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{a.rows.length}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-emerald-600">{y}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-rose-600">{n}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{na}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{o}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {active.rows.map(r => (
-                      <tr key={r.id} className="border-b align-top">
-                        <td className="px-2 py-2 font-mono">{r.no}</td>
-                        <td className="px-2 py-2"><Textarea rows={2} className="text-xs" value={r.question} onChange={(e) => updateRow(r.id, { question: e.target.value })} /></td>
-                        <td className="px-2 py-2">
-                          <Select value={r.answer || undefined} onValueChange={(v) => updateRow(r.id, { answer: v as YNA })}>
-                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
-                            <SelectContent>{YN_OPTS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-2 py-2"><Textarea rows={2} className="text-xs" value={r.response} onChange={(e) => updateRow(r.id, { response: e.target.value })} /></td>
-                        <td className="px-2 py-2"><Textarea rows={2} className="text-xs" value={r.observation} onChange={(e) => updateRow(r.id, { observation: e.target.value })} /></td>
-                        <td className="px-2 py-2">
-                          <div className="flex flex-wrap gap-1 mb-1">
-                            {r.photos.map((p, i) => (
-                              <div key={i} className="relative group">
-                                <img src={p} alt="" className="h-12 w-12 object-cover rounded border" />
-                                <button onClick={() => updateRow(r.id, { photos: r.photos.filter((_, j) => j !== i) })}
-                                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
-                                  <X className="h-2.5 w-2.5" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          <input type="file" accept="image/*" className="text-[10px]"
-                            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadPhoto(r.id, f); e.currentTarget.value = ""; }} />
-                        </td>
-                        <td className="px-2 py-2">
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => removeRow(r.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="p-3 border-t">
-                  <Button size="sm" variant="outline" onClick={addRow}><Plus className="h-3.5 w-3.5 mr-1" />Add row</Button>
-                </div>
-              </CardContent></Card>
-            </>
-          )}
+                  );
+                })}
+                {areas.length === 0 && <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No areas yet.</td></tr>}
+              </tbody>
+            </table>
+          </CardContent></Card>
         </>
       )}
 
-      {tab === "album" && (
-        <Card><CardContent className="p-4">
-          {allPhotos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No photos uploaded yet.</p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {allPhotos.map((ph, i) => (
-                <div key={i} className="space-y-1">
-                  <img src={ph.src} alt="" className="w-full aspect-square object-cover rounded border" />
-                  <div className="text-[10px] text-muted-foreground truncate">{ph.ctx}</div>
+      {tab === "wf" && (
+        <div className="space-y-3">
+          {areas.map(a => (
+            <Collapsible key={a.id} defaultOpen={false}>
+              <Card>
+                <div className="px-4 py-3 border-b flex items-center justify-between gap-2">
+                  <CollapsibleTrigger className="flex items-center gap-2 min-w-0 flex-1 text-left">
+                    <ChevronDown className="h-4 w-4 shrink-0" />
+                    <span className="font-semibold text-sm truncate">{a.name}</span>
+                    <span className="text-[10px] text-muted-foreground">({a.rows.length} items)</span>
+                  </CollapsibleTrigger>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => renameArea(a.id)} title="Rename">
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteArea(a.id)} title="Delete">
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <CollapsibleContent>
+                  <CardContent className="p-0 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/40 border-b">
+                        <tr>
+                          <th className="text-left font-medium px-2 py-2 w-10">No.</th>
+                          <th className="text-left font-medium px-2 py-2">Items for Checking / Question</th>
+                          <th className="text-left font-medium px-2 py-2 w-28">Compliance Status</th>
+                          <th className="text-left font-medium px-2 py-2 w-48">Remarks</th>
+                          <th className="text-left font-medium px-2 py-2 w-48">Observations</th>
+                          <th className="text-left font-medium px-2 py-2 w-48">Recommendations</th>
+                          <th className="px-2 py-2 w-8"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {a.rows.map(r => (
+                          <tr key={r.id} className="border-b align-top">
+                            <td className="px-2 py-2 font-mono">{r.no}</td>
+                            <td className="px-2 py-2">
+                              <Textarea rows={2} className="text-xs" value={r.question} onChange={(e) => updateRow(a.id, r.id, { question: e.target.value })} />
+                            </td>
+                            <td className="px-2 py-2">
+                              <Select value={r.status || undefined} onValueChange={(v) => updateRow(a.id, r.id, { status: v as YNA })}>
+                                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                                <SelectContent>{YN_OPTS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </td>
+                            <td className="px-2 py-2"><Textarea rows={2} className="text-xs" value={r.remarks} onChange={(e) => updateRow(a.id, r.id, { remarks: e.target.value })} /></td>
+                            <td className="px-2 py-2"><Textarea rows={2} className="text-xs" value={r.observation} onChange={(e) => updateRow(a.id, r.id, { observation: e.target.value })} /></td>
+                            <td className="px-2 py-2"><Textarea rows={2} className="text-xs" value={r.recommendation} onChange={(e) => updateRow(a.id, r.id, { recommendation: e.target.value })} /></td>
+                            <td className="px-2 py-2">
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => removeRow(a.id, r.id)}>
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="p-3 border-t">
+                      <Button size="sm" variant="outline" onClick={() => addRow(a.id)}><Plus className="h-3.5 w-3.5 mr-1" />Add row</Button>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          ))}
+          {areas.length === 0 && (
+            <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
+              No areas yet. Click <strong>New area</strong> to start.
+            </CardContent></Card>
           )}
-        </CardContent></Card>
+        </div>
       )}
 
       {tab === "drl" && <DrlInlinePanel category="actions" title="Physical Inspection DRL / Action items" />}
+      {tab === "refs" && <ReferencesPanel moduleId="physical" title="Physical Inspection References" />}
     </PageShell>
   );
 }

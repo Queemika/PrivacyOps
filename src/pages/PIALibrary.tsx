@@ -103,11 +103,7 @@ export default function PIALibrary() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.currentTarget.value = ""; }}
           />
           <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Upload .xlsx</Button>
-          <Button variant="outline" onClick={loadSamples}>Load samples</Button>
           <Button asChild variant="outline"><Link to="/pia/new"><FilePlus2 className="mr-2 h-4 w-4" />New PIA</Link></Button>
-          <Button asChild disabled={selected.length === 0}>
-            <Link to="/compile" state={{ ids: selected }}><Layers className="mr-2 h-4 w-4" />Compile ({selected.length})</Link>
-          </Button>
         </>
       }
     >
