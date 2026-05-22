@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Upload, Library, Layers, BarChart3, ListChecks,
-  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck,
+  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +19,7 @@ const items: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Transcript", url: "/upload", icon: Upload },
   { title: "PIA Library", url: "/library", icon: Library },
-  { title: "Compilation / RoPA / NPC-RS", url: "/ropa", icon: Layers },
+  { title: "ROPA / NPC-RS", url: "/ropa", icon: Layers },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "DRL / IRL", url: "/drl", icon: ListChecks },
   { title: "PRADAR", url: "/pradar", icon: Shield },
@@ -28,6 +28,7 @@ const items: Item[] = [
   { title: "Privacy Notice", url: "/notice", icon: Eye },
   { title: "Manuals", url: "/manuals", icon: BookOpen },
   { title: "Email Generator", url: "/email", icon: Mail },
+  { title: "Help & FAQ", url: "/help", icon: HelpCircle },
 ];
 
 export function AppSidebar() {
