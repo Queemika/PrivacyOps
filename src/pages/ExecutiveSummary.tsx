@@ -254,7 +254,7 @@ export default function ExecutiveSummary() {
         links={[
           { to: "/library", label: "PIA Library", icon: FileText },
           { to: "/compile", label: "Compilation Builder", icon: BookOpen },
-          { to: "/ropa", label: "ROPA / NPC-RS", icon: Table2 },
+          { to: "/ropa", label: "Compilation / NPC-RS", icon: Table2 },
           { to: "/drl", label: "DRL / IRL", icon: ShieldAlert },
           { to: "/email?source=summary", label: "Send progress report", icon: Mail },
         ]}
