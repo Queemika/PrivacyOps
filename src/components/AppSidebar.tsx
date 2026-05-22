@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Upload, Library, Layers, BarChart3, ListChecks,
-  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle,
+  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -26,8 +26,9 @@ const items: Item[] = [
   { title: "Tech Security", url: "/tsa", icon: Lock },
   { title: "Physical Inspection", url: "/inspection", icon: Camera },
   { title: "Privacy Notice", url: "/notice", icon: Eye },
-  { title: "Manuals", url: "/manuals", icon: BookOpen },
+  { title: "Manuals and Outputs", url: "/manuals", icon: BookOpen },
   { title: "Email Generator", url: "/email", icon: Mail },
+  { title: "Audit Log", url: "/audit", icon: ScrollText },
   { title: "Help & FAQ", url: "/help", icon: HelpCircle },
 ];
 

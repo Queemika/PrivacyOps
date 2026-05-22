@@ -12,6 +12,7 @@ import {
 import {
   loadPias, savePias, getActiveEngagementId, ensureSeedEngagement, createPia,
 } from "@/lib/pia/store";
+import { loadSamplePias, autoSeedSamplesOnce } from "@/lib/pia/sampleSeeds";
 import { Pia } from "@/lib/pia/schema";
 import { resolveValue, ROPA_FIELDS, toCSV } from "@/lib/pia/ropaMap";
 import {
@@ -43,7 +44,8 @@ export default function PIALibrary() {
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const refresh = () => setPias(loadPias());
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { autoSeedSamplesOnce(); refresh(); }, []);
+  const loadSamples = () => { const n = loadSamplePias(true); refresh(); toast.success(n ? `Loaded ${n} sample PIA${n===1?"":"s"}` : "Samples already loaded"); };
 
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const filtered = pias.filter((p) => (p.title || "").toLowerCase().includes(q.toLowerCase()));
@@ -101,6 +103,7 @@ export default function PIALibrary() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.currentTarget.value = ""; }}
           />
           <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="mr-2 h-4 w-4" />Upload .xlsx</Button>
+          <Button variant="outline" onClick={loadSamples}>Load samples</Button>
           <Button asChild variant="outline"><Link to="/pia/new"><FilePlus2 className="mr-2 h-4 w-4" />New PIA</Link></Button>
           <Button asChild disabled={selected.length === 0}>
             <Link to="/compile" state={{ ids: selected }}><Layers className="mr-2 h-4 w-4" />Compile ({selected.length})</Link>
