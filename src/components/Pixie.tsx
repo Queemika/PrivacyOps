@@ -10,10 +10,13 @@ type Msg = { role: "bot" | "user"; text: string };
 
 export default function Pixie() {
   const [open, setOpen] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(false);
   const [input, setInput] = useState("");
   const [lang, setLang] = useState<Lang>("EN");
   const [source, setSource] = useState<Source>("PH");
   const [loading, setLoading] = useState(false);
+  const { pathname } = useLocation();
+  const hint = hintForPath(pathname);
   const [messages, setMessages] = useState<Msg[]>([
     { role: "bot", text: "Hi! I'm Pixie. Ask me about PIAs, ROPA, NPC-RS, or how to navigate the app." },
   ]);
