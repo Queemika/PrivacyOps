@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Sparkles, X, Send, Globe, BookMarked, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { hintForPath } from "@/lib/pixieHints";
 
 type Lang = "EN" | "FIL" | "Taglish";
 type Source = "PH" | "GDPR" | "CCPA";
