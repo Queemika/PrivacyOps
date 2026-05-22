@@ -1,0 +1,1190 @@
+{
+  "pwd": {
+    "p1": {
+      "systemType": "Hybrid System",
+      "systemFunction": "collection, use, storage, sharing, and disposal",
+      "organizationScope": "Dummy Corporation",
+      "dataCollection": "PWD ID application and validation forms (manual forms), survey and evaluation form collected through Google Forms, and online application through email (digital form).",
+      "dataUsage": "monitoring of PWDs and implement programs through a data driven decision making.",
+      "dataStorage": "Google Drive, desktop, and storage area.",
+      "dataDisposal": "the National Archives of the Philippines (NAP) .",
+      "integration": "N/A",
+      "supportingDocs": "N/A",
+      "purpose": "streamline data management and support organizational goals while ensuring the rights of data subjects.",
+      "piaScope": "Dummy Corp PWD Database"
+    },
+    "p2": {
+      "dpsType": "Both",
+      "dpsName": "Dummy Corp PWD Database",
+      "basisPI": "Compliance with a legal obligation",
+      "basisSPI": "Existing laws and regulations",
+      "purposeProcessing": "For monitoring of PWDs and implement programs through a data driven decision making.",
+      "futurePurpose": "N/A",
+      "dataSubjectsDesc": "Clients",
+      "categories": [
+        {
+          "type": "Personal Information",
+          "categories": "Name, Contact Details, and  Professional/Employment Details.",
+          "amount": "17000",
+          "pipPic": "PIC"
+        },
+        {
+          "type": "Sensitive Personal Information",
+          "categories": "Health (Blood Type, Disabilities, Medical Certificate), Age, Birthdate, Educational Details, Marital Status, Government-Issued IDs, and Family Background.",
+          "amount": "17000",
+          "pipPic": "PIC"
+        }
+      ],
+      "picOrPip": "PIC",
+      "outsourced": "No",
+      "picName": "Dummy Corporation",
+      "dpoName": "Jos\u00e9 Protasio Rizal Mercado y Alonso Realonda",
+      "dpoEmail": "dpo@dummy.org.ph",
+      "dpoContact": "8643-1132 Local 1406",
+      "publicFacing": "No",
+      "externalInternal": "Internal",
+      "lawfulBasis": "N/A",
+      "otherBasisInfo": "N/A",
+      "retention": "N/A",
+      "automatedMethods": "N/A",
+      "automatedDecisions": "N/A",
+      "automatedDecisionNotice": "No",
+      "securityOrg": "Designation of Data Privacy Officer (DPO), data protection policies, RoPA, HR Management, personal data processing, and third-party contracts.",
+      "securityPhysical": "Access control, workspace privacy, personnel access management, media handling, and security & protection.",
+      "securityTechnical": "Network protection, system testing, resilience & monitoring, and data encryption & recovery.",
+      "collection": [
+        {
+          "when": "Upon submission of online and manual forms.",
+          "who": "PIC",
+          "from": "Directly from data subjects and authorized representatives."
+        }
+      ],
+      "use": [
+        {
+          "positionDept": "Payroll and Treasury",
+          "scopeModule": "Payroll",
+          "fileName": "Payroll (Payroll) and Check (Treasury)",
+          "purpose": "To distribute financial related services."
+        },
+        {
+          "positionDept": "Budget and Accounting",
+          "scopeModule": "Budget",
+          "fileName": "Obligation Request (Budget) and Disbursement Voucher (Accounting)",
+          "purpose": "To provide obligation request."
+        },
+        {
+          "positionDept": "City Mayor",
+          "scopeModule": "Budget",
+          "fileName": "Approved Budget",
+          "purpose": "To approve obligation request and financial related services."
+        },
+        {
+          "positionDept": "Persons with Disabilities Office (PDAO) and Civil Society Organization (CSO) - Partner Organization",
+          "scopeModule": "Application Forms",
+          "fileName": "Validation Form and Application Form",
+          "purpose": "To gather personal data of data subject."
+        },
+        {
+          "positionDept": "Data Protection Officer (DPO)",
+          "scopeModule": "",
+          "fileName": "",
+          "purpose": "To provide overall data protection measures and process data subject requests."
+        }
+      ],
+      "disclosure": [
+        {
+          "kind": "Internal",
+          "recipients": "No inter-office collaboration.",
+          "purpose": "N/A",
+          "agreement": "N/A",
+          "pic": "N/A",
+          "crossBorder": "N/A"
+        },
+        {
+          "kind": "External",
+          "recipients": "Landbank",
+          "purpose": "For cash card.",
+          "agreement": "No",
+          "pic": "Landbank",
+          "crossBorder": "Yes"
+        },
+        {
+          "kind": "External",
+          "recipients": "Type of Media",
+          "purpose": "Location of the repositories",
+          "agreement": "City, Country",
+          "pic": "Basis for Retention",
+          "crossBorder": "Disposal/Destruction/Deletion Procedure"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Storage Area",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Manual Shredding (Straight)"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Hard drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Manual Shredding (Straight)"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Storage Area",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Manual Shredding (Straight)"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Storage Area",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Manual Shredding (Straight)"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Google Drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Manual Shredding (Straight)"
+        }
+      ],
+      "repositories": [
+        {
+          "name": "Payroll (Payroll)",
+          "mediaType": "Paper-based",
+          "location": "Storage Area",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Payroll (Payroll)",
+          "mediaType": "Electronic/Digital",
+          "location": "Hard drive",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Check (Treasury)",
+          "mediaType": "Paper-based",
+          "location": "Storage Area",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Obligation Request (Budget)",
+          "mediaType": "Paper-based",
+          "location": "Storage Area",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Obligation Request (Budget)",
+          "mediaType": "Electronic/Digital",
+          "location": "Google Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Disbursement Voucher (Accounting)",
+          "mediaType": "Paper-based",
+          "location": "Storage Area",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Disbursement Voucher (Accounting)",
+          "mediaType": "Electronic/Digital",
+          "location": "",
+          "hosting": "",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Approved Budget",
+          "mediaType": "Paper-based",
+          "location": "Storage Area",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Approved Budget",
+          "mediaType": "Electronic/Digital",
+          "location": "",
+          "hosting": "",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Validation Form and Application Form",
+          "mediaType": "Paper-based",
+          "location": "Storage Area",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        },
+        {
+          "name": "Validation Form and Application Form",
+          "mediaType": "Electronic/Digital",
+          "location": "",
+          "hosting": "",
+          "cityCountry": "",
+          "retentionPeriod": "5 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Manual Shredding (Straight)"
+        }
+      ]
+    }
+  },
+  "uis": {
+    "p1": {
+      "systemType": "Hybrid System",
+      "systemFunction": "collection, use, storage, sharing and disposal",
+      "organizationScope": "Dummy Corporation",
+      "dataCollection": "enrollment form (manual) and Google forms (electronic).",
+      "dataUsage": "student application, admission, and the encoding of records into the database.",
+      "dataStorage": "filing cabinets located in the Registrar\u2019s Office and in Google Drive accessible only to authorized personnel.",
+      "dataDisposal": "the National Archives of the Philippines (NAP) guidelines and internal data retention policies.",
+      "integration": "Student Portal, Learning Management System (LMS), and Registrar Information Modules.",
+      "supportingDocs": "Data Flow Diagrams and System Architecture Documents. (Annex A.)",
+      "purpose": "streamline and secure data management processes.",
+      "piaScope": "University Information System"
+    },
+    "p2": {
+      "dpsType": "Both",
+      "dpsName": "University Information System",
+      "basisPI": "National emergency/public order & safety/ constitutional/statutory mandate of a public authority",
+      "basisSPI": "Existing laws and regulations",
+      "purposeProcessing": "For application and admission of student records to database.",
+      "futurePurpose": "N/A",
+      "dataSubjectsDesc": "Students",
+      "categories": [
+        {
+          "type": "Personal Information",
+          "categories": "Names, Address, Contact Details, and Educational Background",
+          "amount": "5000",
+          "pipPic": "PIC"
+        },
+        {
+          "type": "Sensitive Personal Information",
+          "categories": "Birth Certificate, Grades, Family Background, and Health Declaration",
+          "amount": "5000",
+          "pipPic": "PIC"
+        }
+      ],
+      "picOrPip": "PIC",
+      "outsourced": "Yes",
+      "picName": "Dummy Corporation",
+      "dpoName": "Jos\u00e9 Protasio Rizal Mercado y Alonso Realonda",
+      "dpoEmail": "dpo@dummy.org.ph",
+      "dpoContact": "8643-1132 Local 1406",
+      "publicFacing": "No",
+      "externalInternal": "Internal",
+      "lawfulBasis": "N/A",
+      "otherBasisInfo": "N/A",
+      "retention": "N/A",
+      "automatedMethods": "N/A",
+      "automatedDecisions": "N/A",
+      "automatedDecisionNotice": "No",
+      "securityOrg": "Designation of Data Privacy Officer (DPO), data protection policies, RoPA, HR Management, personal data processing, and third-party contracts.",
+      "securityPhysical": "Access control, workspace privacy, personnel access management, media handling, and security & protection.",
+      "securityTechnical": "Network protection, system testing, resilience & monitoring, and data encryption & recovery.",
+      "collection": [
+        {
+          "when": "Upon submission of manual forms and Google forms.",
+          "who": "PIC",
+          "from": "Directly from the data subjects and authorized representatives."
+        }
+      ],
+      "use": [
+        {
+          "positionDept": "University President",
+          "scopeModule": "Executive Dashboard / Reports",
+          "fileName": "Exec Dashboard Report",
+          "purpose": "To monitor overall university performance, strategic decisions, and policy compliance."
+        },
+        {
+          "positionDept": "Vice President for Administration",
+          "scopeModule": "Resource & Budget Management",
+          "fileName": "Admin Resources Budget",
+          "purpose": "To track and allocate resources, approve expenditures, and monitor budget utilization."
+        },
+        {
+          "positionDept": "MIS / IT Director",
+          "scopeModule": "System Administration & Security",
+          "fileName": "IT Admin Configuration",
+          "purpose": "To manage system setup, configurations, user access, and cybersecurity controls."
+        },
+        {
+          "positionDept": "Data Protection Officer (DPO)",
+          "scopeModule": "Data Privacy & Compliance",
+          "fileName": "DPO Compliance Checklist",
+          "purpose": "To ensure adherence to data privacy regulations, access logs, and privacy risk assessments."
+        },
+        {
+          "positionDept": "Registrar",
+          "scopeModule": "Student Records / Enrollment",
+          "fileName": "Student Records",
+          "purpose": "To maintain student records, enrollment, grades, transcripts, and course registrations."
+        },
+        {
+          "positionDept": "Finance Office / Accountant",
+          "scopeModule": "Billing & Accounting",
+          "fileName": "Finance Transactions",
+          "purpose": "To track student fees, payments, OR generation, and accounting reconciliation."
+        },
+        {
+          "positionDept": "HR Director",
+          "scopeModule": "Employee Records & Payroll",
+          "fileName": "HR Employee Data",
+          "purpose": "To manage faculty and staff information, payroll, leave, and HR workflows."
+        },
+        {
+          "positionDept": "Academic Deans / Department Heads",
+          "scopeModule": "Curriculum & Scheduling",
+          "fileName": "Academic Schedule",
+          "purpose": "To plan course schedules, faculty load, and curriculum management."
+        },
+        {
+          "positionDept": "Faculty Representatives",
+          "scopeModule": "Class Management / Grading",
+          "fileName": "Faculty Class Grading",
+          "purpose": "To input grades, manage attendance, and interact with students via faculty portal."
+        },
+        {
+          "positionDept": "Students / Student Council",
+          "scopeModule": "Student Portal / Enrollment",
+          "fileName": "Student Portal Interface",
+          "purpose": "To access academic records, enroll in courses, monitor grades, and communicate with faculty."
+        },
+        {
+          "positionDept": "University Librarian",
+          "scopeModule": "Library / Resource Access",
+          "fileName": "Library Integration",
+          "purpose": "To integrate library databases, manage digital catalog access, and link with student/faculty IDs."
+        }
+      ],
+      "disclosure": [
+        {
+          "kind": "External",
+          "recipients": "CHED, TESDA,  and DepEd",
+          "purpose": "Use data for scholarships and financial aid.",
+          "agreement": "Yes",
+          "pic": "CHED, TESDA,  and DepEd",
+          "crossBorder": "Yes"
+        },
+        {
+          "kind": "External",
+          "recipients": "External Vendors (UIS Dev)",
+          "purpose": "System development, configuration, and support.",
+          "agreement": "Yes",
+          "pic": "MIS",
+          "crossBorder": ""
+        },
+        {
+          "kind": "External",
+          "recipients": "Type of Media",
+          "purpose": "Location of the repositories",
+          "agreement": "City, Country",
+          "pic": "Basis for Retention",
+          "crossBorder": "Disposal/Destruction/Deletion Procedure"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Google Drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "University policy & CHED guidelines",
+          "crossBorder": "Secure deletion from cloud storage, verified by MIS"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Filing Cabinet",
+          "agreement": "Baguio City, Philippines",
+          "pic": "NAP / Accounting Standards",
+          "crossBorder": "Shredding by authorized personnel, logged in disposal record"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "University Server / Cloud",
+          "agreement": "Baguio City, Philippines",
+          "pic": "University IT policy & cybersecurity standards",
+          "crossBorder": "Secure deletion / wiping from server, verified by MIS"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "MIS / Compliance Office",
+          "agreement": "Baguio City, Philippines",
+          "pic": "Data Privacy Act & University policy",
+          "crossBorder": "Secure deletion from server, documented by DPO"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Student Information System (SIS)",
+          "agreement": "Baguio City, Philippines",
+          "pic": "University policy & CHED guidelines",
+          "crossBorder": "Permanent deletion after retention period, verified by Registrar & IT"
+        }
+      ],
+      "repositories": [
+        {
+          "name": "Executive Dashboard / Reports",
+          "mediaType": "Electronic/Digital",
+          "location": "Google Drive",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years from creation",
+          "basis": "University policy & CHED guidelines",
+          "disposal": "Secure deletion from cloud storage, verified by MIS"
+        },
+        {
+          "name": "Resource & Budget Management",
+          "mediaType": "Paper-based",
+          "location": "Filing Cabinet",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "1 year",
+          "basis": "NAP / Accounting Standards",
+          "disposal": "Shredding by authorized personnel, logged in disposal record"
+        },
+        {
+          "name": "System Administration & Security",
+          "mediaType": "Electronic/Digital",
+          "location": "University Server / Cloud",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years after module update or retirement",
+          "basis": "University IT policy & cybersecurity standards",
+          "disposal": "Secure deletion / wiping from server, verified by MIS"
+        },
+        {
+          "name": "Data Privacy & Compliance",
+          "mediaType": "Electronic/Digital",
+          "location": "MIS / Compliance Office",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years after compliance audit",
+          "basis": "Data Privacy Act & University policy",
+          "disposal": "Secure deletion from server, documented by DPO"
+        },
+        {
+          "name": "Student Records / Enrollment",
+          "mediaType": "Electronic/Digital",
+          "location": "Student Information System (SIS)",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "Duration of enrollment + 5 years",
+          "basis": "University policy & CHED guidelines",
+          "disposal": "Permanent deletion after retention period, verified by Registrar & IT"
+        },
+        {
+          "name": "Billing & Accounting",
+          "mediaType": "Paper-based",
+          "location": "Finance Office / Server",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "7 years",
+          "basis": "NAP / Accounting Standards",
+          "disposal": "Shredding (paper) / Secure deletion (digital), documented"
+        },
+        {
+          "name": "Employee Records & Payroll",
+          "mediaType": "Paper-based",
+          "location": "HR Office / HRMS",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years after termination",
+          "basis": "Labor Code / University Policy",
+          "disposal": "Shredding (paper) / Secure deletion (digital), documented"
+        },
+        {
+          "name": "Curriculum & Scheduling",
+          "mediaType": "Electronic/Digital",
+          "location": "Academic Office / SIS",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years from end of academic year",
+          "basis": "University policy",
+          "disposal": "Secure deletion from system, verified by Academic Office"
+        },
+        {
+          "name": "Class Management / Grading",
+          "mediaType": "Electronic/Digital",
+          "location": "Faculty Portal / SIS",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years from end of academic year",
+          "basis": "University policy",
+          "disposal": "Secure deletion from system, verified by Registrar"
+        },
+        {
+          "name": "Student Portal / Enrollment",
+          "mediaType": "Electronic/Digital",
+          "location": "Student Portal / Cloud",
+          "hosting": "Outsourced",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "Duration of enrollment + 5 years",
+          "basis": "University policy & CHED guidelines",
+          "disposal": "Secure deletion / wipe from portal, verified by MIS"
+        },
+        {
+          "name": "Library / Resource Access",
+          "mediaType": "Electronic/Digital",
+          "location": "Library Database",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "2 years",
+          "basis": "University policy",
+          "disposal": "Automatic deletion by system or secure wipe, logged"
+        },
+        {
+          "name": "Data Entry & Workflow Processing",
+          "mediaType": "Electronic/Digital",
+          "location": "Admin / Support Staff Server",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "3 years",
+          "basis": "University policy",
+          "disposal": "Secure deletion from system, verified by Admin"
+        },
+        {
+          "name": "UIS Development & Maintenance",
+          "mediaType": "Electronic/Digital",
+          "location": "MIS / Vendor Servers",
+          "hosting": "Outsourced",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years after project completion",
+          "basis": "University IT policy",
+          "disposal": "Secure deletion / wipe from development servers, documented by MIS"
+        }
+      ]
+    }
+  },
+  "bmd": {
+    "p1": {
+      "systemType": "Hybrid System",
+      "systemFunction": "collection, use, sharing, storage, and disposal",
+      "organizationScope": "Dummy Corporation",
+      "dataCollection": "Form 102 (birth), Form 103 (death), and Form 97 (marriage).",
+      "dataUsage": "registration and certification; verification and validation; archiving and record maintenance; statistical and reporting purposes; and inter-agency coordination and internal operations.",
+      "dataStorage": "records library, hard drive, digital database of LEXYs under MIS, and records and archives division.",
+      "dataDisposal": "the National Archive of the Philippines (NAP).",
+      "integration": "N/A",
+      "supportingDocs": "N/A",
+      "purpose": "streamline data management and protect personal data.",
+      "piaScope": "Birth, Marriage, and Death Certificate Registration"
+    },
+    "p2": {
+      "dpsType": "Both",
+      "dpsName": "Birth, Marriage, and Death Certificate Registration",
+      "basisPI": "Compliance with a legal obligation",
+      "basisSPI": "Existing laws and regulations",
+      "purposeProcessing": "For registration and certification; verification and validation; archiving and record maintenance; statistical and reporting purposes; and inter-agency coordination and internal operations.",
+      "futurePurpose": "N/A",
+      "dataSubjectsDesc": "Parents/Late-Registered Individuals, Couples, and Next of Kin.",
+      "categories": [
+        {
+          "type": "Personal Information",
+          "categories": "Name, Address, Occupation of Parents, Parent's information, Marriage Details of Parents, and Place of Birth.",
+          "amount": "1000000",
+          "pipPic": "PIC"
+        },
+        {
+          "type": "Sensitive Personal Information",
+          "categories": "Age, Gender, Date of Birth, Date of Death, Type of Birth, Birth Order, Religion, Weight at Birth, Marital Status, NBI Clearance, Citizenship, Cause of Death, Permit Numbers, and Government Issued IDs.",
+          "amount": "1000000",
+          "pipPic": "PIC"
+        }
+      ],
+      "picOrPip": "PIC",
+      "outsourced": "Yes",
+      "picName": "Dummy Corporation",
+      "dpoName": "Jos\u00e9 Protasio Rizal Mercado y Alonso Realonda",
+      "dpoEmail": "dpo@dummy.org.ph",
+      "dpoContact": "8643-1132 Local 1406",
+      "publicFacing": "No",
+      "externalInternal": "Internal",
+      "lawfulBasis": "N/A",
+      "otherBasisInfo": "N/A",
+      "retention": "N/A",
+      "automatedMethods": "N/A",
+      "automatedDecisions": "N/A",
+      "automatedDecisionNotice": "No",
+      "securityOrg": "Designation of Data Privacy Officer (DPO), data protection policies, RoPA, HR Management, personal data processing, and third-party contracts.",
+      "securityPhysical": "Access control, workspace privacy, personnel access management, media handling, and security & protection.",
+      "securityTechnical": "Network protection, system testing, resilience & monitoring, and data encryption & recovery.",
+      "collection": [
+        {
+          "when": "Upon the submission of forms 102, 103, and 97.",
+          "who": "PIC",
+          "from": "From the data subject and authorized representatives."
+        }
+      ],
+      "use": [
+        {
+          "positionDept": "OIC City Civil Registry Department",
+          "scopeModule": "Within CCRD.",
+          "fileName": "Forms 102, 103, and 97",
+          "purpose": "Responsible for overall civil registry operations and privacy compliance."
+        },
+        {
+          "positionDept": "Civil Registrar",
+          "scopeModule": "Within CCRD.",
+          "fileName": "Forms 102, 103, and 97",
+          "purpose": "Sign the final document as proof that the document is registered to the civil registry."
+        },
+        {
+          "positionDept": "Birth Section",
+          "scopeModule": "Within CCRD.",
+          "fileName": "Form 102",
+          "purpose": "Receive the document and transmit it to PSA."
+        },
+        {
+          "positionDept": "Record Section/Digitization Unit",
+          "scopeModule": "Within CCRD.",
+          "fileName": "Forms 102, 103, and 97",
+          "purpose": "Encode the information in the system."
+        },
+        {
+          "positionDept": "PSA",
+          "scopeModule": "N/A",
+          "fileName": "Forms 102, 103, and 97",
+          "purpose": "Central repository of all documents."
+        },
+        {
+          "positionDept": "Death Section",
+          "scopeModule": "Within CCRD.",
+          "fileName": "Form 103",
+          "purpose": "Receive the document and transmit it to PSA."
+        },
+        {
+          "positionDept": "Marriage Section",
+          "scopeModule": "Within CCRD.",
+          "fileName": "Form 97",
+          "purpose": "Receive the document and transmit it to PSA."
+        },
+        {
+          "positionDept": "Data Protection Officer (DPO)",
+          "scopeModule": "",
+          "fileName": "",
+          "purpose": "Provide overall data protection measures and process data subject requests."
+        }
+      ],
+      "disclosure": [
+        {
+          "kind": "Internal",
+          "recipients": "Inter-office collaboration",
+          "purpose": "N/A",
+          "agreement": "N/A",
+          "pic": "N/A",
+          "crossBorder": "N/A"
+        },
+        {
+          "kind": "External",
+          "recipients": "Government Agency",
+          "purpose": "For record keeping.",
+          "agreement": "Yes",
+          "pic": "Philippine Statistics Authority (PSA)",
+          "crossBorder": "No"
+        },
+        {
+          "kind": "External",
+          "recipients": "Type of Media",
+          "purpose": "Location of the repositories",
+          "agreement": "City, Country",
+          "pic": "Basis for Retention",
+          "crossBorder": "Disposal/Destruction/Deletion Procedure"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Records Library",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "N/A"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Records Library",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Shredding"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Hard Drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "N/A"
+        }
+      ],
+      "repositories": [
+        {
+          "name": "Forms 102, 103, and 97",
+          "mediaType": "Paper-based",
+          "location": "Records Library",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "Permanent Record",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "N/A"
+        },
+        {
+          "name": "Supporting Documents (Duplicate Copies, Affidavit)",
+          "mediaType": "Paper-based",
+          "location": "Records Library",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5-10 years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Shredding"
+        },
+        {
+          "name": "Digital Copies",
+          "mediaType": "Electronic/Digital",
+          "location": "Hard Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "Permanent Record",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "N/A"
+        }
+      ]
+    }
+  },
+  "foi": {
+    "p1": {
+      "systemType": "Hybrid System",
+      "systemFunction": "collection, use, storage, and disposal",
+      "organizationScope": "Dummy Corporation",
+      "dataCollection": "physical and online forms.",
+      "dataUsage": "improvement of service delivery and fulfillment of mandate.",
+      "dataStorage": "filing cabinets and storage warehouse (physical), Google Drive and external hard drive (online).",
+      "dataDisposal": "the National Archives of the Philippines (NAP).",
+      "integration": "N/A",
+      "supportingDocs": "N/A",
+      "purpose": "streamline data management and support organizational goals.",
+      "piaScope": "Feedback, Complaints, and FOI Requests"
+    },
+    "p2": {
+      "dpsType": "Both",
+      "dpsName": "Feedback, Complaints, and FOI Requests",
+      "basisPI": "National emergency/public order & safety/ constitutional/statutory mandate of a public authority",
+      "basisSPI": "Existing laws and regulations",
+      "purposeProcessing": "For improvement of service delivery and fulfillment of mandate.",
+      "futurePurpose": "N/A",
+      "dataSubjectsDesc": "Clients",
+      "categories": [
+        {
+          "type": "Personal Information",
+          "categories": "Name, Contact Details, and Signature",
+          "amount": "33624",
+          "pipPic": "PIC"
+        },
+        {
+          "type": "Sensitive Personal Information",
+          "categories": "Gender",
+          "amount": "6258",
+          "pipPic": "PIC"
+        }
+      ],
+      "picOrPip": "PIC",
+      "outsourced": "No",
+      "picName": "Dummy Corporation",
+      "dpoName": "Jos\u00e9 Protasio Rizal Mercado y Alonso Realonda",
+      "dpoEmail": "dpo@dummy.org.ph",
+      "dpoContact": "8643-1132 Local 1406",
+      "publicFacing": "No",
+      "externalInternal": "Internal",
+      "lawfulBasis": "N/A",
+      "otherBasisInfo": "N/A",
+      "retention": "N/A",
+      "automatedMethods": "N/A",
+      "automatedDecisions": "N/A",
+      "automatedDecisionNotice": "No",
+      "securityOrg": "Designation of Data Privacy Officer (DPO), data protection policies, RoPA, HR Management, personal data processing, and third-party contracts.",
+      "securityPhysical": "Access control, workspace privacy, personnel access management, media handling, and security & protection.",
+      "securityTechnical": "Network protection, system testing, resilience & monitoring, and data encryption & recovery.",
+      "collection": [
+        {
+          "when": "Upon submission of physical and online forms.",
+          "who": "PIC",
+          "from": "Directly from the data subjects."
+        }
+      ],
+      "use": [
+        {
+          "positionDept": "UGNAYAN",
+          "scopeModule": "All information (feedback and complaints).",
+          "fileName": "Case Files",
+          "purpose": "To process and monitor feedback and complaints."
+        },
+        {
+          "positionDept": "FOI Unit",
+          "scopeModule": "All information (FOI requests).",
+          "fileName": "Case Files",
+          "purpose": "To process and monitor FOI requests."
+        },
+        {
+          "positionDept": "Concerned Office",
+          "scopeModule": "Respective complaints and feedbacks (excluding personal data) and FOI requests.",
+          "fileName": "Case Files",
+          "purpose": "To process and monitor endorsed complaints and request."
+        },
+        {
+          "positionDept": "City Administrator",
+          "scopeModule": "All information.",
+          "fileName": "Case Files",
+          "purpose": "To monitor endorsed escalated concerns."
+        },
+        {
+          "positionDept": "Blue Ribbon Committee",
+          "scopeModule": "All information.",
+          "fileName": "Case Files",
+          "purpose": "To montior endorsed appeal form."
+        },
+        {
+          "positionDept": "Office of the City Mayor",
+          "scopeModule": "All information.",
+          "fileName": "Case Files",
+          "purpose": "To monitor endorsed escalated concerns."
+        },
+        {
+          "positionDept": "Management Information Systems Office (MISO)",
+          "scopeModule": "",
+          "fileName": "",
+          "purpose": "Review technical security measures."
+        },
+        {
+          "positionDept": "Data Protection Officer (DPO)",
+          "scopeModule": "",
+          "fileName": "",
+          "purpose": "Oversee privacy risk assessment."
+        }
+      ],
+      "disclosure": [
+        {
+          "kind": "Internal",
+          "recipients": "Inter-office Collaboration.",
+          "purpose": "",
+          "agreement": "",
+          "pic": "",
+          "crossBorder": "Yes"
+        },
+        {
+          "kind": "External",
+          "recipients": "Type of Media",
+          "purpose": "Location of the repositories",
+          "agreement": "City, Country",
+          "pic": "Basis for Retention",
+          "crossBorder": "Disposal/Destruction/Deletion Procedure"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Filing Cabinets and Storage Warehouse",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Sale"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "External Hard Drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "NAP",
+          "crossBorder": "Secured Deletion"
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Google Drive",
+          "agreement": "Outside Philippines",
+          "pic": "NAP",
+          "crossBorder": "Secured Deletion"
+        }
+      ],
+      "repositories": [
+        {
+          "name": "Feedback, Complaints, and FOI Requests",
+          "mediaType": "Paper-based",
+          "location": "Filing Cabinets and Storage Warehouse",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "Five years",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Sale"
+        },
+        {
+          "name": "Feedback, Complaints, and FOI Requests",
+          "mediaType": "Electronic/Digital",
+          "location": "External Hard Drive",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "Five years",
+          "basis": "NAP",
+          "disposal": "Secured Deletion"
+        },
+        {
+          "name": "Feedback, Complaints, and FOI Requests",
+          "mediaType": "Electronic/Digital",
+          "location": "Google Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Outside Philippines",
+          "retentionPeriod": "Five years",
+          "basis": "NAP",
+          "disposal": "Secured Deletion"
+        }
+      ]
+    }
+  },
+  "chd": {
+    "p1": {
+      "systemType": "Hybrid System",
+      "systemFunction": "collection, use, storage, and disposal",
+      "organizationScope": "Dummy Corporation",
+      "dataCollection": "interviews and manual forms.",
+      "dataUsage": "patient treatment records and treatment monitoring, as well as planning, procurement, and research.",
+      "dataStorage": "filing cabinets (physical copies), and Google Drive and hard drive (digital copies).",
+      "dataDisposal": "the National Archives of the Philippines (NAP).",
+      "integration": "N/A",
+      "supportingDocs": "N/A",
+      "purpose": "streamline data management and support organizational goals while ensuring the rights of data subjects.",
+      "piaScope": "Electronic Health Records"
+    },
+    "p2": {
+      "dpsType": "Both",
+      "dpsName": "Electronic Health Records",
+      "basisPI": "National emergency/public order & safety/ constitutional/statutory mandate of a public authority",
+      "basisSPI": "Existing laws and regulations",
+      "purposeProcessing": "For patient treatment records and treatment monitoring, as well as planning, procurement, and research.",
+      "futurePurpose": "N/A",
+      "dataSubjectsDesc": "Client",
+      "categories": [
+        {
+          "type": "Personal Information",
+          "categories": "Name, Contact Details",
+          "amount": "1000000",
+          "pipPic": "PIC"
+        },
+        {
+          "type": "Sensitive Personal Information",
+          "categories": "Age, Marital Status, Government-issued ID",
+          "amount": "1000000",
+          "pipPic": "PIC"
+        },
+        {
+          "type": "Privileged Information",
+          "categories": "Doctor-Patient",
+          "amount": "1000000",
+          "pipPic": "PIC"
+        }
+      ],
+      "picOrPip": "PIC",
+      "outsourced": "Yes",
+      "picName": "Dummy Corporation",
+      "dpoName": "Jos\u00e9 Protasio Rizal Mercado y Alonso Realonda",
+      "dpoEmail": "dpo@dummy.org.ph",
+      "dpoContact": "8643-1132 Local 1406",
+      "publicFacing": "No",
+      "externalInternal": "Internal",
+      "lawfulBasis": "N/A",
+      "otherBasisInfo": "N/A",
+      "retention": "N/A",
+      "automatedMethods": "N/A",
+      "automatedDecisions": "N/A",
+      "automatedDecisionNotice": "No",
+      "securityOrg": "Designation of Data Protection Officer (DPO), data protection policies, RoPA, HR management, personal data processing, third-party contracts.",
+      "securityPhysical": "Access control, workspace privacy, personnel access management, media handling, security & protection.",
+      "securityTechnical": "Network protection, system testing, resilience & monitoring, data encryption & recovery.",
+      "collection": [
+        {
+          "when": "Upon submission of manual forms or interview.",
+          "who": "PIC",
+          "from": "Data Subjects and Authorized Representatives."
+        }
+      ],
+      "use": [
+        {
+          "positionDept": "Medical Encoders and Administrative Aide III",
+          "scopeModule": "Patient intake.",
+          "fileName": "Patient Intake Form.",
+          "purpose": "To collect and encode personal data."
+        },
+        {
+          "positionDept": "Licensed Health Care Professionals, Program Managers, and Section Chiefs",
+          "scopeModule": "Treatment monitoring.",
+          "fileName": "Treatment Records, and Risk Assessment Form.",
+          "purpose": "To provide medical treatment and use data for planning, monitoring, and evaluation."
+        },
+        {
+          "positionDept": "Data Protection Officer (DPO)",
+          "scopeModule": "",
+          "fileName": "",
+          "purpose": "To provide overall data protection measures and process data subject requests."
+        }
+      ],
+      "disclosure": [
+        {
+          "kind": "Internal",
+          "recipients": "No inter-office collaboration.",
+          "purpose": "N/A",
+          "agreement": "N/A",
+          "pic": "N/A",
+          "crossBorder": "N/A"
+        },
+        {
+          "kind": "External",
+          "recipients": "Type of Media",
+          "purpose": "Location of the repositories",
+          "agreement": "City, Country",
+          "pic": "Basis for Retention",
+          "crossBorder": "Disposal/Destruction/Deletion Procedure"
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Filing Cabinet",
+          "agreement": "Baguio City, Philippines",
+          "pic": "National Archives of the Philippines (NAP)",
+          "crossBorder": "Forwarded to General Services Office (GSO) based on NAP Policy."
+        },
+        {
+          "kind": "External",
+          "recipients": "Paper-based",
+          "purpose": "Filing Cabinet",
+          "agreement": "Baguio City, Philippines",
+          "pic": "NAP",
+          "crossBorder": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Hard Drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "NAP",
+          "crossBorder": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Hard Drive",
+          "agreement": "Baguio City, Philippines",
+          "pic": "NAP",
+          "crossBorder": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "kind": "External",
+          "recipients": "Electronic/Digital",
+          "purpose": "Google Drive",
+          "agreement": "Ouside Philippines",
+          "pic": "NAP",
+          "crossBorder": "Forwarded to GSO based on NAP Policy."
+        }
+      ],
+      "repositories": [
+        {
+          "name": "Patient Intake Form",
+          "mediaType": "Paper-based",
+          "location": "Filing Cabinet",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years.",
+          "basis": "National Archives of the Philippines (NAP)",
+          "disposal": "Forwarded to General Services Office (GSO) based on NAP Policy."
+        },
+        {
+          "name": "Treatment Records and Risk Assessment Form",
+          "mediaType": "Paper-based",
+          "location": "Filing Cabinet",
+          "hosting": "In-house",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years.",
+          "basis": "NAP",
+          "disposal": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "name": "Patient Intake Form",
+          "mediaType": "Electronic/Digital",
+          "location": "Hard Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years.",
+          "basis": "NAP",
+          "disposal": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "name": "Treatment Records and Risk Assessment Form",
+          "mediaType": "Electronic/Digital",
+          "location": "Hard Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Baguio City, Philippines",
+          "retentionPeriod": "5 years.",
+          "basis": "NAP",
+          "disposal": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "name": "Patient Intake Form",
+          "mediaType": "Electronic/Digital",
+          "location": "Google Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Ouside Philippines",
+          "retentionPeriod": "5 years.",
+          "basis": "NAP",
+          "disposal": "Forwarded to GSO based on NAP Policy."
+        },
+        {
+          "name": "Treatment Records and Risk Assessment Form",
+          "mediaType": "Electronic/Digital",
+          "location": "Google Drive",
+          "hosting": "Outsourced",
+          "cityCountry": "Ouside Philippines",
+          "retentionPeriod": "5 years.",
+          "basis": "NAP",
+          "disposal": "Forwarded to GSO based on NAP Policy."
+        }
+      ]
+    }
+  }
+}
