@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Pia } from "@/lib/pia/schema";
 import { getPia, upsertPia, loadPias } from "@/lib/pia/store";
 import { ROPA_FIELDS, NPC_FIELDS, FieldDef, resolveValue, deriveFieldValue, toCSV } from "@/lib/pia/ropaMap";
-import { Download, RotateCcw, FileText, ArrowLeft, Mail, ShieldAlert, BookOpen } from "lucide-react";
+import { Download, RotateCcw, FileText, ArrowLeft, Mail, ShieldAlert, BookOpen, FileSpreadsheet, FileText as FileTextIcon } from "lucide-react";
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
+import * as XLSX from "xlsx";
 
 type Kind = "ropa" | "npc";
 
