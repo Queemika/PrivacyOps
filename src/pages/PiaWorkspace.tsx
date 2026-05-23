@@ -16,6 +16,7 @@ import { getPia, upsertPia, ensureSeedEngagement, createPia } from "@/lib/pia/st
 import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, BookOpen, Table2 } from "lucide-react";
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
+import { DrlInlinePanel } from "@/components/DrlInlinePanel";
 
 export default function PiaWorkspace() {
   const { id } = useParams();
