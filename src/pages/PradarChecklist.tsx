@@ -218,6 +218,24 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-2">
+          {hideHeader && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".xlsx"
+                className="hidden"
+                onChange={e => e.target.files?.[0] && handleImport(e.target.files[0])}
+              />
+              <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-1 h-3.5 w-3.5" />Import
+              </Button>
+              <Button size="sm" onClick={handleExport}>
+                <Download className="mr-1 h-3.5 w-3.5" />Export
+              </Button>
+              <div className="h-5 w-px bg-border mx-1" />
+            </>
+          )}
           <Button size="sm" variant={showInternal ? "default" : "outline"} onClick={() => setShowInternal(s => !s)}>
             <Settings2 className="mr-2 h-3.5 w-3.5" />Internal mode
           </Button>
