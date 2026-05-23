@@ -147,6 +147,7 @@ export default function PiaWorkspace() {
           {!isPhase1Only && <TabsTrigger value="p2">Phase 2 — Data Mapping</TabsTrigger>}
           {!isPhase1Only && <TabsTrigger value="p3">Phase 3 — Assessment</TabsTrigger>}
           <TabsTrigger value="p4">Sign-off</TabsTrigger>
+          <TabsTrigger value="drl">DRL</TabsTrigger>
         </TabsList>
         <TabsContent value="p1">
           <Phase1Form value={pia.phase1} onChange={(p) => setPia({ ...pia, phase1: p })} phase1OnlyMode={isPhase1Only} />
@@ -158,11 +159,14 @@ export default function PiaWorkspace() {
         )}
         {!isPhase1Only && (
           <TabsContent value="p3">
-            <Phase3Form value={pia.phase3} onChange={(p) => setPia({ ...pia, phase3: p })} />
+            <Phase3Form value={pia.phase3} onChange={(p) => setPia({ ...pia, phase3: p })} piaId={pia.id} dpsName={pia.phase2?.dpsName || pia.title} />
           </TabsContent>
         )}
         <TabsContent value="p4">
           <Phase4SignOff value={pia.phase4} onChange={(p) => setPia({ ...pia, phase4: p })} />
+        </TabsContent>
+        <TabsContent value="drl">
+          <DrlInlinePanel category="pia" title={`DRL items for ${pia.title || pia.id}`} piaId={pia.id} />
         </TabsContent>
       </Tabs>
 
