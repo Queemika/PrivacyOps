@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useMyRoles } from "@/lib/roles/store";
 import { useEffect, useState } from "react";
 import { ensureSeedEngagement, loadEngagements, getActiveEngagementId } from "@/lib/pia/store";
 import { isPathVisible, getViewAsRole, setViewAsRole } from "@/lib/admin/roleVisibility";
@@ -35,8 +36,9 @@ const items: Item[] = [
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
+  const { isAdmin } = useMyRoles();
   const nav = useNavigate();
-  const initials = user ? (user.firstName[0] + user.lastName[0]).toUpperCase() : "U";
+  const initials = user ? ((user.firstName?.[0] || "") + (user.lastName?.[0] || user.email?.[0] || "U")).toUpperCase().slice(0, 2) : "U";
   const [client, setClient] = useState<string>("");
   const [viewAs, setViewAs] = useState(getViewAsRole());
   const [, force] = useState(0);
@@ -134,7 +136,12 @@ export function AppSidebar() {
               <div className="text-[10px] text-muted-foreground font-normal">{user?.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => { logout(); nav("/login", { replace: true }); }}>
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => nav("/admin/users")}>
+                <ShieldCheck className="h-4 w-4 mr-2" />User Management
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={async () => { await logout(); nav("/login", { replace: true }); }}>
               <LogOut className="h-4 w-4 mr-2" />Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
