@@ -390,3 +390,87 @@ function Subpanel({ title, children }: { title: string; children: string[] }) {
     </div>
   );
 }
+
+function AllDrlView({ rows, refresh }: { rows: DrlRow[]; refresh: () => void }) {
+  const [moduleFilter, setModuleFilter] = useState<DrlCategory | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<DrlStatus | "all">("all");
+  const [assignedFilter, setAssignedFilter] = useState<string>("");
+
+  const filtered = useMemo(() => {
+    let r = rows;
+    if (moduleFilter !== "all") r = r.filter(x => x.category === moduleFilter);
+    if (statusFilter !== "all") r = r.filter(x => x.status === statusFilter);
+    if (assignedFilter.trim()) {
+      const q = assignedFilter.trim().toLowerCase();
+      r = r.filter(x => (x.assignedTo || "").toLowerCase().includes(q));
+    }
+    return r.slice().sort((a, b) => a.category.localeCompare(b.category) || a.no - b.no);
+  }, [rows, moduleFilter, statusFilter, assignedFilter]);
+
+  const exportColumns = ALL_SPEC.map(c => ({ header: c.label, key: c.key, width: c.width }));
+  const exportRows = filtered.map(r => Object.fromEntries(ALL_SPEC.map(c => [c.key, getCell(r, c)])));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={moduleFilter} onValueChange={(v) => setModuleFilter(v as DrlCategory | "all")}>
+            <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All modules</SelectItem>
+              <SelectItem value="tsa">Tech Security</SelectItem>
+              <SelectItem value="pradar">PRADAR</SelectItem>
+              <SelectItem value="pia">PIA</SelectItem>
+              <SelectItem value="notice">Privacy Notice</SelectItem>
+              <SelectItem value="actions">Action Items</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as DrlStatus | "all")}>
+            <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any status</SelectItem>
+              {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input
+            placeholder="Filter by assignee…"
+            value={assignedFilter}
+            onChange={(e) => setAssignedFilter(e.target.value)}
+            className="h-8 w-[200px] text-xs"
+          />
+          <span className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</span>
+        </div>
+        <ExportMenu filename="DRL_all" columns={exportColumns} rows={exportRows} formats={["excel", "pdf", "csv"]} />
+      </div>
+
+      <Card>
+        <CardContent className="p-0 overflow-x-auto">
+          <table className="text-xs" style={{ width: "max-content", minWidth: "100%" }}>
+            <thead className="bg-muted/40 border-b">
+              <tr>
+                {ALL_SPEC.map(c => (
+                  <th key={c.key} className="px-2 py-2 text-left font-medium border-l first:border-l-0" style={{ width: c.width, minWidth: c.width }}>{c.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => (
+                <tr key={r.id} className="border-b align-top hover:bg-muted/10">
+                  {ALL_SPEC.map(c => (
+                    <td key={c.key} className="px-1 py-1 border-l first:border-l-0" style={{ width: c.width, minWidth: c.width, maxWidth: c.width }}>
+                      <CellEditor row={r} col={c} onChange={refresh} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr><td className="px-4 py-6 text-center text-muted-foreground" colSpan={ALL_SPEC.length}>No DRL items match your filters.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
