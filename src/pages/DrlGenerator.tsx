@@ -21,13 +21,17 @@ const STATUSES: DrlStatus[] = ["Open", "Partially Received", "Under Inspection",
 
 interface ColSpec extends DrlColumnConfig { kind?: "text" | "status" | "date" | "select"; options?: string[]; field?: boolean; }
 
+const ASSIGNED_COL: ColSpec = { key: "assignedTo", label: "Assigned To", width: 130, visible: true, kind: "text" };
+
 const SPEC: Record<DrlCategory, ColSpec[]> = {
   tsa: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "domain", label: "Domain", width: 140, visible: true, field: true, kind: "text" },
     { key: "system", label: "System", width: 140, visible: true, field: true, kind: "text" },
     { key: "requirement", label: "Requirement", width: 220, visible: true, field: true, kind: "text" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "tool", label: "Tool", width: 110, visible: true, field: true, kind: "text" },
     { key: "version", label: "Version", width: 80, visible: true, field: true, kind: "text" },
     { key: "managedBy", label: "Managed By", width: 120, visible: true, field: true, kind: "text" },
@@ -38,17 +42,20 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   pradar: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "proof", label: "Proof of Compliance", width: 360, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "coList", label: "Co-listed", width: 110, visible: true, field: true, kind: "text" },
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   pia: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "dpsName", label: "DPS Name", width: 160, visible: true, field: true, kind: "text" },
     { key: "phase", label: "Phase", width: 80, visible: true, field: true, kind: "select", options: ["Phase 1", "Phase 2", "Phase 3", "Phase 4"] },
     { key: "field", label: "Field (linked)", width: 180, visible: true, field: true, kind: "text" },
@@ -56,29 +63,55 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   notice: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "dpsName", label: "DPS Name", width: 160, visible: true, field: true, kind: "text" },
     { key: "issuer", label: "Department / Issuer", width: 180, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   actions: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "tag", label: "Tag", width: 130, visible: true, kind: "select", options: ["PIA", "PRADAR (5-in-1)", "TSA", "Privacy Notice", "Other"] },
     { key: "item", label: "Action / Request", width: 280, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
+};
+
+// "All" view spec — read-only summary across categories
+const ALL_SPEC: ColSpec[] = [
+  { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+  { key: "category", label: "Module", width: 110, visible: true, kind: "text" },
+  { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
+  { key: "summary", label: "Item", width: 320, visible: true, kind: "text" },
+  { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+  ASSIGNED_COL,
+  { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
+  { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
+  { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
+];
+
+const CATEGORY_LABEL: Record<DrlCategory, string> = {
+  tsa: "Tech Security",
+  pradar: "PRADAR",
+  pia: "PIA",
+  notice: "Privacy Notice",
+  actions: "Action Items",
 };
 
 export default function DrlGenerator() {
