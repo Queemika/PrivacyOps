@@ -88,6 +88,10 @@ export function Phase3Form({ value, onChange, piaId, dpsName }: Phase3FormProps)
                   key={seed.id} seed={seed} index={i}
                   answer={value.crossBorder[seed.id]}
                   onChange={(next) => set("crossBorder", { ...value.crossBorder, [seed.id]: next })}
+                  piaId={piaId}
+                  dpsName={dpsName}
+                  phaseLabel="Phase 3"
+                  sectionLabel="Cross-border Data Flows"
                 />
               ))}
             </div>
