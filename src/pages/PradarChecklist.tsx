@@ -97,6 +97,7 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
 
   return (
     <TooltipProvider>
+      {!hideHeader && (
       <PageHeader
         title="PRADAR (5-in-1) Assessment"
         description="Privacy Risk and Document Assessment Request — 24 control questions across 10 privacy domains. Synced with your Excel template."
@@ -118,6 +119,7 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
           </>
         }
       />
+      )}
 
       {/* Scoreboard */}
       {!hideScoreboard && (
