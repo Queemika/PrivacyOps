@@ -143,6 +143,7 @@ export default function DrlGenerator() {
     <PageShell title="DRL / IRL" subtitle="Document and inquiry request lists across Tech Security, PRADAR (5-in-1), PIA, Privacy Notice, and Action Items.">
       <Tabs defaultValue={defaultTab}>
         <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="tsa">Tech Security</TabsTrigger>
           <TabsTrigger value="pradar">PRADAR</TabsTrigger>
           <TabsTrigger value="pia">PIA</TabsTrigger>
@@ -150,6 +151,7 @@ export default function DrlGenerator() {
           <TabsTrigger value="actions">Action Items</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="all"><AllDrlView rows={rows} refresh={refresh} /></TabsContent>
         <TabsContent value="tsa"><DrlTable category="tsa" rows={rows} refresh={refresh} /></TabsContent>
         <TabsContent value="pradar"><DrlTable category="pradar" rows={rows} refresh={refresh} /></TabsContent>
         <TabsContent value="pia"><DrlTable category="pia" rows={rows} refresh={refresh} piaFilter={piaId} /></TabsContent>
