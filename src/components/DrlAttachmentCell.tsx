@@ -1,6 +1,7 @@
 import { useRef } from "react";
-import { Paperclip, X, Download } from "lucide-react";
+import { Paperclip, X, Eye, Plus } from "lucide-react";
 import { DrlAttachment, DrlRow, updateRow } from "@/lib/drl/store";
+import { useAttachmentPreview } from "@/components/AttachmentPreview";
 import { toast } from "sonner";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 export function DrlAttachmentCell({ row, onChange }: Props) {
   const ref = useRef<HTMLInputElement>(null);
   const items = row.attachments || [];
+  const { open } = useAttachmentPreview();
 
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -39,18 +41,35 @@ export function DrlAttachmentCell({ row, onChange }: Props) {
   return (
     <div className="space-y-1">
       <input ref={ref} type="file" multiple className="hidden" onChange={(e) => { onFiles(e.target.files); e.currentTarget.value = ""; }} />
-      <button
-        type="button"
-        onClick={() => ref.current?.click()}
-        className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border bg-background hover:bg-muted"
-      >
-        <Paperclip className="h-3 w-3" />Attach
-      </button>
+      {items.length === 0 ? (
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-dashed bg-background hover:bg-muted text-muted-foreground"
+          title="No attachment yet — add to DRL"
+        >
+          <Plus className="h-3 w-3" />Add to DRL
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border bg-background hover:bg-muted"
+        >
+          <Paperclip className="h-3 w-3" />Attach more
+        </button>
+      )}
       {items.map((a, i) => (
         <div key={i} className="flex items-center gap-1 text-[10px] bg-muted/40 rounded px-1.5 py-0.5">
-          <a href={a.dataUrl} download={a.name} className="flex-1 truncate hover:underline" title={a.name}>
-            <Download className="inline h-2.5 w-2.5 mr-1" />{a.name}
-          </a>
+          <button
+            type="button"
+            onClick={() => open(a)}
+            className="flex-1 min-w-0 flex items-center gap-1 truncate hover:underline text-left"
+            title={`Preview ${a.name}`}
+          >
+            <Eye className="h-2.5 w-2.5 shrink-0" />
+            <span className="truncate">{a.name}</span>
+          </button>
           <button onClick={() => remove(i)} className="text-muted-foreground hover:text-destructive" aria-label="Remove">
             <X className="h-3 w-3" />
           </button>
