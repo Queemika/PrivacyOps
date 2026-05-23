@@ -9,24 +9,26 @@ import { toast } from "sonner";
 
 export default function Login() {
   const nav = useNavigate();
-  const { login } = useAuth();
-  const [email, setEmail] = useState("consultant@privacyteam.ph");
-  const [password, setPassword] = useState("demo1234");
+  const { login, loginWithGoogle } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Demo mode: any credentials work
-    const r = login(email, password);
-    if (!r.ok) {
-      // fall back: still let them in
-      const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
-      accounts[email.toLowerCase()] = { firstName: "Demo", lastName: "User", email, password };
-      localStorage.setItem("pa_accounts", JSON.stringify(accounts));
-      const u = { firstName: "Demo", lastName: "User", email };
-      localStorage.setItem("pa_user", JSON.stringify(u));
-    }
+    setBusy(true);
+    const r = await login(email, password);
+    setBusy(false);
+    if (!r.ok) { toast.error(r.error || "Sign-in failed"); return; }
     toast.success("Welcome to PrivacyOps");
     nav("/engagements", { replace: true });
+  };
+
+  const google = async () => {
+    setBusy(true);
+    const r = await loginWithGoogle();
+    setBusy(false);
+    if (!r.ok) toast.error(r.error || "Google sign-in failed");
   };
 
   return (
@@ -52,12 +54,16 @@ export default function Login() {
             <Input id="password" type="password" autoComplete="current-password"
               value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-          <Button type="submit" className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground text-sm font-medium">
-            Sign In
+          <Button type="submit" disabled={busy} className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground text-sm font-medium">
+            {busy ? "Signing in…" : "Sign In"}
           </Button>
-          <p className="text-[11px] text-muted-foreground text-center pt-1">
-            Demo: Any credentials work · Version 1.0 Prototype
-          </p>
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="relative flex justify-center text-[11px] uppercase"><span className="bg-white px-2 text-muted-foreground">or</span></div>
+          </div>
+          <Button type="button" variant="outline" onClick={google} disabled={busy} className="w-full h-11">
+            Continue with Google
+          </Button>
           <p className="text-[11px] text-muted-foreground text-center">
             Need an account?{" "}
             <Link to="/signup" className="text-accent hover:underline font-medium">Create one</Link>
@@ -67,7 +73,7 @@ export default function Login() {
 
       <div className="mt-6 flex items-center gap-1.5 text-[11px] text-white/50 max-w-md text-center">
         <AlertTriangle className="h-3 w-3 text-warning shrink-0" />
-        Auto-generated content requires human review. All data shown is for demonstration only.
+        Auto-generated content requires human review.
       </div>
     </div>
   );
