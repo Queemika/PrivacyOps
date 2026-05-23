@@ -34,9 +34,20 @@ export default function UserManagement() {
   if (!ready) return null;
   if (!isAdmin) {
     return (
-      <div className="p-8 text-sm text-muted-foreground">
-        <ShieldCheck className="h-5 w-5 inline mr-2" />
-        Admin access required. Ask an admin to grant you the Admin role.
+      <div className="p-8 max-w-md mx-auto space-y-4 text-center">
+        <ShieldCheck className="h-10 w-10 mx-auto text-muted-foreground" />
+        <h1 className="text-xl font-semibold">Admin access required</h1>
+        <p className="text-sm text-muted-foreground">
+          Ask an admin to grant you the Admin role. If this is a fresh workspace and no admin exists yet,
+          you can claim the first admin seat.
+        </p>
+        <Button onClick={async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data, error } = await (supabase as any).rpc("claim_first_admin");
+          if (error) { toast.error(error.message); return; }
+          if (data === true) { toast.success("You are now Admin. Reloading…"); setTimeout(() => location.reload(), 600); }
+          else toast.error("An admin already exists — ask them to grant you access.");
+        }}>Claim first admin</Button>
       </div>
     );
   }
