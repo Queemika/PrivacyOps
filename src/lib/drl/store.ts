@@ -15,6 +15,7 @@ export interface DrlRow {
   attachment?: string;             // legacy free-text note
   attachments?: DrlAttachment[];   // multi-file uploads
   tag?: string;     // for action items
+  assignedTo?: string;             // user / role assigned to deliver
   coListWith?: DrlCategory[]; // mirrors
   createdAt: string;
   updatedAt: string;

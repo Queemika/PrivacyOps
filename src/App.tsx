@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AttachmentPreviewProvider } from "./components/AttachmentPreview";
 import { AuthProvider } from "./context/AuthContext";
 import { ComplianceProvider } from "./context/ComplianceContext";
 import Login from "./pages/Login";
@@ -49,6 +50,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ComplianceProvider>
+            <AttachmentPreviewProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -86,6 +88,7 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </AttachmentPreviewProvider>
           </ComplianceProvider>
         </AuthProvider>
       </BrowserRouter>

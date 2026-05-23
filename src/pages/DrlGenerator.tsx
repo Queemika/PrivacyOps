@@ -21,13 +21,17 @@ const STATUSES: DrlStatus[] = ["Open", "Partially Received", "Under Inspection",
 
 interface ColSpec extends DrlColumnConfig { kind?: "text" | "status" | "date" | "select"; options?: string[]; field?: boolean; }
 
+const ASSIGNED_COL: ColSpec = { key: "assignedTo", label: "Assigned To", width: 130, visible: true, kind: "text" };
+
 const SPEC: Record<DrlCategory, ColSpec[]> = {
   tsa: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "domain", label: "Domain", width: 140, visible: true, field: true, kind: "text" },
     { key: "system", label: "System", width: 140, visible: true, field: true, kind: "text" },
     { key: "requirement", label: "Requirement", width: 220, visible: true, field: true, kind: "text" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "tool", label: "Tool", width: 110, visible: true, field: true, kind: "text" },
     { key: "version", label: "Version", width: 80, visible: true, field: true, kind: "text" },
     { key: "managedBy", label: "Managed By", width: 120, visible: true, field: true, kind: "text" },
@@ -38,17 +42,20 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   pradar: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "proof", label: "Proof of Compliance", width: 360, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "coList", label: "Co-listed", width: 110, visible: true, field: true, kind: "text" },
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   pia: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "dpsName", label: "DPS Name", width: 160, visible: true, field: true, kind: "text" },
     { key: "phase", label: "Phase", width: 80, visible: true, field: true, kind: "select", options: ["Phase 1", "Phase 2", "Phase 3", "Phase 4"] },
     { key: "field", label: "Field (linked)", width: 180, visible: true, field: true, kind: "text" },
@@ -56,29 +63,55 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   notice: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "dpsName", label: "DPS Name", width: 160, visible: true, field: true, kind: "text" },
     { key: "issuer", label: "Department / Issuer", width: 180, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
   actions: [
-    { key: "no", label: "DRL No.", width: 70, visible: true, kind: "text" },
+    { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+    { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
     { key: "tag", label: "Tag", width: 130, visible: true, kind: "select", options: ["PIA", "PRADAR (5-in-1)", "TSA", "Privacy Notice", "Other"] },
     { key: "item", label: "Action / Request", width: 280, visible: true, field: true, kind: "text" },
     { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+    ASSIGNED_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
+};
+
+// "All" view spec — read-only summary across categories
+const ALL_SPEC: ColSpec[] = [
+  { key: "no", label: "No.", width: 50, visible: true, kind: "text" },
+  { key: "category", label: "Module", width: 110, visible: true, kind: "text" },
+  { key: "drlNo", label: "DRL #", width: 80, visible: true, kind: "text" },
+  { key: "summary", label: "Item", width: 320, visible: true, kind: "text" },
+  { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
+  ASSIGNED_COL,
+  { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
+  { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
+  { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
+];
+
+const CATEGORY_LABEL: Record<DrlCategory, string> = {
+  tsa: "Tech Security",
+  pradar: "PRADAR",
+  pia: "PIA",
+  notice: "Privacy Notice",
+  actions: "Action Items",
 };
 
 export default function DrlGenerator() {
@@ -110,6 +143,7 @@ export default function DrlGenerator() {
     <PageShell title="DRL / IRL" subtitle="Document and inquiry request lists across Tech Security, PRADAR (5-in-1), PIA, Privacy Notice, and Action Items.">
       <Tabs defaultValue={defaultTab}>
         <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="tsa">Tech Security</TabsTrigger>
           <TabsTrigger value="pradar">PRADAR</TabsTrigger>
           <TabsTrigger value="pia">PIA</TabsTrigger>
@@ -117,6 +151,7 @@ export default function DrlGenerator() {
           <TabsTrigger value="actions">Action Items</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="all"><AllDrlView rows={rows} refresh={refresh} /></TabsContent>
         <TabsContent value="tsa"><DrlTable category="tsa" rows={rows} refresh={refresh} /></TabsContent>
         <TabsContent value="pradar"><DrlTable category="pradar" rows={rows} refresh={refresh} /></TabsContent>
         <TabsContent value="pia"><DrlTable category="pia" rows={rows} refresh={refresh} piaFilter={piaId} /></TabsContent>
@@ -208,6 +243,18 @@ function DrlTable({ category, rows, refresh, piaFilter }: { category: DrlCategor
   );
 }
 
+function summarizeRow(r: DrlRow): string {
+  const f = r.fields;
+  switch (r.category) {
+    case "tsa":     return f.requirement || `${f.domain || ""} / ${f.system || ""}`.trim();
+    case "pradar":  return f.proof || "";
+    case "pia":     return f.request || f.field || f.dpsName || "";
+    case "notice":  return `${f.dpsName || ""} (${f.issuer || ""})`.replace(" ()", "").trim();
+    case "actions": return f.item || "";
+    default:        return "";
+  }
+}
+
 function getCell(r: DrlRow, c: ColSpec): string {
   if (c.computed === "daysOutstanding") {
     if (!r.dateRequested) return "";
@@ -216,7 +263,11 @@ function getCell(r: DrlRow, c: ColSpec): string {
     return String(days);
   }
   if (c.key === "no") return String(r.no);
+  if (c.key === "drlNo") return `${r.category.toUpperCase()}-${String(r.no).padStart(3, "0")}`;
+  if (c.key === "category") return CATEGORY_LABEL[r.category];
+  if (c.key === "summary") return summarizeRow(r);
   if (c.key === "status") return r.status;
+  if (c.key === "assignedTo") return r.assignedTo || "";
   if (c.key === "dateRequested") return r.dateRequested || "";
   if (c.key === "dateReceived") return r.dateReceived || "";
   if (c.key === "remarks") return r.remarks || "";
@@ -228,10 +279,14 @@ function getCell(r: DrlRow, c: ColSpec): string {
 function CellEditor({ row, col, onChange }: { row: DrlRow; col: ColSpec; onChange: () => void }) {
   const value = getCell(row, col);
   if (col.computed) return <div className="px-1 text-muted-foreground tabular-nums">{value}</div>;
-  if (col.key === "no") return <div className="px-1 font-mono">{value}</div>;
+  if (col.key === "no") return <div className="px-1 font-mono text-muted-foreground tabular-nums">{value}</div>;
+  if (col.key === "drlNo") return <div className="px-1 font-mono text-[10px] inline-flex items-center px-1.5 py-0.5 rounded bg-muted/60 border w-fit">{value}</div>;
+  if (col.key === "category") return <div className="px-1 text-xs">{value}</div>;
+  if (col.key === "summary") return <div className="px-1 text-xs leading-snug">{value}</div>;
 
   const commit = (v: string) => {
     if (col.key === "status") updateRow(row.id, { status: v as DrlStatus });
+    else if (col.key === "assignedTo") updateRow(row.id, { assignedTo: v });
     else if (col.key === "dateRequested") updateRow(row.id, { dateRequested: v });
     else if (col.key === "dateReceived") updateRow(row.id, { dateReceived: v });
     else if (col.key === "remarks") updateRow(row.id, { remarks: v });
@@ -335,3 +390,87 @@ function Subpanel({ title, children }: { title: string; children: string[] }) {
     </div>
   );
 }
+
+function AllDrlView({ rows, refresh }: { rows: DrlRow[]; refresh: () => void }) {
+  const [moduleFilter, setModuleFilter] = useState<DrlCategory | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<DrlStatus | "all">("all");
+  const [assignedFilter, setAssignedFilter] = useState<string>("");
+
+  const filtered = useMemo(() => {
+    let r = rows;
+    if (moduleFilter !== "all") r = r.filter(x => x.category === moduleFilter);
+    if (statusFilter !== "all") r = r.filter(x => x.status === statusFilter);
+    if (assignedFilter.trim()) {
+      const q = assignedFilter.trim().toLowerCase();
+      r = r.filter(x => (x.assignedTo || "").toLowerCase().includes(q));
+    }
+    return r.slice().sort((a, b) => a.category.localeCompare(b.category) || a.no - b.no);
+  }, [rows, moduleFilter, statusFilter, assignedFilter]);
+
+  const exportColumns = ALL_SPEC.map(c => ({ header: c.label, key: c.key, width: c.width }));
+  const exportRows = filtered.map(r => Object.fromEntries(ALL_SPEC.map(c => [c.key, getCell(r, c)])));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={moduleFilter} onValueChange={(v) => setModuleFilter(v as DrlCategory | "all")}>
+            <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All modules</SelectItem>
+              <SelectItem value="tsa">Tech Security</SelectItem>
+              <SelectItem value="pradar">PRADAR</SelectItem>
+              <SelectItem value="pia">PIA</SelectItem>
+              <SelectItem value="notice">Privacy Notice</SelectItem>
+              <SelectItem value="actions">Action Items</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as DrlStatus | "all")}>
+            <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any status</SelectItem>
+              {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input
+            placeholder="Filter by assignee…"
+            value={assignedFilter}
+            onChange={(e) => setAssignedFilter(e.target.value)}
+            className="h-8 w-[200px] text-xs"
+          />
+          <span className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</span>
+        </div>
+        <ExportMenu filename="DRL_all" columns={exportColumns} rows={exportRows} formats={["excel", "pdf", "csv"]} />
+      </div>
+
+      <Card>
+        <CardContent className="p-0 overflow-x-auto">
+          <table className="text-xs" style={{ width: "max-content", minWidth: "100%" }}>
+            <thead className="bg-muted/40 border-b">
+              <tr>
+                {ALL_SPEC.map(c => (
+                  <th key={c.key} className="px-2 py-2 text-left font-medium border-l first:border-l-0" style={{ width: c.width, minWidth: c.width }}>{c.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => (
+                <tr key={r.id} className="border-b align-top hover:bg-muted/10">
+                  {ALL_SPEC.map(c => (
+                    <td key={c.key} className="px-1 py-1 border-l first:border-l-0" style={{ width: c.width, minWidth: c.width, maxWidth: c.width }}>
+                      <CellEditor row={r} col={c} onChange={refresh} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr><td className="px-4 py-6 text-center text-muted-foreground" colSpan={ALL_SPEC.length}>No DRL items match your filters.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+

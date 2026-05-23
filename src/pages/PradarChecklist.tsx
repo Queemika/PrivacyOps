@@ -52,8 +52,8 @@ const ratingTone = (r: number | null) => {
   return "bg-success text-success-foreground";
 };
 
-interface PradarChecklistProps { hideScoreboard?: boolean; hideControls?: boolean }
-export default function PradarChecklist({ hideScoreboard = false, hideControls = false }: PradarChecklistProps = {}) {
+interface PradarChecklistProps { hideScoreboard?: boolean; hideControls?: boolean; hideHeader?: boolean }
+export default function PradarChecklist({ hideScoreboard = false, hideControls = false, hideHeader = false }: PradarChecklistProps = {}) {
   const [entries, setEntries] = useState<Record<string, PradarEntry>>({});
   const [showInternal, setShowInternal] = useState(false);
   const [showClient, setShowClient] = useState(false);
@@ -97,6 +97,7 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
 
   return (
     <TooltipProvider>
+      {!hideHeader && (
       <PageHeader
         title="PRADAR (5-in-1) Assessment"
         description="Privacy Risk and Document Assessment Request — 24 control questions across 10 privacy domains. Synced with your Excel template."
@@ -118,6 +119,7 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
           </>
         }
       />
+      )}
 
       {/* Scoreboard */}
       {!hideScoreboard && (
@@ -216,6 +218,24 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-2">
+          {hideHeader && (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".xlsx"
+                className="hidden"
+                onChange={e => e.target.files?.[0] && handleImport(e.target.files[0])}
+              />
+              <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-1 h-3.5 w-3.5" />Import
+              </Button>
+              <Button size="sm" onClick={handleExport}>
+                <Download className="mr-1 h-3.5 w-3.5" />Export
+              </Button>
+              <div className="h-5 w-px bg-border mx-1" />
+            </>
+          )}
           <Button size="sm" variant={showInternal ? "default" : "outline"} onClick={() => setShowInternal(s => !s)}>
             <Settings2 className="mr-2 h-3.5 w-3.5" />Internal mode
           </Button>
@@ -256,7 +276,7 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="p-0 divide-y">
-                    {items.map(item => {
+                    {items.map((item, idx) => {
                       const e = entryFor(entries, item.id);
                       const basisItems = parseBasis(item.basis);
                       const checks = e.basisChecks || {};
@@ -293,68 +313,66 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
                       };
 
                       return (
-                        <div key={item.id} className="p-4 hover:bg-muted/10">
-                          <div className="flex items-start gap-3 mb-3">
-                            <Badge variant="outline" className="text-[10px] mt-0.5">DRL #{item.drlNo}</Badge>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium leading-snug flex items-start gap-2">
-                                <span>{item.controlQuestion}</span>
-                                {item.basis && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button type="button" className="text-muted-foreground hover:text-foreground shrink-0 mt-0.5">
-                                        <Info className="h-3.5 w-3.5" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-md whitespace-pre-wrap text-xs">
-                                      {item.basis}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </div>
-                              <div className="text-[11px] text-muted-foreground mt-1">
-                                {item.component} · {item.subDomain} · Proof: {item.proof}
-                              </div>
-                            </div>
+                        <div key={item.id} className="flex hover:bg-muted/10">
+                          {/* LEFT: row number */}
+                          <div className="w-12 shrink-0 py-4 pl-4 pr-2 text-xs font-mono tabular-nums text-muted-foreground text-right">
+                            {idx + 1}.
                           </div>
 
-                          {/* Rating with auto-score badge */}
-                          <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <span className="text-xs text-muted-foreground w-20">Rating</span>
-                            <div className="flex items-center gap-1">
-                              {RATING_OPTIONS.map(r => (
-                                <Popover key={r}>
-                                  <PopoverTrigger asChild>
-                                    <button
-                                      onClick={() => update(item.id, { rating: e.rating === r ? null : r })}
-                                      className={`text-[11px] px-2.5 py-1 rounded border transition ${
-                                        effectiveRating === r ? ratingTone(r) + " border-transparent" : "bg-background hover:bg-muted"
-                                      }`}
-                                    >
-                                      {r} · {RATING_LABELS[r]}
+                          {/* MIDDLE: control content */}
+                          <div className="flex-1 min-w-0 py-4 pr-3">
+                            <div className="text-sm font-medium leading-snug flex items-start gap-2 mb-1">
+                              <span>{item.controlQuestion}</span>
+                              {item.basis && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button type="button" className="text-muted-foreground hover:text-foreground shrink-0 mt-0.5">
+                                      <Info className="h-3.5 w-3.5" />
                                     </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="max-w-md text-xs whitespace-pre-wrap">
-                                    {item.ratingGuide}
-                                  </PopoverContent>
-                                </Popover>
-                              ))}
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-md whitespace-pre-wrap text-xs">
+                                    {item.basis}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                             </div>
-                            {autoScore != null && e.rating == null && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge variant="secondary" className="text-[10px]">Auto: {autoScore}</Badge>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-sm text-xs">{SCORE_FORMULA_HELP}</TooltipContent>
-                              </Tooltip>
-                            )}
-                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7" onClick={linkToDrl}>
-                              <Link2 className="mr-1 h-3 w-3" />{e.drlRowId ? "Sync DRL" : "Add to DRL"}
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-xs h-7">
-                              <Sparkles className="mr-1 h-3 w-3" />AI assist
-                            </Button>
-                          </div>
+                            <div className="text-[11px] text-muted-foreground mb-3">
+                              {item.component} · {item.subDomain} · Proof: {item.proof}
+                            </div>
+
+                            {/* Rating with auto-score badge */}
+                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                              <span className="text-xs text-muted-foreground w-20">Rating</span>
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {RATING_OPTIONS.map(r => (
+                                  <Popover key={r}>
+                                    <PopoverTrigger asChild>
+                                      <button
+                                        onClick={() => update(item.id, { rating: e.rating === r ? null : r })}
+                                        className={`text-[11px] px-2.5 py-1 rounded border transition ${
+                                          effectiveRating === r ? ratingTone(r) + " border-transparent" : "bg-background hover:bg-muted"
+                                        }`}
+                                      >
+                                        {r} · {RATING_LABELS[r]}
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="max-w-md text-xs whitespace-pre-wrap">
+                                      {item.ratingGuide}
+                                    </PopoverContent>
+                                  </Popover>
+                                ))}
+                              </div>
+                              {autoScore != null && e.rating == null && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="secondary" className="text-[10px]">Auto: {autoScore}</Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-sm text-xs">{SCORE_FORMULA_HELP}</TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+
+                          {/* (control body continues below — basis checklist, inputs, modes) */}
 
                           {/* Basis / minimum requirements checklist */}
                           {basisItems.length > 0 && (
@@ -456,6 +474,26 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
                               <SmallSelect label="Client Status" value={e.clientStatus} onChange={v => update(item.id, { clientStatus: v })} options={CLIENT_STATUS_OPTIONS} />
                             </div>
                           )}
+                          </div>
+
+                          {/* RIGHT: sticky actions */}
+                          <div className="w-36 shrink-0 border-l bg-muted/10 p-3 flex flex-col gap-2 sticky right-0">
+                            <div className="inline-flex items-center justify-center px-2 py-1 rounded border bg-background font-mono text-[10px] text-muted-foreground" title="DRL reference number">
+                              DRL #{item.drlNo}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={e.drlRowId ? "secondary" : "default"}
+                              className="w-full text-xs h-8 justify-start"
+                              onClick={linkToDrl}
+                            >
+                              <Link2 className="mr-1.5 h-3 w-3" />
+                              {e.drlRowId ? "Sync DRL" : "Add to DRL"}
+                            </Button>
+                            <Button size="sm" variant="outline" className="w-full text-xs h-8 justify-start">
+                              <Sparkles className="mr-1.5 h-3 w-3" />AI Assist
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}
