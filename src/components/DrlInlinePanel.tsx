@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react";
 import { DrlCategory, DrlRow, loadDrl } from "@/lib/drl/store";
 import { useEffect, useState } from "react";
 
-interface Props { category: DrlCategory; title?: string; }
+interface Props { category: DrlCategory; title?: string; piaId?: string; }
 
 const STATUS_TONE: Record<string, string> = {
   Open: "bg-rose-100 text-rose-700",
@@ -16,9 +16,13 @@ const STATUS_TONE: Record<string, string> = {
   "Not Applicable": "bg-slate-100 text-slate-600",
 };
 
-export function DrlInlinePanel({ category, title }: Props) {
+export function DrlInlinePanel({ category, title, piaId }: Props) {
   const [rows, setRows] = useState<DrlRow[]>([]);
-  useEffect(() => { setRows(loadDrl().filter(r => r.category === category)); }, [category]);
+  useEffect(() => {
+    let r = loadDrl().filter(x => x.category === category);
+    if (piaId) r = r.filter(x => x.fields.piaId === piaId);
+    setRows(r);
+  }, [category, piaId]);
 
   return (
     <Card>
