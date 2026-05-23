@@ -474,6 +474,26 @@ export default function PradarChecklist({ hideScoreboard = false, hideControls =
                               <SmallSelect label="Client Status" value={e.clientStatus} onChange={v => update(item.id, { clientStatus: v })} options={CLIENT_STATUS_OPTIONS} />
                             </div>
                           )}
+                          </div>
+
+                          {/* RIGHT: sticky actions */}
+                          <div className="w-36 shrink-0 border-l bg-muted/10 p-3 flex flex-col gap-2 sticky right-0">
+                            <div className="inline-flex items-center justify-center px-2 py-1 rounded border bg-background font-mono text-[10px] text-muted-foreground" title="DRL reference number">
+                              DRL #{item.drlNo}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={e.drlRowId ? "secondary" : "default"}
+                              className="w-full text-xs h-8 justify-start"
+                              onClick={linkToDrl}
+                            >
+                              <Link2 className="mr-1.5 h-3 w-3" />
+                              {e.drlRowId ? "Sync DRL" : "Add to DRL"}
+                            </Button>
+                            <Button size="sm" variant="outline" className="w-full text-xs h-8 justify-start">
+                              <Sparkles className="mr-1.5 h-3 w-3" />AI Assist
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}
