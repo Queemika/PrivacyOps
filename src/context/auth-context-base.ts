@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 
 export interface AuthUser {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -16,9 +17,10 @@ export interface AuditEntry {
 export interface AuthCtx {
   user: AuthUser | null;
   ready: boolean;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  signup: (u: AuthUser & { password: string }) => { ok: boolean; error?: string };
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signup: (u: { firstName: string; lastName: string; email: string; password: string }) => Promise<{ ok: boolean; error?: string }>;
+  loginWithGoogle: () => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
   logAction: (action: string, target: string) => void;
   auditLog: AuditEntry[];
 }

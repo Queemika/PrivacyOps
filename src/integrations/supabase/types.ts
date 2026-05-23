@@ -14,16 +14,353 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          meta: Json
+          target: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          target?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          target?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      comment_todos: {
+        Row: {
+          assignee_id: string
+          comment_id: string
+          created_at: string
+          done: boolean
+          due_date: string | null
+          id: string
+        }
+        Insert: {
+          assignee_id: string
+          comment_id: string
+          created_at?: string
+          done?: boolean
+          due_date?: string | null
+          id?: string
+        }
+        Update: {
+          assignee_id?: string
+          comment_id?: string
+          created_at?: string
+          done?: boolean
+          due_date?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_todos_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          anchor: Json
+          author_id: string
+          body: string
+          created_at: string
+          engagement_id: string | null
+          id: string
+          kind: Database["public"]["Enums"]["comment_kind"]
+          mentions: string[]
+          module: string
+          parent_id: string | null
+          record_id: string | null
+          status: Database["public"]["Enums"]["comment_status"]
+          updated_at: string
+        }
+        Insert: {
+          anchor?: Json
+          author_id: string
+          body?: string
+          created_at?: string
+          engagement_id?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["comment_kind"]
+          mentions?: string[]
+          module: string
+          parent_id?: string | null
+          record_id?: string | null
+          status?: Database["public"]["Enums"]["comment_status"]
+          updated_at?: string
+        }
+        Update: {
+          anchor?: Json
+          author_id?: string
+          body?: string
+          created_at?: string
+          engagement_id?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["comment_kind"]
+          mentions?: string[]
+          module?: string
+          parent_id?: string | null
+          record_id?: string | null
+          status?: Database["public"]["Enums"]["comment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_members: {
+        Row: {
+          created_at: string
+          engagement_id: string
+          id: string
+          role_on_engagement: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          engagement_id: string
+          id?: string
+          role_on_engagement?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          engagement_id?: string
+          id?: string
+          role_on_engagement?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_members_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagements: {
+        Row: {
+          client_name: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["engagement_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["engagement_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["engagement_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      module_assignments: {
+        Row: {
+          assigned_by: string | null
+          assignee_id: string
+          created_at: string
+          due_date: string | null
+          engagement_id: string
+          id: string
+          module: string
+          notes: string | null
+          record_id: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          assignee_id: string
+          created_at?: string
+          due_date?: string | null
+          engagement_id: string
+          id?: string
+          module: string
+          notes?: string | null
+          record_id?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          assignee_id?: string
+          created_at?: string
+          due_date?: string | null
+          engagement_id?: string
+          id?: string
+          module?: string
+          notes?: string | null
+          record_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_assignments_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          link: string | null
+          meta: Json
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          link?: string | null
+          meta?: Json
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          meta?: Json
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_first_admin: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_engagement_member: {
+        Args: { _engagement_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "Intern" | "Preparer" | "Lead" | "Approver" | "Admin"
+      comment_kind: "comment" | "highlight"
+      comment_status: "open" | "resolved"
+      engagement_status: "active" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +487,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["Intern", "Preparer", "Lead", "Approver", "Admin"],
+      comment_kind: ["comment", "highlight"],
+      comment_status: ["open", "resolved"],
+      engagement_status: ["active", "archived"],
+    },
   },
 } as const

@@ -1,103 +1,79 @@
-## Scope
 
-Nine focused changes across PIA, Transcripts, Library, Summary, References (admin), date fields, and Physical Inspection. Everything stays frontend/localStorage — no backend changes.
+# Phase 1 — Foundation: Roles, Comments, Notifications
 
----
+The rest of your request (sign-off workflow, client view, rating-formula configurator, field locks, theming, transcript bento + AI extraction, PIA Phase 3 redesign, DRL "All" + Assigned-to, PRADAR table) will be split into Phase 2 and Phase 3 plans after this lands. They all depend on real users, roles, and a notification channel — so this comes first.
 
-### 1. PIA shell — remove NPC-RS tab
+## What ships in Phase 1
 
-`src/pages/PiaShell.tsx`: drop the `<TabsTrigger value="npc">` and its `TabsContent` (it currently renders the same `RopaGenerator` as Compilation).
+### 1. Real auth on Lovable Cloud
+- Replace the current `localStorage` auth in `src/context/AuthContext.tsx` with Supabase auth.
+- `/login` and `/signup` use email/password + Google sign-in.
+- `profiles` row auto-created on signup via trigger; existing `useAuth()` API kept (same `user`, `login`, `signup`, `logout`, `logAction` surface) so the rest of the app keeps working.
+- Audit log writes move from `localStorage` to a server `audit_log` table.
 
-### 2. Upload Transcript — hide "Team transcripts" section
+### 2. Roles & assignments (admin-managed)
+- New `user_roles` table using an `app_role` enum: `Intern | Preparer | Lead | Approver | Admin`. Roles live in their own table (security best practice), checked via `has_role()` SECURITY DEFINER.
+- New `engagements` table and `engagement_members` join table (`user_id`, `engagement_id`, `role_on_engagement`).
+- New `module_assignments` table: assign a specific workable (PIA / PRADAR / TSA / Inspection / Notice / DRL row) to a user within an engagement.
+- New Admin screen `src/pages/admin/UserManagement.tsx`:
+  - List signed-up users, assign role, assign to engagements, assign workables/screens.
+  - Replaces the current localStorage-only `ViewAsSettings` for production use (View-As stays for dev preview).
 
-`src/pages/UploadTranscript.tsx`: When a **new transcript is being uploaded or processed**, the **Team Transcripts section should:**
+### 3. Comments system (MS-Office style, field-anchored + highlight)
+- New `comments` table: `id, engagement_id, module, record_id, anchor (jsonb: {field?, selection?: {start,end,quote}}), author_id, body, mentions uuid[], status (open|resolved), parent_id, created_at`.
+- New `comment_todos` table linking a comment to an assignee with a due date.
+- Reusable `<CommentableField>` and `<CommentableText>` wrappers:
+  - Field-level: speech-bubble in the gutter, click to open thread.
+  - Text-level: select text → floating "Comment / Highlight" button → stores selection offsets + quoted text so re-render survives content edits.
+- `<CommentsPanel>` side-drawer per workable: thread list, @mention autocomplete (engagement members), reply, resolve, reopen, delete, assign-as-todo (writes to the to-do store + notifies user).
+- Wired into PIA Phase 1/2/3, PRADAR Working File, TSA, Physical Inspection, Privacy Notice tabs (one panel per module, anchors carry which sub-tab/field).
+- Highlight/annotate: same selection mechanism, persists as a comment with `kind: "highlight"` and a color; rendered as a `<mark>` overlay.
 
-- Automatically **collapse OR minimize**
-- OR be hidden behind a **collapsible panel/tab**
+### 4. Notifications + bell
+- New `notifications` table: `id, user_id, kind, title, body, link, read_at, created_at, meta jsonb`.
+- Triggers/inserts on: comment @mention, comment-to-do assigned, workable assigned, status change submitted/reviewed/approved (stubs now; the actual sign-off flow lands in Phase 2 but the channel is ready), deadline reminder (cron edge function `notify-deadlines` runs daily).
+- `<NotificationBell>` in `AppLayout` header: unread count, dropdown list, per-item "Add to to-do" / "Dismiss", "Mark all read", deep-link to the source.
+- Realtime: subscribe to `notifications` + `comments` via Supabase Realtime so the bell and panels update live.
 
-### 3. Link-to-existing-PIA uses latest template
+## Technical details
 
-Currently `handleLinkExisting` just navigates with `piaId=...` and does not normalize the target PIA against the latest schema (Phase 1 desc + threshold + stakeholders, Phase 2 data mapping, Phase 3 principles/rights/security/cross-border). Add a `normalizePiaToLatestTemplate(pia)` helper in `src/lib/pia/store.ts` that:
+### Migrations (single migration, ordered)
+1. `create type app_role`
+2. `profiles` (auto-create via `handle_new_user` trigger on `auth.users`)
+3. `user_roles` + `has_role(_user_id, _role)` SECURITY DEFINER
+4. `engagements`, `engagement_members`, `module_assignments`
+5. `comments`, `comment_todos`
+6. `notifications`
+7. `audit_log`
+8. RLS on all tables:
+   - profiles: self read/update; admins read all.
+   - user_roles: self read; only admins insert/update/delete.
+   - engagements/members/assignments: members of the engagement read; admins write.
+   - comments/comment_todos/notifications: scoped to engagement membership; author can edit/delete own; mentioned users can read.
+9. `ALTER PUBLICATION supabase_realtime ADD TABLE comments, notifications;`
 
-- Ensures every Phase 1 desc field exists (fills missing keys with defaults from `templates.ts`).
-- Ensures threshold answers exist for every current threshold key.
-- Ensures Phase 2 has all rows arrays (collection/use/disclosure/repositories/categories) and all field keys.
-- Ensures Phase 3 has principles, rights, organizational, physical, technical, crossBorder records seeded with the current checklist keys (blank answers).
-- Calls `upsertPia` and returns the upgraded PIA.
+### Frontend structure
+- `src/lib/auth/` — replaces `src/context/AuthContext.tsx` internals; same hook surface.
+- `src/lib/roles/` — `useRole()`, `useAssignments()`, `useEngagement()`.
+- `src/lib/comments/` — store, hooks, types; `CommentableField`, `CommentableText`, `CommentsPanel`, `HighlightOverlay`.
+- `src/lib/notifications/` — store, hook, `NotificationBell`.
+- `src/pages/admin/UserManagement.tsx` — new.
+- `AppLayout.tsx` — add bell + (admin only) link to User Management.
+- Existing localStorage stores stay in place for module data; only auth/audit/comments/notifications move to Cloud now. Module data migrations happen in Phase 2 when sign-off + client view need server state.
 
-Call it from `handleLinkExisting` before navigation. Also call it on `getPia` reads in `PiaWorkspace` so legacy PIAs are auto-upgraded on open.
+### Edge functions
+- `notify-deadlines` (scheduled) — scans assignments + due dates, inserts notifications.
+- `comment-mention` — invoked on comment create; resolves @mentions and writes notifications (could be a DB trigger; using an edge function keeps the mention-parsing in TS).
 
-### 4. PIA Library — remove "Load samples" and "Compile" buttons
+## Out of scope for this plan (will be Phase 2 / 3)
+- Sign-off / submit-for-review / approve workflow buttons and statuses
+- Client read-only view + per-module client visibility config
+- Admin rating-formula configurator
+- Admin field-lock & rule editor
+- Per-user theme/background customization
+- Transcript preview-edit-process flow + bento outputs + real AI extraction
+- PIA Phase 3 column redesign, Consistency Checker rework, per-PIA DRL tab
+- DRL "All" tab + "Assigned to" column
+- PRADAR table layout, sticky right-side actions, attachment preview popover
 
-`src/pages/PIALibrary.tsx`: drop those two buttons from `actions` and remove the now-unused `loadSamples` handler + checkbox selection logic if no longer referenced (keep checkboxes if other features use them — they don't, so remove the selection column too for a cleaner table).
-
-### 5. PIA Summary tab = full Executive Summary + link to Analytics
-
-`src/pages/PiaShell.tsx`: replace the small `PiaSummary` inline component with `<ExecutiveSummary />` rendered inside the Summary tab, plus a prominent "Open Analytics Hub →" button at the top linking to `/analytics`.
-
-### 6. Admin-editable References (new system)
-
-**New store** `src/lib/references/store.ts`:
-
-```ts
-type RefBlockType = "link" | "paragraph" | "table" | "blog";
-interface RefBlock { id; type; title?; body?; url?; rows?: string[][]; headers?: string[]; updatedAt }
-interface ReferenceSet { moduleId: string; blocks: RefBlock[] }
-```
-
-localStorage key `pa_references`. Seed with current hardcoded refs for each module.
-
-**New component** `src/components/ReferencesPanel.tsx`: read-only render for all users; if `role === "admin"` (from `useAuth`), show edit toolbar: Add link / Add paragraph / Add table / Add blog post / Paste content (textarea → saved as paragraph; user-side "Format &  Clean" is just a no-op formatter that trims whitespace and normalizes line breaks — clarified as a label only since no AI call exists here, and optionally add “Convert to blog blocks” parsing. If later user want true rewriting, that would require Lovable AI/backend capability.).
-
-**Wire into modules** (replace existing References tabs/sections):
-
-- PIA: `PiaShell` refs tab → `<ReferencesPanel moduleId="pia" />`
-- PRADAR: `PradarShell` (find refs tab) → `moduleId="pradar"`
-- Tech Security: `TechnicalSecurityAssessment` → add/replace refs tab `moduleId="tsa"`
-- Physical Inspection: add new "References" tab `moduleId="physical"`
-- Privacy Notice: add refs tab `moduleId="privacyNotice"`
-- Manuals & Outputs (`ManualsDeliverables`): add new "References" tab `moduleId="manuals"`
-
-### 7. Date Requested / Date Received → date pickers
-
-Search all tables for these text inputs. Replace `<Input type="text">` (or untyped) with shadcn date picker using `<Popover>` + `<Calendar>` per project convention. Files likely affected:
-
-- `src/components/DrlInlinePanel.tsx`, `src/pages/DrlGenerator.tsx`, `src/components/DrlAttachmentCell.tsx`
-- Any PRADAR/Tech Sec/Physical Inspection tables containing these columns.
-Create a small reusable `<DateCell value onChange />` wrapper to keep tables tidy.
-
-### 8. Physical Inspection rework
-
-`src/pages/PhysicalInspection.tsx` + `src/lib/inspections/store.ts`:
-
-- Remove the "Overall view" option from the area selector.
-- Replace single-area inspection model with multi-area working file. Default areas (created on first load if empty, editable/deletable):
-  - Management Information Systems, Human Resources, Administration, Client-Facing Services, Records Management, Legal Compliance, Facilities and Security, Third-Party and Procurement, Accounting and Finance, Executive, DPO Oversight.
-- Working File tab shows each area as a `<Collapsible>` section. Each holds its own checklist table with columns:
-`No. | Items for Checking / Question | Compliance Status | Remarks | Observations | Recommendations`
-(Compliance Status = Yes/No/N-A select; others are textareas.)
-- Per-area controls: rename, delete, add row, remove row.
-- Summary tab tiles aggregate across all areas + add a per-area breakdown table (counts of Yes/No/N-A).
-- Store schema migrates: `Inspection` becomes `{ areas: InspectionArea[] }` keyed by inspection id, or simpler — flatten so each saved record IS an area, and add a separate "engagement" wrapper that lists areas. Simpler: drop the existing single-inspection picker and store one global `InspectionArea[]` list under `pa_inspection_areas`. Row schema:
-`{ id, no, question, status: YNA, remarks, observation, recommendation }`.
-- Migration: if old `pa_inspections` exists and `pa_inspection_areas` is empty, convert each old inspection to one area (preserve rows where possible by mapping `response→remarks`, leaving `recommendation` blank).
-
-### 9. Verification
-
-After edits: typecheck via build, click through PIA tabs, transcript flow, library, inspection working file, and one References panel as admin vs non-admin.
-
----
-
-## Technical notes
-
-- Auth role: `useAuth().user?.role === "admin"` (confirm field name in `auth-context-base.ts` — adjust if it uses `role`/`isAdmin`).
-- "Let Lovable fix it" inside Reference editor: no AI call; just a client-side formatter (trim, collapse blank lines, smart-paragraph splitting). Labeled clearly so users know it's lightweight.
-- All localStorage migrations are guarded so existing users don't lose data.
-
-## Out of scope
-
-- No backend, no edge functions.
-- No real LLM-assisted reference rewriting (would need Lovable AI; can add later if you want).
-- No changes to PRADAR / Tech Sec / Privacy Notice business logic beyond inserting a References tab.
-
-Shall I proceed with all 9 items, or trim?
+Confirm and I'll build Phase 1, then queue Phase 2.

@@ -10,23 +10,32 @@ import { toast } from "sonner";
 
 export default function Signup() {
   const nav = useNavigate();
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const emailErr = email ? validateCorporateEmail(email) : null;
   const emailOk = email && !emailErr;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    const r = signup({ firstName: first, lastName: last, email, password });
+    setError(null); setBusy(true);
+    const r = await signup({ firstName: first, lastName: last, email, password });
+    setBusy(false);
     if (!r.ok) { setError(r.error ?? "Signup failed"); return; }
-    toast.success("Account created");
-    nav("/engagements", { replace: true });
+    toast.success("Account created — check your email to confirm.");
+    nav("/login", { replace: true });
+  };
+
+  const google = async () => {
+    setBusy(true);
+    const r = await loginWithGoogle();
+    setBusy(false);
+    if (!r.ok) setError(r.error ?? "Google sign-in failed");
   };
 
   return (
@@ -34,11 +43,11 @@ export default function Signup() {
       <div className="hidden lg:flex flex-col justify-between p-10 w-1/2 bg-[var(--gradient-primary)] text-primary-foreground">
         <div className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-md bg-white/10 flex items-center justify-center font-bold">PA</div>
-          <span className="font-semibold">PrivacyAtlas</span>
+          <span className="font-semibold">PrivacyOps</span>
         </div>
         <div className="space-y-3 max-w-md">
-          <h1 className="text-3xl font-semibold leading-tight">Create your enterprise account</h1>
-          <p className="text-sm text-primary-foreground/80">Registration is restricted to authorised corporate email addresses.</p>
+          <h1 className="text-3xl font-semibold leading-tight">Create your account</h1>
+          <p className="text-sm text-primary-foreground/80">Your admin will assign your role and engagements after sign-up.</p>
         </div>
         <p className="text-xs text-primary-foreground/60">Prototype · Sample data only.</p>
       </div>
@@ -72,7 +81,7 @@ export default function Signup() {
                   <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{emailErr}</p>
                 )}
                 {emailOk && (
-                  <p className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />Corporate email accepted.</p>
+                  <p className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />Email accepted.</p>
                 )}
               </div>
 
@@ -89,14 +98,17 @@ export default function Signup() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={!!emailErr || !email}>Create account</Button>
+              <Button type="submit" className="w-full" disabled={!!emailErr || !email || busy}>
+                {busy ? "Creating…" : "Create account"}
+              </Button>
+
+              <Button type="button" variant="outline" onClick={google} disabled={busy} className="w-full">
+                Continue with Google
+              </Button>
 
               <p className="text-xs text-muted-foreground text-center">
                 Already have an account?{" "}
                 <Link to="/login" className="text-accent hover:underline font-medium">Sign in</Link>
-              </p>
-              <p className="text-[11px] text-muted-foreground text-center pt-2 border-t">
-                Demo prototype — any well-formed email is accepted.
               </p>
             </form>
           </CardContent>
