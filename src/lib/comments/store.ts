@@ -66,7 +66,7 @@ export function useComments(module: string, record_id?: string | null) {
       module: input.module,
       record_id: input.record_id ?? record_id ?? null,
       engagement_id: input.engagement_id ?? null,
-      anchor: input.anchor ?? {},
+      anchor: (input.anchor ?? {}) as unknown as Record<string, unknown>,
       kind: input.kind ?? "comment",
       body: input.body,
       mentions: input.mentions ?? [],
