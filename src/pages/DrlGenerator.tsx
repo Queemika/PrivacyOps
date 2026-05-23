@@ -243,6 +243,18 @@ function DrlTable({ category, rows, refresh, piaFilter }: { category: DrlCategor
   );
 }
 
+function summarizeRow(r: DrlRow): string {
+  const f = r.fields;
+  switch (r.category) {
+    case "tsa":     return f.requirement || `${f.domain || ""} / ${f.system || ""}`.trim();
+    case "pradar":  return f.proof || "";
+    case "pia":     return f.request || f.field || f.dpsName || "";
+    case "notice":  return `${f.dpsName || ""} (${f.issuer || ""})`.replace(" ()", "").trim();
+    case "actions": return f.item || "";
+    default:        return "";
+  }
+}
+
 function getCell(r: DrlRow, c: ColSpec): string {
   if (c.computed === "daysOutstanding") {
     if (!r.dateRequested) return "";
@@ -251,7 +263,11 @@ function getCell(r: DrlRow, c: ColSpec): string {
     return String(days);
   }
   if (c.key === "no") return String(r.no);
+  if (c.key === "drlNo") return `${r.category.toUpperCase()}-${String(r.no).padStart(3, "0")}`;
+  if (c.key === "category") return CATEGORY_LABEL[r.category];
+  if (c.key === "summary") return summarizeRow(r);
   if (c.key === "status") return r.status;
+  if (c.key === "assignedTo") return r.assignedTo || "";
   if (c.key === "dateRequested") return r.dateRequested || "";
   if (c.key === "dateReceived") return r.dateReceived || "";
   if (c.key === "remarks") return r.remarks || "";
@@ -263,10 +279,14 @@ function getCell(r: DrlRow, c: ColSpec): string {
 function CellEditor({ row, col, onChange }: { row: DrlRow; col: ColSpec; onChange: () => void }) {
   const value = getCell(row, col);
   if (col.computed) return <div className="px-1 text-muted-foreground tabular-nums">{value}</div>;
-  if (col.key === "no") return <div className="px-1 font-mono">{value}</div>;
+  if (col.key === "no") return <div className="px-1 font-mono text-muted-foreground tabular-nums">{value}</div>;
+  if (col.key === "drlNo") return <div className="px-1 font-mono text-[10px] inline-flex items-center px-1.5 py-0.5 rounded bg-muted/60 border w-fit">{value}</div>;
+  if (col.key === "category") return <div className="px-1 text-xs">{value}</div>;
+  if (col.key === "summary") return <div className="px-1 text-xs leading-snug">{value}</div>;
 
   const commit = (v: string) => {
     if (col.key === "status") updateRow(row.id, { status: v as DrlStatus });
+    else if (col.key === "assignedTo") updateRow(row.id, { assignedTo: v });
     else if (col.key === "dateRequested") updateRow(row.id, { dateRequested: v });
     else if (col.key === "dateReceived") updateRow(row.id, { dateReceived: v });
     else if (col.key === "remarks") updateRow(row.id, { remarks: v });
