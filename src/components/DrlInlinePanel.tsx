@@ -33,12 +33,12 @@ export function DrlInlinePanel({ category, title, piaId }: Props) {
             <p className="text-[11px] text-muted-foreground">Showing rows scoped to this workable.</p>
           </div>
           <Button asChild size="sm" variant="outline">
-            <Link to={`/drl?tab=${category}`}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open full DRL</Link>
+            <Link to={`/drl?tab=${category}${piaId ? `&piaId=${piaId}` : ""}`}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open full DRL</Link>
           </Button>
         </div>
         {rows.length === 0 ? (
           <div className="p-6 text-sm text-center text-muted-foreground">
-            No DRL items yet for this workable. <Link to={`/drl?tab=${category}`} className="text-accent underline">Add in DRL →</Link>
+            No DRL items yet for this workable. <Link to={`/drl?tab=${category}${piaId ? `&piaId=${piaId}` : ""}`} className="text-accent underline">Add in DRL →</Link>
           </div>
         ) : (
           <table className="w-full text-xs">
