@@ -1,4 +1,7 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
+import type { Session, User } from "@supabase/supabase-js";
 import {
   AuthContextObject,
   AuthUser,
@@ -9,108 +12,109 @@ import {
 export { useAuth, validateCorporateEmail } from "./auth-context-base";
 export type { AuthUser, AuditEntry } from "./auth-context-base";
 
-const readUser = (): AuthUser | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    const u = localStorage.getItem("pa_user");
-    return u ? JSON.parse(u) : null;
-  } catch {
-    return null;
-  }
-};
-
-const readAudit = (): AuditEntry[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const a = localStorage.getItem("pa_audit");
-    return a ? JSON.parse(a) : [];
-  } catch {
-    return [];
-  }
-};
+function toAuthUser(u: User | null): AuthUser | null {
+  if (!u) return null;
+  const meta = (u.user_metadata || {}) as Record<string, string>;
+  const fullName = meta.full_name || meta.name || "";
+  const [fnPart, ...rest] = fullName.split(" ");
+  return {
+    id: u.id,
+    email: u.email || "",
+    firstName: meta.first_name || fnPart || (u.email?.split("@")[0] ?? ""),
+    lastName: meta.last_name || rest.join(" ") || "",
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => readUser());
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>(() => readAudit());
-  const [ready] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
-      if (!accounts["admin@kpmg.com"]) {
-        accounts["admin@kpmg.com"] = {
-          firstName: "Admin",
-          lastName: "User",
-          email: "admin@kpmg.com",
-          password: "admin1234",
-        };
-        localStorage.setItem("pa_accounts", JSON.stringify(accounts));
-      }
-    } catch {
-      /* noop */
-    }
+    // 1. Subscribe FIRST
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
+      setUser(toAuthUser(session?.user ?? null));
+    });
+    // 2. THEN getSession
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(toAuthUser(data.session?.user ?? null));
+      setReady(true);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  const persistUser = (u: AuthUser | null) => {
-    if (u) localStorage.setItem("pa_user", JSON.stringify(u));
-    else localStorage.removeItem("pa_user");
-    setUser(u);
-  };
+  // Load recent audit entries for display
+  useEffect(() => {
+    if (!user) { setAuditLog([]); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("audit_log")
+        .select("created_at, user_email, action, target")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (cancelled || !data) return;
+      setAuditLog(data.map((d) => ({
+        ts: (d.created_at as string).replace("T", " ").slice(0, 16),
+        user: d.user_email || "—",
+        action: d.action,
+        target: d.target || "",
+      })));
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
-  const logAction = (action: string, target: string) => {
-    const entry: AuditEntry = {
-      ts: new Date().toISOString().replace("T", " ").slice(0, 16),
-      user: user?.email ?? "anonymous",
+  const logAction = useCallback((action: string, target: string) => {
+    if (!user) return;
+    supabase.from("audit_log").insert({
+      user_id: user.id,
+      user_email: user.email,
       action,
       target,
-    };
-    setAuditLog((prev) => {
-      const next = [entry, ...prev].slice(0, 200);
-      localStorage.setItem("pa_audit", JSON.stringify(next));
-      return next;
+    }).then(({ error }) => {
+      if (!error) {
+        const entry: AuditEntry = {
+          ts: new Date().toISOString().replace("T", " ").slice(0, 16),
+          user: user.email, action, target,
+        };
+        setAuditLog((p) => [entry, ...p].slice(0, 200));
+      }
     });
-  };
+  }, [user]);
 
-  const signup: AuthCtx["signup"] = ({ firstName, lastName, email, password }) => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Please enter a valid email address." };
+  const signup: AuthCtx["signup"] = async ({ firstName, lastName, email, password }) => {
     if (!firstName.trim() || !lastName.trim()) return { ok: false, error: "First and last name are required." };
     if (password.length < 8) return { ok: false, error: "Password must be at least 8 characters." };
-    const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
-    accounts[email.toLowerCase()] = { firstName, lastName, email, password };
-    localStorage.setItem("pa_accounts", JSON.stringify(accounts));
-    persistUser({ firstName, lastName, email });
-    logAction("Account created", email);
+    const redirectTo = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: {
+        emailRedirectTo: redirectTo,
+        data: { first_name: firstName, last_name: lastName },
+      },
+    });
+    if (error) return { ok: false, error: error.message };
     return { ok: true };
   };
 
-  const login: AuthCtx["login"] = (email, password) => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Please enter a valid email address." };
-    const accounts = JSON.parse(localStorage.getItem("pa_accounts") || "{}");
-    const acc = accounts[email.toLowerCase()];
-    if (!acc || acc.password !== password) return { ok: false, error: "Invalid email or password." };
-    const u = { firstName: acc.firstName, lastName: acc.lastName, email: acc.email };
-    persistUser(u);
-    setTimeout(() => {
-      const entry: AuditEntry = {
-        ts: new Date().toISOString().replace("T", " ").slice(0, 16),
-        user: u.email, action: "Signed in", target: "session",
-      };
-      setAuditLog((prev) => {
-        const next = [entry, ...prev].slice(0, 200);
-        localStorage.setItem("pa_audit", JSON.stringify(next));
-        return next;
-      });
-    }, 0);
+  const login: AuthCtx["login"] = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false, error: error.message };
     return { ok: true };
   };
 
-  const logout = () => {
-    if (user) logAction("Signed out", "session");
-    persistUser(null);
+  const loginWithGoogle: AuthCtx["loginWithGoogle"] = async () => {
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) return { ok: false, error: result.error.message };
+    return { ok: true };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
-    <AuthContextObject.Provider value={{ user, ready, login, signup, logout, logAction, auditLog }}>
+    <AuthContextObject.Provider value={{ user, ready, login, signup, loginWithGoogle, logout, logAction, auditLog }}>
       {children}
     </AuthContextObject.Provider>
   );
