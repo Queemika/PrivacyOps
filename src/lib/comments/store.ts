@@ -62,17 +62,19 @@ export function useComments(module: string, record_id?: string | null) {
 
   const create = async (input: CreateCommentInput) => {
     if (!user) return null;
-    const { data, error } = await supabase.from("comments").insert({
+    const payload = {
       module: input.module,
       record_id: input.record_id ?? record_id ?? null,
       engagement_id: input.engagement_id ?? null,
-      anchor: (input.anchor ?? {}) as unknown as Record<string, unknown>,
+      anchor: input.anchor ?? {},
       kind: input.kind ?? "comment",
       body: input.body,
       mentions: input.mentions ?? [],
       parent_id: input.parent_id ?? null,
       author_id: user.id,
-    }).select().single();
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await supabase.from("comments").insert(payload as any).select().single();
     if (error) console.error(error);
     return data as Comment | null;
   };
