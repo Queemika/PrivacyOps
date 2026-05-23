@@ -136,11 +136,9 @@ export function AppSidebar() {
               <div className="text-[10px] text-muted-foreground font-normal">{user?.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {isAdmin && (
-              <DropdownMenuItem onClick={() => nav("/admin/users")}>
-                <ShieldCheck className="h-4 w-4 mr-2" />User Management
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={() => nav("/admin/users")}>
+              <ShieldCheck className="h-4 w-4 mr-2" />{isAdmin ? "User Management" : "Become Admin"}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={async () => { await logout(); nav("/login", { replace: true }); }}>
               <LogOut className="h-4 w-4 mr-2" />Sign out
             </DropdownMenuItem>
