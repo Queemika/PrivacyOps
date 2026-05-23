@@ -12,7 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2 } from "lucide-react";
 import { RATING_CLASS } from "@/lib/pia/risk";
 
-export function Phase3Form({ value, onChange }: { value: Phase3; onChange: (next: Phase3) => void }) {
+interface Phase3FormProps {
+  value: Phase3;
+  onChange: (next: Phase3) => void;
+  piaId?: string;
+  dpsName?: string;
+}
+
+export function Phase3Form({ value, onChange, piaId, dpsName }: Phase3FormProps) {
   const set = <K extends keyof Phase3>(k: K, v: Phase3[K]) => onChange({ ...value, [k]: v });
 
   const renderGroup = (
@@ -41,6 +48,10 @@ export function Phase3Form({ value, onChange }: { value: Phase3; onChange: (next
                     index={i}
                     answer={answers[seed.id]}
                     onChange={(next) => onAnswers({ ...answers, [seed.id]: next })}
+                    piaId={piaId}
+                    dpsName={dpsName}
+                    phaseLabel="Phase 3"
+                    sectionLabel={title}
                   />
                 ))}
               </div>
@@ -50,6 +61,7 @@ export function Phase3Form({ value, onChange }: { value: Phase3; onChange: (next
       </Card>
     );
   };
+
 
   return (
     <div className="space-y-6">
@@ -76,6 +88,10 @@ export function Phase3Form({ value, onChange }: { value: Phase3; onChange: (next
                   key={seed.id} seed={seed} index={i}
                   answer={value.crossBorder[seed.id]}
                   onChange={(next) => set("crossBorder", { ...value.crossBorder, [seed.id]: next })}
+                  piaId={piaId}
+                  dpsName={dpsName}
+                  phaseLabel="Phase 3"
+                  sectionLabel="Cross-border Data Flows"
                 />
               ))}
             </div>

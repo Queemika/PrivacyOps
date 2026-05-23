@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react";
 import { DrlCategory, DrlRow, loadDrl } from "@/lib/drl/store";
 import { useEffect, useState } from "react";
 
-interface Props { category: DrlCategory; title?: string; }
+interface Props { category: DrlCategory; title?: string; piaId?: string; }
 
 const STATUS_TONE: Record<string, string> = {
   Open: "bg-rose-100 text-rose-700",
@@ -16,9 +16,13 @@ const STATUS_TONE: Record<string, string> = {
   "Not Applicable": "bg-slate-100 text-slate-600",
 };
 
-export function DrlInlinePanel({ category, title }: Props) {
+export function DrlInlinePanel({ category, title, piaId }: Props) {
   const [rows, setRows] = useState<DrlRow[]>([]);
-  useEffect(() => { setRows(loadDrl().filter(r => r.category === category)); }, [category]);
+  useEffect(() => {
+    let r = loadDrl().filter(x => x.category === category);
+    if (piaId) r = r.filter(x => x.fields.piaId === piaId);
+    setRows(r);
+  }, [category, piaId]);
 
   return (
     <Card>
@@ -29,12 +33,12 @@ export function DrlInlinePanel({ category, title }: Props) {
             <p className="text-[11px] text-muted-foreground">Showing rows scoped to this workable.</p>
           </div>
           <Button asChild size="sm" variant="outline">
-            <Link to={`/drl?tab=${category}`}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open full DRL</Link>
+            <Link to={`/drl?tab=${category}${piaId ? `&piaId=${piaId}` : ""}`}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open full DRL</Link>
           </Button>
         </div>
         {rows.length === 0 ? (
           <div className="p-6 text-sm text-center text-muted-foreground">
-            No DRL items yet for this workable. <Link to={`/drl?tab=${category}`} className="text-accent underline">Add in DRL →</Link>
+            No DRL items yet for this workable. <Link to={`/drl?tab=${category}${piaId ? `&piaId=${piaId}` : ""}`} className="text-accent underline">Add in DRL →</Link>
           </div>
         ) : (
           <table className="w-full text-xs">

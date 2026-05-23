@@ -4,26 +4,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Link2 } from "lucide-react";
 import { ChecklistSeed } from "@/lib/pia/templates";
+import { addRow as addDrlRow } from "@/lib/drl/store";
+import { toast } from "sonner";
 
-export function ChecklistRow({
-  seed, answer, onChange, index,
-}: {
+interface ChecklistRowProps {
   seed: ChecklistSeed;
   answer: ChecklistAnswer;
   onChange: (next: ChecklistAnswer) => void;
   index: number;
-}) {
+  piaId?: string;
+  dpsName?: string;
+  phaseLabel?: string;
+  sectionLabel?: string;
+}
+
+export function ChecklistRow({
+  seed, answer, onChange, index, piaId, dpsName, phaseLabel, sectionLabel,
+}: ChecklistRowProps) {
   const set = (patch: Partial<ChecklistAnswer>) => {
     const merged = { ...answer, ...patch } as ChecklistAnswer;
     merged.rating = computeRating(merged.impact, merged.probability);
     onChange(merged);
   };
 
+  const handleAddToDrl = () => {
+    const row = addDrlRow("pia", {
+      fields: {
+        piaId: piaId || "",
+        dpsName: dpsName || "",
+        phase: phaseLabel || "Phase 3",
+        field: `${sectionLabel || ""} / ${seed.id}`,
+        request: seed.question,
+      },
+      remarks: answer.response || "",
+    });
+    toast.success(`Added to DRL — ${row.id.slice(-4)}`);
+  };
+
   return (
     <div className="grid grid-cols-12 gap-3 px-3 py-3 border-b last:border-0 text-xs">
       <div className="col-span-1 text-muted-foreground tabular-nums">{index + 1}</div>
-      <div className="col-span-4 space-y-2">
+      <div className="col-span-3 space-y-2">
         <div className="text-foreground">{seed.question}</div>
         {seed.subItems && (
           <div className="space-y-1.5 pl-1">
@@ -62,6 +86,15 @@ export function ChecklistRow({
       <div className="col-span-1">
         <span className={`status-chip text-[10px] ${RATING_CLASS[answer.rating]}`}>{answer.rating || "—"}</span>
       </div>
+      {/* Sticky-right action column */}
+      <div className="col-span-1 flex flex-col gap-1">
+        <Button size="sm" variant="outline" className="h-7 text-[10px] px-1.5 justify-start" onClick={handleAddToDrl}>
+          <Link2 className="h-3 w-3 mr-1" />Add to DRL
+        </Button>
+        <Button size="sm" variant="ghost" className="h-7 text-[10px] px-1.5 justify-start">
+          <Sparkles className="h-3 w-3 mr-1" />AI Assist
+        </Button>
+      </div>
     </div>
   );
 }
@@ -88,13 +121,14 @@ export function ChecklistHeader() {
   return (
     <div className="grid grid-cols-12 gap-3 px-3 py-2 border-b bg-muted/40 text-[10px] uppercase tracking-wide font-medium text-muted-foreground">
       <div className="col-span-1">No.</div>
-      <div className="col-span-4">Questions</div>
+      <div className="col-span-3">Questions</div>
       <div className="col-span-1">Yes/No/N/A</div>
       <div className="col-span-2">Response</div>
       <div className="col-span-1">Legal Basis</div>
       <div className="col-span-1">Impact</div>
       <div className="col-span-1">Probability</div>
       <div className="col-span-1">Rating</div>
+      <div className="col-span-1 text-right pr-1">Actions</div>
     </div>
   );
 }
