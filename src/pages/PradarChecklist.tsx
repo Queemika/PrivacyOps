@@ -52,8 +52,8 @@ const ratingTone = (r: number | null) => {
   return "bg-success text-success-foreground";
 };
 
-interface PradarChecklistProps { hideScoreboard?: boolean; hideControls?: boolean }
-export default function PradarChecklist({ hideScoreboard = false, hideControls = false }: PradarChecklistProps = {}) {
+interface PradarChecklistProps { hideScoreboard?: boolean; hideControls?: boolean; hideHeader?: boolean }
+export default function PradarChecklist({ hideScoreboard = false, hideControls = false, hideHeader = false }: PradarChecklistProps = {}) {
   const [entries, setEntries] = useState<Record<string, PradarEntry>>({});
   const [showInternal, setShowInternal] = useState(false);
   const [showClient, setShowClient] = useState(false);
