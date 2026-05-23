@@ -6,10 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ShieldCheck, Users, Briefcase, Plus, Trash2, UserPlus } from "lucide-react";
+import { ShieldCheck, Users, Briefcase, Plus, UserPlus } from "lucide-react";
 
 const ROLES: AppRole[] = ["Intern", "Preparer", "Lead", "Approver", "Admin"];
 const MODULES = ["pia", "pradar", "tsa", "inspection", "notice", "drl", "transcript"];

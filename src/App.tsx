@@ -36,6 +36,7 @@ import Help from "./pages/Help";
 import TooltipManager from "./pages/admin/TooltipManager";
 import ViewAsSettings from "./pages/admin/ViewAsSettings";
 import ResetData from "./pages/admin/ResetData";
+import UserManagement from "./pages/admin/UserManagement";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
                 <Route path="/admin/tooltips" element={<TooltipManager />} />
                 <Route path="/admin/view-as" element={<ViewAsSettings />} />
                 <Route path="/admin/reset" element={<ResetData />} />
+                <Route path="/admin/users" element={<UserManagement />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
