@@ -88,6 +88,7 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </AttachmentPreviewProvider>
           </ComplianceProvider>
         </AuthProvider>
       </BrowserRouter>
