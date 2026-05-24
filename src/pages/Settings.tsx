@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2, Users, Lock as LockIcon, MessageSquare } from "lucide-react";
+import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2, Users, Lock as LockIcon, MessageSquare, Palette, Check } from "lucide-react";
 import { toast } from "sonner";
 import { loadTooltipOverrides, saveTooltipOverrides, defaultTooltips } from "@/lib/tooltipStore";
+import { THEMES, applyTheme, getActiveThemeId } from "@/lib/theme/themes";
 
 const ROLES = ["Intern", "Preparer/Associate", "Lead/Supervisor", "Approver/Manager"];
 const TABLES = [
@@ -43,6 +44,8 @@ export default function Settings() {
   const [locks, setLocks] = useState<TableLocks>(loadLocks());
   const [tooltipOverrides, setTooltipOverrides] = useState<Record<string, string>>(loadTooltipOverrides());
   const [tooltipsEnabled, setTooltipsEnabled] = useState(localStorage.getItem("pa_tooltips_enabled") !== "false");
+  const [themeId, setThemeId] = useState<string>(getActiveThemeId());
+  const pickTheme = (id: string) => { applyTheme(id); setThemeId(id); toast.success(`Theme: ${THEMES.find(t=>t.id===id)?.name}`); };
 
   const applyTheme = (t: "light" | "dark") => {
     setTheme(t);
@@ -86,29 +89,56 @@ export default function Settings() {
       />
 
       {tab === "general" && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card><CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4" /> Appearance</div>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Dark theme</Label>
+                <Switch checked={theme === "dark"} onCheckedChange={(c) => applyTheme(c ? "dark" : "light")} />
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                {theme === "dark" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+                {theme} mode active
+              </div>
+            </CardContent></Card>
+            <Card><CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold"><ShieldAlert className="h-4 w-4" /> Role</div>
+              <Select value={role} onValueChange={saveRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="reviewer">Reviewer</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Admin unlocks the audit log, tooltip and tables configuration.</p>
+            </CardContent></Card>
+          </div>
+
           <Card><CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4" /> Appearance</div>
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Dark theme</Label>
-              <Switch checked={theme === "dark"} onCheckedChange={(c) => applyTheme(c ? "dark" : "light")} />
+            <div className="flex items-center gap-2 text-sm font-semibold"><Palette className="h-4 w-4" /> Color theme</div>
+            <p className="text-xs text-muted-foreground">Switch the accent and sidebar palette. Changes apply instantly across the app.</p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {THEMES.map(t => {
+                const active = t.id === themeId;
+                return (
+                  <button key={t.id} type="button" onClick={() => pickTheme(t.id)}
+                    className={`text-left rounded-lg border p-3 transition hover:shadow-sm ${active ? "border-accent ring-2 ring-accent/30" : "border-border"}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">{t.name}</span>
+                      {active && <Check className="h-4 w-4 text-accent" />}
+                    </div>
+                    <div className="flex h-6 rounded overflow-hidden border">
+                      {t.swatches.map((c) => (
+                        <div key={c} className="flex-1" style={{ background: c }} />
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-2 leading-snug">{t.description}</p>
+                  </button>
+                );
+              })}
             </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              {theme === "dark" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
-              {theme} mode active
-            </div>
-          </CardContent></Card>
-          <Card><CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold"><ShieldAlert className="h-4 w-4" /> Role</div>
-            <Select value={role} onValueChange={saveRole}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="reviewer">Reviewer</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">Admin unlocks the audit log, tooltip and tables configuration.</p>
           </CardContent></Card>
         </div>
       )}
