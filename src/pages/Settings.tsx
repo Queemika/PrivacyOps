@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2, Users, Lock as LockIcon, MessageSquare, Palette, Check } from "lucide-react";
 import { toast } from "sonner";
 import { loadTooltipOverrides, saveTooltipOverrides, defaultTooltips } from "@/lib/tooltipStore";
-import { THEMES, applyTheme, getActiveThemeId } from "@/lib/theme/themes";
+import { THEMES, applyTheme as applyPalette, getActiveThemeId } from "@/lib/theme/themes";
 
 const ROLES = ["Intern", "Preparer/Associate", "Lead/Supervisor", "Approver/Manager"];
 const TABLES = [
@@ -45,7 +45,7 @@ export default function Settings() {
   const [tooltipOverrides, setTooltipOverrides] = useState<Record<string, string>>(loadTooltipOverrides());
   const [tooltipsEnabled, setTooltipsEnabled] = useState(localStorage.getItem("pa_tooltips_enabled") !== "false");
   const [themeId, setThemeId] = useState<string>(getActiveThemeId());
-  const pickTheme = (id: string) => { applyTheme(id); setThemeId(id); toast.success(`Theme: ${THEMES.find(t=>t.id===id)?.name}`); };
+  const pickTheme = (id: string) => { applyPalette(id); setThemeId(id); toast.success(`Theme: ${THEMES.find(t=>t.id===id)?.name}`); };
 
   const applyTheme = (t: "light" | "dark") => {
     setTheme(t);
