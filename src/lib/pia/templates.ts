@@ -30,19 +30,60 @@ export const INTEGRATION_OPTIONS = ["Email Service", "Identity Provider (SSO)", 
 export const RECORD_VOLUME_OPTIONS = ["Low (<250)", "Medium (<1000)", "High (1000+)"];
 
 export const PHASE1_TOOLTIPS: Record<string, string> = {
-  systemType: "Describe the nature of the system processing personal data. Keep it high-level but specific.",
-  systemFunction: "Explain the main function of the system (e.g., manages employee records, processes applications).",
-  organizationScope: "Specify the business unit, department, or organization using the system.",
+  systemType: "Purely System-Based, Filing System, or Hybrid System. Keep it high-level but specific.",
+  systemFunction: "What the system is designed to manage — insert all that's applicable: collection, use, storage, sharing, and/or disposal of personal data.",
+  organizationScope: "Input the Organization Name / business unit / department owning the system.",
   keyProcesses: "List how personal data is handled across the lifecycle.",
-  dataCollection: "Indicate all sources and methods of data collection (e.g., online forms, manual forms, APIs).",
-  dataUsage: "Describe how the collected data is used operationally.",
-  dataStorage: "Specify storage locations (systems, databases, cloud, physical cabinets).",
-  dataDisposal: "Describe how data is deleted or destroyed after retention.",
-  integration: "Identify other systems or tools integrated with this system.",
-  supportingDocs: "Upload or reference design documents that support system understanding.",
-  purpose: "Clearly state the purpose of processing personal data.",
-  piaScope: "Define what parts of the system are included in the PIA.",
-  outOfScope: "Identify areas not covered in the PIA (e.g., non-personal data).",
+  dataCollection: "Gathering data through — e.g., online forms, surveys, direct submissions.",
+  dataUsage: "Using data for — e.g., service delivery, research, compliance.",
+  dataStorage: "Secure storage in — e.g., centralized database with access controls.",
+  dataDisposal: "Secure disposal in line with — e.g., retention policy and legal requirements.",
+  integration: "Specify the programs this system integrates with (e.g., HRIS, payroll, SSO).",
+  supportingDocs: "Reference documents like the Requirements & Design Specifications.",
+  purpose: "e.g., streamline data management, protect personal data, and support organizational goals while ensuring the rights of data subjects.",
+  piaScope: "Input the System/Project name and the activities reviewed (collection, use, storage, sharing, disposal). It examines data types, legal basis, security, consent management, and data sharing.",
+  outOfScope: "Identify areas not covered in this PIA (e.g., non-personal data, out-of-system processes).",
+};
+
+// Phase 2 tooltips sourced from Drop_and_Tooltips.xlsx
+export const PHASE2_TOOLTIPS: Record<string, string> = {
+  dpsType: "Manual = physical documents collected. Electronic/Automated = electronic data being processed. Both = if a physical form is eventually processed electronically.",
+  dpsName: "Title of the system being registered (e.g., HRIS, Registration System).",
+  purposeProcessing: 'Why the information is being processed (e.g., "This DPS is used for processing of the salaries of employees, etc.").',
+  dataSubjectsDesc: "e.g., Employees, customers, clients, suppliers, etc.",
+  categories: "e.g., name, contact details (home address, phone no., personal email), IP address, online/offline identifier, voice/voice pattern, professional/employment details.",
+  amount: "Please enter a whole number only (no decimals or text).",
+  picOrPip: "Are you processing personal data as a PIC or a PIP? If both, you must register each use separately in the NPC-RS.",
+  pipName: 'Applicable only if outsourced or subcontracted. If not, enter "N/A" or leave blank.',
+  retention: "Conditional question — only applicable if there has been a notification regarding any automated decision-making operation and/or profiling.",
+  securityOrg: "e.g., designation of DPO, data protection policies, RoPA, HR management, personal data processing, third-party contracts.",
+  securityPhysical: "e.g., access control, workspace privacy, personnel access management, media handling, security & protection.",
+  securityTechnical: "e.g., network protection, system testing, resilience & monitoring, data encryption & recovery.",
+  collectionWhen: "Manner when the data is collected (e.g., upon submission of form and other requirements).",
+  collectionFrom: "e.g., Data Subjects, Authorized Representatives of the Data Subject, Third Parties, Internal Departments, Public Sources.",
+  repositoryLocation: "e.g., filing cabinet, storage room, local network drive, on-premise data center, remote data center, external backup, cloud provider infrastructure, on-premise server.",
+  retentionBasis: "Indicate the reason for retention (e.g., legal requirement — cite specific law or regulation, industry standard — ISO/NIST, company policy).",
+  disposal: "e.g., shredding (cross-cut), data wiping, degaussing, physical destruction of storage devices, cryptographic erasure.",
+};
+
+// Phase 3 default-response hints (drop-downs and "if No" boilerplate)
+export const PHASE3_TOOLTIPS: Record<string, string> = {
+  ynNA: 'Choose the applicable option from the dropdown (Yes / No / N/A). Enter "N/A" if not applicable; leave the response blank otherwise.',
+  impact: "1 = Negligible, 2 = Limited, 3 = Significant, 4 = Maximum.",
+  probability: "1 = Unlikely, 2 = Possible, 3 = Likely, 4 = Almost Certain.",
+  riskRating: "Negligible / Low Risk / Medium Risk / High Risk — auto-derived from Impact × Probability.",
+};
+
+// Threshold-question response hints — appears under each Yes/No
+export const THRESHOLD_HINTS: Record<string, string> = {
+  T1: "e.g. name, contact details (home/office address, phone, email), IP address, online identifier (username, social media, password, photo, signature), voice/voice pattern, professional/employment details.",
+  T2: "e.g., race, ethnicity, marital status, age, color, religion, politics, health, education, genetics, sexual life, legal matters, government-issued numbers, classified by law.",
+  T4: "e.g., children, employees, elderly, patients, PWD, asylum seekers.",
+  T5: "Low (<250), Medium (<1000), High (1000+).",
+  T6: "e.g., Microsoft Excel, Google Sheets, Microsoft Word, Zoom, Adobe Acrobat, etc.",
+  T10: "e.g., biometrics, facial recognition or Internet of Things.",
+  T11: "e.g., processing leads to discrimination against individuals, work performance evaluation.",
+  T12: "e.g., disqualifies someone for a benefit, loan disapproval.",
 };
 
 export const THRESHOLD_QUESTIONS: { id: string; q: string }[] = [
