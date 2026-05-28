@@ -3,6 +3,7 @@ import { AppSidebar } from "./AppSidebar";
 import { BackButton } from "./BackButton";
 import Pixie from "./Pixie";
 import { NotificationBell } from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AppLayout() {
@@ -15,7 +16,8 @@ export default function AppLayout() {
   if (isEngagements) {
     return (
       <div className="min-h-screen w-full bg-background">
-        <div className="max-w-5xl mx-auto px-6 pt-4 flex justify-end">
+        <div className="max-w-5xl mx-auto px-6 pt-4 flex items-center gap-3 justify-end">
+          {user && <GlobalSearch className="mr-auto" />}
           {user && <NotificationBell />}
         </div>
         <main className="max-w-5xl mx-auto px-6 pb-12">
@@ -30,6 +32,7 @@ export default function AppLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 relative">
         <div className="absolute top-4 right-6 z-20 flex items-center gap-2">
+          {user && <GlobalSearch />}
           {user && <NotificationBell />}
         </div>
         {showBack && (

@@ -38,6 +38,8 @@ import TooltipManager from "./pages/admin/TooltipManager";
 import ViewAsSettings from "./pages/admin/ViewAsSettings";
 import ResetData from "./pages/admin/ResetData";
 import UserManagement from "./pages/admin/UserManagement";
+import CalendarPage from "./pages/CalendarPage";
+import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -85,6 +87,8 @@ const App = () => (
                 <Route path="/admin/view-as" element={<ViewAsSettings />} />
                 <Route path="/admin/reset" element={<ResetData />} />
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/search" element={<SearchResults />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
