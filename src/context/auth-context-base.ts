@@ -16,7 +16,7 @@ export interface AuditEntry {
 }
 
 export type LoginResult =
-  | { ok: true; mfa: true; email: string }
+  | { ok: true; mfa: true; email: string; devCode?: string; devNotice?: string }
   | { ok: true; mfa: false }
   | { ok: false; error: string };
 
