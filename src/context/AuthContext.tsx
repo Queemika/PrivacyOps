@@ -23,17 +23,15 @@ function toAuthUser(u: User | null): AuthUser | null {
   };
 }
 
-async function callFn(name: string, body: Record<string, unknown>) {
+async function callFn(name: string, body: Record<string, unknown>): Promise<{ ok: boolean; error?: string; devCode?: string; devNotice?: string }> {
   const { data, error } = await supabase.functions.invoke(name, { body });
   if (error) {
-    // edge function returned non-2xx; try to surface message from body
     const msg = (data as { error?: string } | null)?.error || error.message;
     return { ok: false, error: msg };
   }
-  if (data && typeof data === "object" && "error" in data && (data as { error?: string }).error) {
-    return { ok: false, error: (data as { error: string }).error };
-  }
-  return { ok: true };
+  const d = (data ?? {}) as { error?: string; devCode?: string; devNotice?: string };
+  if (d.error) return { ok: false, error: d.error };
+  return { ok: true, devCode: d.devCode, devNotice: d.devNotice };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
