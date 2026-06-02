@@ -357,7 +357,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "Intern" | "Preparer" | "Lead" | "Approver" | "Admin"
+      app_role: "Intern" | "Preparer" | "Lead" | "Approver" | "Admin" | "Client"
       comment_kind: "comment" | "highlight"
       comment_status: "open" | "resolved"
       engagement_status: "active" | "archived"
@@ -488,7 +488,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["Intern", "Preparer", "Lead", "Approver", "Admin"],
+      app_role: ["Intern", "Preparer", "Lead", "Approver", "Admin", "Client"],
       comment_kind: ["comment", "highlight"],
       comment_status: ["open", "resolved"],
       engagement_status: ["active", "archived"],
