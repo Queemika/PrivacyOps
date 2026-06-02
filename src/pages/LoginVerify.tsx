@@ -98,6 +98,21 @@ export default function LoginVerify() {
         </div>
         <div className="font-medium text-sm mb-5">{email}</div>
 
+        {devCode && (
+          <div className="mb-5 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
+            <div className="font-semibold text-warning mb-1">Dev mode code</div>
+            <div className="font-mono text-base tracking-[0.3em] text-foreground select-all">{devCode}</div>
+            <div className="text-muted-foreground mt-1">{devNotice ?? "Email delivery is disabled — use this code to continue. Verify a domain in Resend to enable real emails."}</div>
+            <button
+              type="button"
+              onClick={() => { setCode(devCode); navigator.clipboard?.writeText(devCode); toast.success("Code copied"); }}
+              className="mt-2 text-accent hover:underline"
+            >
+              Fill & copy
+            </button>
+          </div>
+        )}
+
         <form onSubmit={submit} className="space-y-5">
           <div className="flex justify-center">
             <InputOTP maxLength={6} value={code} onChange={setCode}>
