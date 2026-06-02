@@ -12,11 +12,23 @@ export default function LoginVerify() {
   const { verifyLoginOtp, resendLoginOtp } = useAuth();
 
   const email = sessionStorage.getItem("login_email") || "";
-  console.log("Verify page email:", email);
 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [devCode, setDevCode] = useState<string | null>(() => sessionStorage.getItem("login_dev_code"));
+  const [devNotice, setDevNotice] = useState<string | null>(() => sessionStorage.getItem("login_dev_notice"));
+
+  useEffect(() => {
+    if (devCode) {
+      console.warn("[dev] Login OTP code:", devCode, devNotice);
+      toast.warning(`Dev code: ${devCode}`, {
+        description: devNotice ?? "Resend rejected delivery — code shown for development only.",
+        duration: 30000,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!email) return <Navigate to="/login" replace />;
 
@@ -37,6 +49,8 @@ export default function LoginVerify() {
     }
 
     sessionStorage.removeItem("login_email");
+    sessionStorage.removeItem("login_dev_code");
+    sessionStorage.removeItem("login_dev_notice");
 
     toast.success("Welcome to PrivacyOps");
     nav("/engagements", { replace: true });
@@ -51,8 +65,20 @@ export default function LoginVerify() {
       return;
     }
     if (r.devCode) {
-      toast.warning(`Dev code: ${r.devCode}`, { description: r.devNotice, duration: 30000 });
+      console.warn("[dev] Login OTP code:", r.devCode, r.devNotice);
+      sessionStorage.setItem("login_dev_code", r.devCode);
+      if (r.devNotice) sessionStorage.setItem("login_dev_notice", r.devNotice);
+      setDevCode(r.devCode);
+      setDevNotice(r.devNotice ?? null);
+      toast.warning(`Dev code: ${r.devCode}`, {
+        description: r.devNotice ?? "Resend rejected delivery — code shown for development only.",
+        duration: 30000,
+      });
     } else {
+      sessionStorage.removeItem("login_dev_code");
+      sessionStorage.removeItem("login_dev_notice");
+      setDevCode(null);
+      setDevNotice(null);
       toast.success("New code sent");
     }
     setCooldown(30);
@@ -71,6 +97,21 @@ export default function LoginVerify() {
           <Mail className="h-3.5 w-3.5" /> Verification code sent to
         </div>
         <div className="font-medium text-sm mb-5">{email}</div>
+
+        {devCode && (
+          <div className="mb-5 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
+            <div className="font-semibold text-warning mb-1">Dev mode code</div>
+            <div className="font-mono text-base tracking-[0.3em] text-foreground select-all">{devCode}</div>
+            <div className="text-muted-foreground mt-1">{devNotice ?? "Email delivery is disabled — use this code to continue. Verify a domain in Resend to enable real emails."}</div>
+            <button
+              type="button"
+              onClick={() => { setCode(devCode); navigator.clipboard?.writeText(devCode); toast.success("Code copied"); }}
+              className="mt-2 text-accent hover:underline"
+            >
+              Fill & copy
+            </button>
+          </div>
+        )}
 
         <form onSubmit={submit} className="space-y-5">
           <div className="flex justify-center">
