@@ -106,55 +106,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login: AuthCtx["login"] = async (email, password): Promise<LoginResult> => {
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return { ok: false, error: error.message };
-  }
-
-  const DEMO_USERS = [
-    "admin@kpmg.com",
-    "test_client@kpmg.com",
-  ];
-
-  if (DEMO_USERS.includes(email.toLowerCase())) {
-    console.log("DEMO BYPASS TRIGGERED:", email);
-
-    return {
-      ok: true,
-      mfa: false,
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-    };
-  }
+      password,
+    });
 
-  await supabase.auth.signOut();
+    if (error) {
+      return {
+        ok: false,
+        error: error.message,
+      };
+    }
 
-  const { error: otpErr } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false },
-  });
+    const DEMO_USERS = ["admin@kpmg.com", "test_client@kpmg.com"];
 
-  if (otpErr) {
-    return { ok: false, error: otpErr.message };
-  }
+    if (DEMO_USERS.includes(email.toLowerCase())) {
+      console.log("DEMO BYPASS TRIGGERED:", email);
 
-  return {
-    ok: true,
-    mfa: true,
-    email,
-  };
-};
+      return {
+        ok: true,
+        mfa: false,
+      };
+    }
+
+    // Regular users require OTP
+    await supabase.auth.signOut();
 
     const { error: otpErr } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false },
+      options: {
+        shouldCreateUser: false,
+      },
     });
 
     if (otpErr) {
-      return { ok: false, error: otpErr.message };
+      return {
+        ok: false,
+        error: otpErr.message,
+      };
     }
 
     return {
