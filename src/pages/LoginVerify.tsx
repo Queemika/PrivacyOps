@@ -12,6 +12,7 @@ export default function LoginVerify() {
   const { verifyLoginOtp, resendLoginOtp } = useAuth();
 
   const email = sessionStorage.getItem("login_email") || "";
+  console.log("Verify page email:", email);
 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
