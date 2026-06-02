@@ -105,39 +105,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   };
 
-  // Password is step 1. On success we sign out and send an email OTP for step 2.
   const login: AuthCtx["login"] = async (email, password): Promise<LoginResult> => {
-    console.log("STEP 1 - Starting password login");
-
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    console.log("STEP 2 - Password result:", error);
-
     if (error) {
       return { ok: false, error: error.message };
     }
 
-    console.log("STEP 3 - Password login succeeded");
+    // Demo account bypass
+    if (email.toLowerCase() === "admin@kpmg.com") {
+      return {
+        ok: true,
+        mfa: false,
+        email,
+      };
+    }
 
     await supabase.auth.signOut();
-
-    console.log("STEP 4 - Signed out");
 
     const { error: otpErr } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: false },
     });
 
-    console.log("STEP 5 - OTP result:", otpErr);
-
     if (otpErr) {
       return { ok: false, error: otpErr.message };
     }
-
-    console.log("STEP 6 - Returning MFA");
 
     return {
       ok: true,
