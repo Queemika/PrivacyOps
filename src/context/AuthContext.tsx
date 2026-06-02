@@ -39,16 +39,24 @@ const OTP_SEND_COOLDOWN_MS = 30_000;
 function rememberOtpSend(email: string, r: OtpResult) {
   sessionStorage.setItem("login_email", email);
   sessionStorage.setItem("login_otp_sent_at", String(Date.now()));
+  sessionStorage.removeItem("login_otp_request_started_at");
   if (r.devCode) {
     sessionStorage.setItem("login_dev_code", r.devCode);
     if (r.devNotice) sessionStorage.setItem("login_dev_notice", r.devNotice);
   }
 }
 
+function markOtpRequestStarted(email: string) {
+  sessionStorage.setItem("login_email", email);
+  sessionStorage.setItem("login_otp_request_started_at", String(Date.now()));
+}
+
 function hasFreshOtpRequest(email: string) {
   if (sessionStorage.getItem("login_email") !== email) return false;
   const sentAt = Number(sessionStorage.getItem("login_otp_sent_at") || 0);
-  return sentAt > 0 && Date.now() - sentAt < OTP_SEND_COOLDOWN_MS;
+  const startedAt = Number(sessionStorage.getItem("login_otp_request_started_at") || 0);
+  const now = Date.now();
+  return (sentAt > 0 && now - sentAt < OTP_SEND_COOLDOWN_MS) || (startedAt > 0 && now - startedAt < 10_000);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -66,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // detect OAuth (provider != email) by looking at identities
         const isOAuth = (session?.user?.identities || []).some((i) => i.provider !== "email");
         if (isOAuth && !hasFreshOtpRequest(next.email)) {
+          markOtpRequestStarted(next.email);
           callFn("send-login-otp", { email: next.email }).then((r) => {
             if (r.ok) rememberOtpSend(next.email, r);
             if (r.ok && !window.location.pathname.startsWith("/login/verify")) {
