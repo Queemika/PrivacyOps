@@ -25,8 +25,13 @@ export default function Login() {
       return;
     }
     if (r.mfa) {
-      toast.success("We sent a 6-digit verification code to your email.");
-      nav("/login/verify", { state: { email: r.email }, replace: true });
+      console.log("EMAIL BEFORE STORE:", r.email);
+
+      sessionStorage.setItem("login_email", r.email);
+
+      console.log("EMAIL AFTER STORE:", sessionStorage.getItem("login_email"));
+
+      nav("/login/verify", { replace: true });
       return;
     }
     nav("/engagements", { replace: true });
