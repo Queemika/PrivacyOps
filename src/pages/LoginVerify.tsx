@@ -30,6 +30,18 @@ export default function LoginVerify() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const sentAt = Number(sessionStorage.getItem("login_otp_sent_at") || 0);
+    if (!sentAt) return;
+    setCooldown(Math.max(0, Math.ceil((30_000 - (Date.now() - sentAt)) / 1000)));
+  }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = window.setTimeout(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
+
   if (!email) return <Navigate to="/login" replace />;
 
   const submit = async (e: React.FormEvent) => {
@@ -49,6 +61,7 @@ export default function LoginVerify() {
     }
 
     sessionStorage.removeItem("login_email");
+    sessionStorage.removeItem("login_otp_sent_at");
     sessionStorage.removeItem("login_dev_code");
     sessionStorage.removeItem("login_dev_notice");
 
@@ -62,8 +75,10 @@ export default function LoginVerify() {
     setBusy(false);
     if (!r.ok) {
       toast.error(r.error || "Could not resend");
+      if (r.cooldownSeconds) setCooldown(r.cooldownSeconds);
       return;
     }
+    sessionStorage.setItem("login_otp_sent_at", String(Date.now()));
     if (r.devCode) {
       console.warn("[dev] Login OTP code:", r.devCode, r.devNotice);
       sessionStorage.setItem("login_dev_code", r.devCode);
@@ -79,9 +94,9 @@ export default function LoginVerify() {
       sessionStorage.removeItem("login_dev_notice");
       setDevCode(null);
       setDevNotice(null);
-      toast.success("New code sent");
+      toast.success(r.alreadySent ? "Use the code already sent" : "New code sent");
     }
-    setCooldown(30);
+    setCooldown(r.cooldownSeconds ?? 30);
   };
 
   return (
