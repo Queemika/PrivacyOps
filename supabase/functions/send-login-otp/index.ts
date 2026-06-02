@@ -98,7 +98,12 @@ Deno.serve(async (req) => {
     if (!resendRes.ok) {
       const t = await resendRes.text();
       console.error("Resend error:", resendRes.status, t);
-      return json({ error: "Failed to send email" }, 502);
+      // Resend test mode: only the account owner inbox receives mail until a domain is verified.
+      // Surface the code so the prototype stays usable.
+      const notice = resendRes.status === 403 && t.includes("testing emails")
+        ? "Resend test mode — verify a domain at resend.com/domains to send to other inboxes."
+        : "Email delivery failed; using dev fallback.";
+      return json({ ok: true, devCode: code, devNotice: notice });
     }
 
     return json({ ok: true });
