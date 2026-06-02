@@ -49,6 +49,8 @@ export default function LoginVerify() {
     }
 
     sessionStorage.removeItem("login_email");
+    sessionStorage.removeItem("login_dev_code");
+    sessionStorage.removeItem("login_dev_notice");
 
     toast.success("Welcome to PrivacyOps");
     nav("/engagements", { replace: true });
@@ -63,8 +65,20 @@ export default function LoginVerify() {
       return;
     }
     if (r.devCode) {
-      toast.warning(`Dev code: ${r.devCode}`, { description: r.devNotice, duration: 30000 });
+      console.warn("[dev] Login OTP code:", r.devCode, r.devNotice);
+      sessionStorage.setItem("login_dev_code", r.devCode);
+      if (r.devNotice) sessionStorage.setItem("login_dev_notice", r.devNotice);
+      setDevCode(r.devCode);
+      setDevNotice(r.devNotice ?? null);
+      toast.warning(`Dev code: ${r.devCode}`, {
+        description: r.devNotice ?? "Resend rejected delivery — code shown for development only.",
+        duration: 30000,
+      });
     } else {
+      sessionStorage.removeItem("login_dev_code");
+      sessionStorage.removeItem("login_dev_notice");
+      setDevCode(null);
+      setDevNotice(null);
       toast.success("New code sent");
     }
     setCooldown(30);
