@@ -12,11 +12,23 @@ export default function LoginVerify() {
   const { verifyLoginOtp, resendLoginOtp } = useAuth();
 
   const email = sessionStorage.getItem("login_email") || "";
-  console.log("Verify page email:", email);
 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [devCode, setDevCode] = useState<string | null>(() => sessionStorage.getItem("login_dev_code"));
+  const [devNotice, setDevNotice] = useState<string | null>(() => sessionStorage.getItem("login_dev_notice"));
+
+  useEffect(() => {
+    if (devCode) {
+      console.warn("[dev] Login OTP code:", devCode, devNotice);
+      toast.warning(`Dev code: ${devCode}`, {
+        description: devNotice ?? "Resend rejected delivery — code shown for development only.",
+        duration: 30000,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!email) return <Navigate to="/login" replace />;
 
