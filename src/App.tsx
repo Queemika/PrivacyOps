@@ -58,8 +58,10 @@ const App = () => (
             <AttachmentPreviewProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/login/verify" element={<LoginVerify />} />
               <Route path="/signup" element={<Signup />} />
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/engagements/waiting" element={<ProtectedRoute><ClientWaiting /></ProtectedRoute>} />
+              <Route element={<ProtectedRoute><ClientGate><AppLayout /></ClientGate></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/upload" element={<UploadTranscript />} />
                 <Route path="/pia" element={<GeneratedPIA />} />
