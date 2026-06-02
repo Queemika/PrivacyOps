@@ -25,12 +25,13 @@ export default function Login() {
       return;
     }
     if (r.mfa) {
-      console.log("EMAIL BEFORE STORE:", r.email);
-
       sessionStorage.setItem("login_email", r.email);
-
-      console.log("EMAIL AFTER STORE:", sessionStorage.getItem("login_email"));
-
+      if (r.devCode) {
+        toast.warning(`Dev code: ${r.devCode}`, {
+          description: r.devNotice,
+          duration: 30000,
+        });
+      }
       nav("/login/verify", { replace: true });
       return;
     }
