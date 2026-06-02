@@ -38,7 +38,8 @@ const items: Item[] = [
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
-  const { isAdmin } = useMyRoles();
+  const { isAdmin, roles } = useMyRoles();
+  const isClientOnly = roles.length > 0 && roles.every((r) => r === "Client");
   const nav = useNavigate();
   const initials = user ? ((user.firstName?.[0] || "") + (user.lastName?.[0] || user.email?.[0] || "U")).toUpperCase().slice(0, 2) : "U";
   const [client, setClient] = useState<string>("");
