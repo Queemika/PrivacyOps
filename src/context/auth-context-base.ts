@@ -5,6 +5,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   email: string;
+  mfaVerified: boolean;
 }
 
 export interface AuditEntry {
@@ -41,6 +42,11 @@ export function useAuth() {
 }
 
 export const INTERNAL_DOMAIN = "kpmg.com";
+export const DEMO_USERS = ["admin@kpmg.com", "test_client@kpmg.com"];
+
+export function isDemoUser(email: string | null | undefined): boolean {
+  return !!email && DEMO_USERS.includes(email.toLowerCase());
+}
 
 export function isInternalEmail(email: string): boolean {
   return email.trim().toLowerCase().endsWith("@" + INTERNAL_DOMAIN);
