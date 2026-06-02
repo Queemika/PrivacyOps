@@ -27,10 +27,16 @@ export default function Login() {
     if (r.mfa) {
       sessionStorage.setItem("login_email", r.email);
       if (r.devCode) {
+        console.warn("[dev] Login OTP code:", r.devCode, r.devNotice);
+        sessionStorage.setItem("login_dev_code", r.devCode);
+        if (r.devNotice) sessionStorage.setItem("login_dev_notice", r.devNotice);
         toast.warning(`Dev code: ${r.devCode}`, {
-          description: r.devNotice,
+          description: r.devNotice ?? "Resend rejected delivery — code shown for development only.",
           duration: 30000,
         });
+      } else {
+        sessionStorage.removeItem("login_dev_code");
+        sessionStorage.removeItem("login_dev_notice");
       }
       nav("/login/verify", { replace: true });
       return;
