@@ -20,7 +20,7 @@ export default function Login() {
     setBusy(true);
     const r = await login(email, password);
     setBusy(false);
-    if (!r.ok) { toast.error(r.error || "Sign-in failed"); return; }
+    if (!r.ok) { toast.error(("error" in r && r.error) || "Sign-in failed"); return; }
     if (r.mfa) {
       toast.success("We sent a 6-digit verification code to your email.");
       nav("/login/verify", { state: { email: r.email }, replace: true });
