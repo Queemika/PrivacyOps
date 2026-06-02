@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "PrivacyOps <no-reply@privacyops.com>",
+        from: "PrivacyOps <onboarding@resend.dev>",
         to: [email],
         subject: "Your PrivacyOps verification code",
         html,
