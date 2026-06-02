@@ -50,7 +50,11 @@ export default function LoginVerify() {
       toast.error(r.error || "Could not resend");
       return;
     }
-    toast.success("New code sent");
+    if (r.devCode) {
+      toast.warning(`Dev code: ${r.devCode}`, { description: r.devNotice, duration: 30000 });
+    } else {
+      toast.success("New code sent");
+    }
     setCooldown(30);
   };
 
