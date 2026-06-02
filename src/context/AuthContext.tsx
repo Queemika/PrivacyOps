@@ -7,10 +7,11 @@ import {
   AuthUser,
   AuditEntry,
   AuthCtx,
+  LoginResult,
 } from "./auth-context-base";
 
-export { useAuth, validateCorporateEmail } from "./auth-context-base";
-export type { AuthUser, AuditEntry } from "./auth-context-base";
+export { useAuth, validateCorporateEmail, isInternalEmail } from "./auth-context-base";
+export type { AuthUser, AuditEntry, LoginResult } from "./auth-context-base";
 
 function toAuthUser(u: User | null): AuthUser | null {
   if (!u) return null;
@@ -31,11 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // 1. Subscribe FIRST
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
       setUser(toAuthUser(session?.user ?? null));
     });
-    // 2. THEN getSession
     supabase.auth.getSession().then(({ data }) => {
       setUser(toAuthUser(data.session?.user ?? null));
       setReady(true);
@@ -43,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Load recent audit entries for display
   useEffect(() => {
     if (!user) { setAuditLog([]); return; }
     let cancelled = false;
@@ -97,8 +95,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   };
 
-  const login: AuthCtx["login"] = async (email, password) => {
+  // Password is step 1. On success we sign out and send an email OTP for step 2.
+  const login: AuthCtx["login"] = async (email, password): Promise<LoginResult> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false, error: error.message };
+    // Step 1 OK — drop the session, then issue OTP.
+    await supabase.auth.signOut();
+    const { error: otpErr } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    if (otpErr) return { ok: false, error: otpErr.message };
+    return { ok: true, mfa: true, email };
+  };
+
+  const verifyLoginOtp: AuthCtx["verifyLoginOtp"] = async (email, code) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  };
+
+  const resendLoginOtp: AuthCtx["resendLoginOtp"] = async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   };
@@ -109,12 +127,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-  };
+  const logout = async () => { await supabase.auth.signOut(); };
 
   return (
-    <AuthContextObject.Provider value={{ user, ready, login, signup, loginWithGoogle, logout, logAction, auditLog }}>
+    <AuthContextObject.Provider value={{
+      user, ready, login, verifyLoginOtp, resendLoginOtp, signup, loginWithGoogle, logout, logAction, auditLog,
+    }}>
       {children}
     </AuthContextObject.Provider>
   );

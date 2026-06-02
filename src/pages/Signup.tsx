@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth, validateCorporateEmail } from "@/context/AuthContext";
+import { useAuth, validateCorporateEmail, isInternalEmail } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { toast } from "sonner";
+import { PrivacyOpsLogo } from "@/components/brand/PrivacyOpsLogo";
 
 export default function Signup() {
   const nav = useNavigate();
@@ -19,6 +20,7 @@ export default function Signup() {
 
   const emailErr = email ? validateCorporateEmail(email) : null;
   const emailOk = email && !emailErr;
+  const internal = email && emailOk && isInternalEmail(email);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export default function Signup() {
     const r = await signup({ firstName: first, lastName: last, email, password });
     setBusy(false);
     if (!r.ok) { setError(r.error ?? "Signup failed"); return; }
-    toast.success("Account created — check your email to confirm.");
+    toast.success("Account created — sign in to continue.");
     nav("/login", { replace: true });
   };
 
@@ -39,16 +41,16 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_top,hsl(220_45%_12%),hsl(220_50%_6%))] text-white p-6">
-      <div className="flex flex-col items-center gap-3 mb-6">
-        <div className="h-14 w-14 rounded-xl bg-accent flex items-center justify-center shadow-[0_10px_30px_-10px_hsl(var(--accent))]">
-          <ShieldCheck className="h-7 w-7 text-accent-foreground" />
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight">PrivacyOps</h1>
+      <div className="flex flex-col items-center gap-2 mb-6">
+        <PrivacyOpsLogo variant="mark" size="xl" />
+        <div className="text-2xl font-semibold tracking-tight mt-2">Privacy<span className="text-accent">Ops</span></div>
         <p className="text-sm text-white/60">Create your workspace account</p>
       </div>
 
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-7 text-foreground">
-        <div className="text-xs text-muted-foreground mb-5">Your admin will assign your role and engagements after sign-up.</div>
+        <div className="text-xs text-muted-foreground mb-5">
+          KPMG staff get full role access. Other emails sign up as <b>Client</b> and wait for an admin to assign an engagement.
+        </div>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -69,8 +71,11 @@ export default function Signup() {
             {emailErr && (
               <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{emailErr}</p>
             )}
-            {emailOk && (
-              <p className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />Email accepted.</p>
+            {emailOk && internal && (
+              <p className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />KPMG email — full role eligibility.</p>
+            )}
+            {emailOk && !internal && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1"><Info className="h-3 w-3" />External email — you'll be assigned the Client role.</p>
             )}
           </div>
 

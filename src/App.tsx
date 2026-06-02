@@ -9,7 +9,10 @@ import { AttachmentPreviewProvider } from "./components/AttachmentPreview";
 import { AuthProvider } from "./context/AuthContext";
 import { ComplianceProvider } from "./context/ComplianceContext";
 import Login from "./pages/Login";
+import LoginVerify from "./pages/LoginVerify";
 import Signup from "./pages/Signup";
+import ClientWaiting from "./pages/ClientWaiting";
+import ClientGate from "./components/ClientGate";
 import Dashboard from "./pages/Dashboard";
 import UploadTranscript from "./pages/UploadTranscript";
 import GeneratedPIA from "./pages/GeneratedPIA";
@@ -55,8 +58,10 @@ const App = () => (
             <AttachmentPreviewProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/login/verify" element={<LoginVerify />} />
               <Route path="/signup" element={<Signup />} />
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/engagements/waiting" element={<ProtectedRoute><ClientWaiting /></ProtectedRoute>} />
+              <Route element={<ProtectedRoute><ClientGate><AppLayout /></ClientGate></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/upload" element={<UploadTranscript />} />
                 <Route path="/pia" element={<GeneratedPIA />} />

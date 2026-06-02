@@ -14,10 +14,17 @@ export interface AuditEntry {
   target: string;
 }
 
+export type LoginResult =
+  | { ok: true; mfa: true; email: string }
+  | { ok: true; mfa: false }
+  | { ok: false; error: string };
+
 export interface AuthCtx {
   user: AuthUser | null;
   ready: boolean;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  verifyLoginOtp: (email: string, code: string) => Promise<{ ok: boolean; error?: string }>;
+  resendLoginOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
   signup: (u: { firstName: string; lastName: string; email: string; password: string }) => Promise<{ ok: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -31,6 +38,12 @@ export function useAuth() {
   const c = useContext(AuthContextObject);
   if (!c) throw new Error("useAuth must be used within AuthProvider");
   return c;
+}
+
+export const INTERNAL_DOMAIN = "kpmg.com";
+
+export function isInternalEmail(email: string): boolean {
+  return email.trim().toLowerCase().endsWith("@" + INTERNAL_DOMAIN);
 }
 
 export function validateCorporateEmail(email: string): string | null {

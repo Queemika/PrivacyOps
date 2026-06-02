@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { PrivacyOpsMark } from "@/components/brand/PrivacyOpsLogo";
 
 type Item = { title: string; url: string; icon: any };
 
@@ -37,7 +38,8 @@ const items: Item[] = [
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
-  const { isAdmin } = useMyRoles();
+  const { isAdmin, roles } = useMyRoles();
+  const isClientOnly = roles.length > 0 && roles.every((r) => r === "Client");
   const nav = useNavigate();
   const initials = user ? ((user.firstName?.[0] || "") + (user.lastName?.[0] || user.email?.[0] || "U")).toUpperCase().slice(0, 2) : "U";
   const [client, setClient] = useState<string>("");
@@ -66,17 +68,19 @@ export function AppSidebar() {
   }, [pathname]);
 
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
-  const visibleItems = items.filter(i => isPathVisible(i.url));
+  const visibleItems = isClientOnly
+    ? items.filter(i => i.url === "/" || i.url === "/help")
+    : items.filter(i => isPathVisible(i.url));
 
   return (
     <aside className="w-[240px] shrink-0 h-screen sticky top-0 z-40 bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Brand + Engagement context */}
       <NavLink to="/engagements" className="px-4 pt-4 pb-3 flex items-start gap-2.5 hover:bg-sidebar-accent/30 transition-colors" title="Switch engagement">
-        <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shadow-[0_4px_12px_-4px_hsl(var(--accent)/0.5)] shrink-0">
-          <ShieldCheck className="h-5 w-5 text-accent-foreground" />
-        </div>
+        <PrivacyOpsMark className="h-9 w-9 shrink-0" />
         <div className="min-w-0">
-          <div className="text-[13px] font-semibold text-sidebar-accent-foreground leading-tight">PrivacyOps</div>
+          <div className="text-[13px] font-semibold text-sidebar-accent-foreground leading-tight">
+            Privacy<span className="text-accent">Ops</span>
+          </div>
           <div className="text-[11px] text-sidebar-foreground/55 truncate mt-0.5" title={client}>{client || "Select engagement"}</div>
         </div>
       </NavLink>

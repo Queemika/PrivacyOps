@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
-export type AppRole = "Intern" | "Preparer" | "Lead" | "Approver" | "Admin";
+export type AppRole = "Intern" | "Preparer" | "Lead" | "Approver" | "Admin" | "Client";
 
 export function useMyRoles(): { roles: AppRole[]; isAdmin: boolean; ready: boolean; refresh: () => void } {
   const { user } = useAuth();

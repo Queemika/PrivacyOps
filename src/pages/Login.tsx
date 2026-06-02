@@ -4,8 +4,9 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, AlertTriangle } from "lucide-react";
+import { AlertTriangle, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { PrivacyOpsLogo } from "@/components/brand/PrivacyOpsLogo";
 
 export default function Login() {
   const nav = useNavigate();
@@ -19,8 +20,12 @@ export default function Login() {
     setBusy(true);
     const r = await login(email, password);
     setBusy(false);
-    if (!r.ok) { toast.error(r.error || "Sign-in failed"); return; }
-    toast.success("Welcome to PrivacyOps");
+    if (!r.ok) { toast.error(("error" in r && r.error) || "Sign-in failed"); return; }
+    if (r.mfa) {
+      toast.success("We sent a 6-digit verification code to your email.");
+      nav("/login/verify", { state: { email: r.email }, replace: true });
+      return;
+    }
     nav("/engagements", { replace: true });
   };
 
@@ -31,13 +36,13 @@ export default function Login() {
     if (!r.ok) toast.error(r.error || "Google sign-in failed");
   };
 
+  const fillDemo = () => { setEmail("admin@kpmg.com"); setPassword("admin123!"); };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_top,hsl(220_45%_12%),hsl(220_50%_6%))] text-white p-6">
-      <div className="flex flex-col items-center gap-3 mb-8">
-        <div className="h-14 w-14 rounded-xl bg-accent flex items-center justify-center shadow-[0_10px_30px_-10px_hsl(var(--accent))]">
-          <ShieldCheck className="h-7 w-7 text-accent-foreground" />
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight">PrivacyOps</h1>
+      <div className="flex flex-col items-center gap-2 mb-8">
+        <PrivacyOpsLogo variant="mark" size="xl" />
+        <div className="text-2xl font-semibold tracking-tight mt-2">Privacy<span className="text-accent">Ops</span></div>
         <p className="text-sm text-white/60">Data Privacy Compliance Platform</p>
       </div>
 
@@ -55,8 +60,15 @@ export default function Login() {
               value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <Button type="submit" disabled={busy} className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground text-sm font-medium">
-            {busy ? "Signing in…" : "Sign In"}
+            <KeyRound className="h-4 w-4 mr-2" />
+            {busy ? "Sending code…" : "Continue"}
           </Button>
+
+          <button type="button" onClick={fillDemo}
+            className="w-full text-[11px] text-muted-foreground hover:text-accent text-center underline-offset-2 hover:underline">
+            Use demo admin (admin@kpmg.com)
+          </button>
+
           <div className="relative my-2">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
             <div className="relative flex justify-center text-[11px] uppercase"><span className="bg-white px-2 text-muted-foreground">or</span></div>
@@ -73,7 +85,7 @@ export default function Login() {
 
       <div className="mt-6 flex items-center gap-1.5 text-[11px] text-white/50 max-w-md text-center">
         <AlertTriangle className="h-3 w-3 text-warning shrink-0" />
-        Auto-generated content requires human review.
+        After your password we'll email a one-time code to verify it's you.
       </div>
     </div>
   );
