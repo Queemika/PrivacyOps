@@ -106,27 +106,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login: AuthCtx["login"] = async (email, password): Promise<LoginResult> => {
-    const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  const DEMO_USERS = [
+    "admin@kpmg.com",
+    "test_client@kpmg.com",
+  ];
+
+  if (DEMO_USERS.includes(email.toLowerCase())) {
+    console.log("DEMO BYPASS TRIGGERED:", email);
+
+    return {
+      ok: true,
+      mfa: false,
       email,
-      password,
-    });
+    };
+  }
 
-    if (error) {
-      return { ok: false, error: error.message };
-    }
+  await supabase.auth.signOut();
 
-    // Demo account bypass
-    if (email.toLowerCase() === "admin@kpmg.com") ||
-        email.toLowerCase() === "test_client@kpmg.com" 
-  ) {
-      return {
-        ok: true,
-        mfa: false,
-        email,
-      };
-    }
+  const { error: otpErr } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
+  });
 
-    await supabase.auth.signOut();
+  if (otpErr) {
+    return { ok: false, error: otpErr.message };
+  }
+
+  return {
+    ok: true,
+    mfa: true,
+    email,
+  };
+};
 
     const { error: otpErr } = await supabase.auth.signInWithOtp({
       email,
