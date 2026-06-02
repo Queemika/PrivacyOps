@@ -116,7 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Demo account bypass
-    if (email.toLowerCase() === "admin@kpmg.com") {
+    if (email.toLowerCase() === "admin@kpmg.com") ||
+        email.toLowerCase() === "test_client@kpmg.com" 
+  ) {
       return {
         ok: true,
         mfa: false,
