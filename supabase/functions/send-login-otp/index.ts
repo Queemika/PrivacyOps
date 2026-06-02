@@ -8,7 +8,9 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 async function sha256Hex(input: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function json(body: unknown, status = 200) {
@@ -88,7 +90,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "PrivacyOps <onboarding@resend.dev>",
+        from: "PrivacyOps <no-reply@privacyops.com>",
         to: [email],
         subject: "Your PrivacyOps verification code",
         html,
@@ -100,9 +102,10 @@ Deno.serve(async (req) => {
       console.error("Resend error:", resendRes.status, t);
       // Resend test mode: only the account owner inbox receives mail until a domain is verified.
       // Surface the code so the prototype stays usable.
-      const notice = resendRes.status === 403 && t.includes("testing emails")
-        ? "Resend test mode — verify a domain at resend.com/domains to send to other inboxes."
-        : "Email delivery failed; using dev fallback.";
+      const notice =
+        resendRes.status === 403 && t.includes("testing emails")
+          ? "Resend test mode — verify a domain at resend.com/domains to send to other inboxes."
+          : "Email delivery failed; using dev fallback.";
       return json({ ok: true, devCode: code, devNotice: notice });
     }
 
