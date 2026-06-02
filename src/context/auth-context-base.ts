@@ -16,7 +16,7 @@ export interface AuditEntry {
 }
 
 export type LoginResult =
-  | { ok: true; mfa: true; email: string }
+  | { ok: true; mfa: true; email: string; devCode?: string; devNotice?: string }
   | { ok: true; mfa: false }
   | { ok: false; error: string };
 
@@ -25,7 +25,7 @@ export interface AuthCtx {
   ready: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   verifyLoginOtp: (email: string, code: string) => Promise<{ ok: boolean; error?: string }>;
-  resendLoginOtp: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  resendLoginOtp: (email: string) => Promise<{ ok: boolean; error?: string; devCode?: string; devNotice?: string }>;
   signup: (u: { firstName: string; lastName: string; email: string; password: string }) => Promise<{ ok: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
