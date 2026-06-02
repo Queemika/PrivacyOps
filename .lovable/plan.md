@@ -1,80 +1,97 @@
-# Phase A — Identity, Branding & Access Control
+# Custom Application-Level OTP (Replace Supabase Magic Link)
 
-## 1. Branding (PrivacyOps logo)
+Move from `supabase.auth.signInWithOtp()` (which sends Magic Links) to a self-managed numeric OTP layered **on top** of standard Supabase password / Google OAuth sessions. After Supabase authenticates the user, we require an additional 6-digit OTP step before any protected route is reachable.
 
-Source: `privacyops_logo.html` + screenshots (need user to confirm both are uploaded — only screenshots referenced earlier).
+## 1. Database (migration)
 
-- Create `src/components/brand/PrivacyOpsLogo.tsx` — SVG mark + wordmark, with `variant` prop: `mark`, `full`, `mono`. Sized via `className`.
-- Replace the `ShieldCheck` square placeholder in:
-  - `src/pages/Login.tsx`
-  - `src/pages/Signup.tsx`
-  - `src/components/AppSidebar.tsx` (header lockup)
-  - Auth email scaffolding (later)
-- Add the mark as the favicon: write `public/favicon.svg`, update `index.html` `<link rel="icon">` and `<title>` to "PrivacyOps".
+New table `public.login_otps`:
 
-## 2. Default admin account (admin@kpmg.com / admin123!)
+- `id uuid pk default gen_random_uuid()`
+- `email text not null`
+- `otp_hash text not null` (sha256 hex of code — no plaintext)
+- `expires_at timestamptz not null`
+- `used boolean not null default false`
+- `attempts int not null default 0`
+- `created_at timestamptz not null default now()`
 
-The seeded admin already has the `Admin` role granted automatically via the `grant_admin_for_kpmg` function — but the auth user itself must exist.
+Index on `(email, used, expires_at)`. RLS **enabled with no policies** — only edge functions (service role) read/write. GRANT to `service_role` only.
 
-- Add to the Login page a small "Use demo admin" helper button that prefills the form (visible only when fields are empty) so the team can sign in fast.
-- One-time creation: instruct user to sign up admin@kpmg.com with password `admin123!` from the Signup page once. The trigger auto-grants Admin. (We cannot insert into `auth.users` directly from a migration without service role; the trigger handles role assignment on first signup.)
-- Disable HIBP password check (`admin123!` is leaked) via `configure_auth` so the demo password is accepted.
+Also a tiny `login_otp_resends(email text, created_at timestamptz)` table for resend rate limiting (or reuse `created_at` in `login_otps`). Will keep it simple: rate limit by counting recent rows in `login_otps` for the email.
 
-## 3. MFA — email OTP on login
+## 2. Edge Functions
 
-Plan: use **Supabase's native MFA with the `phone`/email factor is not available**; instead implement a custom **email OTP** flow on top of password login:
+`supabase/functions/send-login-otp/index.ts`
+- Input: `{ email }` (validated with zod, lowercased).
+- Verifies caller is an authenticated Supabase user whose email matches (decodes JWT via service-role `getUser`). This prevents arbitrary email spam.
+- Rate limit: max 3 sends per email per 10 min, 30-second cooldown between sends.
+- Invalidates previous unused OTPs for that email (`update ... set used=true`).
+- Generates 6-digit code, stores sha256 hash with `expires_at = now() + 10 min`.
+- Sends branded email via **Resend** (`RESEND_API_KEY` secret) — subject "Your PrivacyOps verification code", body shows the 6 digits + 10-min notice.
+- Returns `{ ok: true }`.
 
-- After `signInWithPassword` succeeds, immediately `signOut`, generate a 6-digit code in an edge function `send-login-otp`, store hashed code + expiry (5 min) in a new `login_otps` table, email it via Lovable Auth email infra (requires email domain — fallback: log code to console + show toast in dev until domain configured).
-- Add `/login/verify` route with 6-digit `InputOTP`. On success, edge function `verify-login-otp` issues a one-time magic link / re-authenticates the session.
-- Alternative simpler path (recommended for prototype): use Supabase **`signInWithOtp`** as the second factor — after password verifies, send OTP to same email, user enters code, we call `verifyOtp({ type: 'email', token, email })` which returns a session. No custom tables needed.
+`supabase/functions/verify-login-otp/index.ts`
+- Input: `{ email, code }`.
+- Requires authenticated caller matching email.
+- Loads latest unused, unexpired row for email. Increments `attempts`; locks (used=true) after 5.
+- Compares sha256(code) to stored hash in constant-ish time.
+- On success: `used=true`, then sets `app_metadata.mfa_verified_at = now()` on the auth user via service-role `auth.admin.updateUserById`. Returns `{ ok: true }`.
+- On failure: `{ ok: false, error }`.
 
-I'll go with the **`signInWithOtp` + `verifyOtp`** approach. Requires `auto_confirm_email: true` to remain off; existing users will still get the OTP since `signInWithOtp` issues codes for known emails.
+Both functions: `verify_jwt = false` in code (we validate manually via service role) so we can also handle the post-OAuth case before middleware. CORS headers on every response.
 
-New migration: none required.
-New table: none.
+## 3. Resend integration
 
-## 4. Role gating
+- Add `RESEND_API_KEY` via the secrets tool (must request from user).
+- Sender: `PrivacyOps <onboarding@resend.dev>` for now (note: only deliverable to the Resend account owner unless a domain is verified — flag this to the user).
 
-Update `validateCorporateEmail` in `src/context/auth-context-base.ts`:
-- Internal domain = `@kpmg.com` → eligible for Intern/Associate/Supervisor/Manager/Admin.
-- Any other domain → allowed to sign up but auto-assigned `Client` role.
+## 4. AuthContext (`src/context/AuthContext.tsx`)
 
-Add `Client` to the `app_role` enum via migration. Update `AppRole` type in `src/lib/roles/store.ts` and `ROLES` in `src/lib/admin/roleVisibility.ts`.
+- **Remove** all `supabase.auth.signInWithOtp` / `verifyOtp` calls.
+- `login(email, password)`:
+  1. `signInWithPassword`.
+  2. If `admin@kpmg.com` demo bypass — skip MFA (existing behavior).
+  3. Otherwise call `send-login-otp` edge function (auth token attached automatically). Do **not** `signOut` — we keep the session but gate routes behind `mfa_verified_at`.
+  4. Return `{ ok: true, mfa: true, email }`.
+- `verifyLoginOtp(email, code)` → calls `verify-login-otp` edge function, then `supabase.auth.refreshSession()` so the new `app_metadata.mfa_verified_at` is reflected client-side.
+- `resendLoginOtp(email)` → calls `send-login-otp` again.
+- Add `loginWithGoogle()` post-flow: nothing changes at start (OAuth redirect), but on returning session we need to trigger OTP — see Section 5.
+- Expose new derived flag `mfaVerified: boolean` from `user.app_metadata.mfa_verified_at` (any non-null value within current session).
 
-Add DB trigger `grant_client_for_external`: on new profile, if email domain ≠ `kpmg.com` AND no role assigned, insert `Client`.
+## 5. Google OAuth post-login OTP
 
-## 5. Client lockdown
+- In `AuthProvider`'s `onAuthStateChange`, when event is `SIGNED_IN` and `app_metadata.mfa_verified_at` is missing (or older than this session's `sign_in_at`), automatically call `send-login-otp` and stash email in `sessionStorage.login_email`, then navigate to `/login/verify`.
+- Demo accounts bypass.
 
-New route guard `ClientGate`:
-- If user's only role is `Client` AND has no `engagement_members` row → redirect every protected route to `/engagements/waiting`.
-- New page `src/pages/ClientWaiting.tsx`: friendly "Your admin hasn't assigned you to an engagement yet" screen with logout button.
-- Sidebar hides all modules for Client-only users.
-- Once admin assigns them to an engagement (existing `UserManagement` flow), they land on `/engagements` and can only see modules for engagements they're members of.
+## 6. ProtectedRoute (`src/components/ProtectedRoute.tsx`)
 
-## 6. Files
+- After existing `user` check, also check `mfaVerified` (and bypass for demo users).
+- If not verified → `<Navigate to="/login/verify" replace />`.
+- `/login/verify` itself must remain reachable while authenticated-but-unverified.
 
-**New**
-- `src/components/brand/PrivacyOpsLogo.tsx`
-- `src/components/ClientGate.tsx`
-- `src/pages/LoginVerify.tsx`
-- `src/pages/ClientWaiting.tsx`
-- `public/favicon.svg`
-- migration: add `Client` to enum + external-domain trigger
+## 7. LoginVerify page (`src/pages/LoginVerify.tsx`)
 
-**Edited**
-- `index.html` (title + favicon)
-- `src/pages/Login.tsx` (logo, demo prefill, OTP step trigger)
-- `src/pages/Signup.tsx` (logo, domain hint)
-- `src/components/AppSidebar.tsx` (logo lockup, hide modules for Client)
-- `src/components/AppLayout.tsx` (wrap with ClientGate)
-- `src/context/AuthContext.tsx` (login → request OTP instead of session)
-- `src/context/auth-context-base.ts` (validator + new `verifyLoginOtp` in ctx)
-- `src/lib/roles/store.ts` (`Client` role)
-- `src/lib/admin/roleVisibility.ts` (`Client` role with all modules hidden by default)
-- `src/App.tsx` (`/login/verify`, `/engagements/waiting` routes)
+- Same UI. Submit calls the new `verifyLoginOtp` (now backed by edge function).
+- Resend calls `resendLoginOtp`; surface rate-limit errors from the edge function.
+- On success navigate to `/engagements` (current behavior).
 
-## Open questions
+## 8. Types
 
-1. **`privacyops_logo.html`** — I don't see it in the project. Can you paste its SVG markup or upload the file? Without it I'll generate a clean shield+wordmark inspired by the screenshots.
-2. **MFA on every login or only first device?** Prototype default: every login.
-3. **`admin123!` is a leaked password** — OK to disable HIBP so it works, or pick a stronger demo password?
+- Generated Supabase types will pick up `login_otps` automatically after migration runs.
+- No extra TS types needed beyond local zod schemas in the edge functions.
+
+## 9. RLS / GRANTs summary
+
+```text
+login_otps:
+  GRANT ALL ON public.login_otps TO service_role;
+  ENABLE ROW LEVEL SECURITY;
+  (no policies — clients cannot read/write directly)
+```
+
+## 10. Open items for you to confirm
+
+1. **Resend API key** — I'll request `RESEND_API_KEY` via the secrets tool. OK?
+2. **Sender address** — use `onboarding@resend.dev` for the prototype (only your Resend-owner inbox receives mail until a domain is verified), or do you already have a verified domain?
+3. **Demo bypass** — keep `admin@kpmg.com` / `test_client@kpmg.com` skipping MFA entirely (current behavior)?
+
+Reply and I'll switch to build mode.
