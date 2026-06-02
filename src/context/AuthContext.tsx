@@ -2,7 +2,7 @@ import { useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import type { Session, User } from "@supabase/supabase-js";
-import { AuthContextObject, AuthUser, AuditEntry, AuthCtx, LoginResult } from "./auth-context-base";
+import { AuthContextObject, AuthUser, AuditEntry, AuthCtx, LoginResult, isDemoUser } from "./auth-context-base";
 
 export { useAuth, validateCorporateEmail, isInternalEmail } from "./auth-context-base";
 export type { AuthUser, AuditEntry, LoginResult } from "./auth-context-base";
@@ -10,14 +10,30 @@ export type { AuthUser, AuditEntry, LoginResult } from "./auth-context-base";
 function toAuthUser(u: User | null): AuthUser | null {
   if (!u) return null;
   const meta = (u.user_metadata || {}) as Record<string, string>;
+  const appMeta = (u.app_metadata || {}) as Record<string, unknown>;
   const fullName = meta.full_name || meta.name || "";
   const [fnPart, ...rest] = fullName.split(" ");
+  const email = u.email || "";
   return {
     id: u.id,
-    email: u.email || "",
-    firstName: meta.first_name || fnPart || (u.email?.split("@")[0] ?? ""),
+    email,
+    firstName: meta.first_name || fnPart || (email.split("@")[0] ?? ""),
     lastName: meta.last_name || rest.join(" ") || "",
+    mfaVerified: isDemoUser(email) || !!appMeta.mfa_verified_at,
   };
+}
+
+async function callFn(name: string, body: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke(name, { body });
+  if (error) {
+    // edge function returned non-2xx; try to surface message from body
+    const msg = (data as { error?: string } | null)?.error || error.message;
+    return { ok: false, error: msg };
+  }
+  if (data && typeof data === "object" && "error" in data && (data as { error?: string }).error) {
+    return { ok: false, error: (data as { error: string }).error };
+  }
+  return { ok: true };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -26,8 +42,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
-      setUser(toAuthUser(session?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session: Session | null) => {
+      const next = toAuthUser(session?.user ?? null);
+      setUser(next);
+
+      // Google OAuth: trigger OTP after sign-in if not yet verified
+      if (event === "SIGNED_IN" && next && !next.mfaVerified) {
+        // detect OAuth (provider != email) by looking at identities
+        const isOAuth = (session?.user?.identities || []).some((i) => i.provider !== "email");
+        if (isOAuth) {
+          sessionStorage.setItem("login_email", next.email);
+          callFn("send-login-otp", { email: next.email }).then((r) => {
+            if (r.ok && !window.location.pathname.startsWith("/login/verify")) {
+              window.location.assign("/login/verify");
+            }
+          });
+        }
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setUser(toAuthUser(data.session?.user ?? null));
@@ -68,12 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!user) return;
       supabase
         .from("audit_log")
-        .insert({
-          user_id: user.id,
-          user_email: user.email,
-          action,
-          target,
-        })
+        .insert({ user_id: user.id, user_email: user.email, action, target })
         .then(({ error }) => {
           if (!error) {
             const entry: AuditEntry = {
@@ -96,73 +122,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: { first_name: firstName, last_name: lastName },
-      },
+      options: { emailRedirectTo: redirectTo, data: { first_name: firstName, last_name: lastName } },
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   };
 
   const login: AuthCtx["login"] = async (email, password): Promise<LoginResult> => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false, error: error.message };
 
-    if (error) {
-      return {
-        ok: false,
-        error: error.message,
-      };
+    if (isDemoUser(email)) {
+      return { ok: true, mfa: false };
     }
 
-    const DEMO_USERS = ["admin@kpmg.com", "test_client@kpmg.com"];
+    const send = await callFn("send-login-otp", { email: email.toLowerCase() });
+    if (!send.ok) return { ok: false, error: send.error || "Could not send verification code." };
 
-    if (DEMO_USERS.includes(email.toLowerCase())) {
-      console.log("DEMO BYPASS TRIGGERED:", email);
-
-      return {
-        ok: true,
-        mfa: false,
-      };
-    }
-
-    // Regular users require OTP
-    await supabase.auth.signOut();
-
-    const { error: otpErr } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-      },
-    });
-
-    if (otpErr) {
-      return {
-        ok: false,
-        error: otpErr.message,
-      };
-    }
-
-    return {
-      ok: true,
-      mfa: true,
-      email,
-    };
+    return { ok: true, mfa: true, email };
   };
 
   const verifyLoginOtp: AuthCtx["verifyLoginOtp"] = async (email, code) => {
-    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-    if (error) return { ok: false, error: error.message };
+    const r = await callFn("verify-login-otp", { email: email.toLowerCase(), code });
+    if (!r.ok) return r;
+    // refresh session so updated app_metadata is reflected
+    const { data } = await supabase.auth.refreshSession();
+    setUser(toAuthUser(data.session?.user ?? null));
     return { ok: true };
   };
 
   const resendLoginOtp: AuthCtx["resendLoginOtp"] = async (email) => {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-    if (error) return { ok: false, error: error.message };
-    return { ok: true };
+    return callFn("send-login-otp", { email: email.toLowerCase() });
   };
 
   const loginWithGoogle: AuthCtx["loginWithGoogle"] = async () => {
@@ -177,18 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContextObject.Provider
-      value={{
-        user,
-        ready,
-        login,
-        verifyLoginOtp,
-        resendLoginOtp,
-        signup,
-        loginWithGoogle,
-        logout,
-        logAction,
-        auditLog,
-      }}
+      value={{ user, ready, login, verifyLoginOtp, resendLoginOtp, signup, loginWithGoogle, logout, logAction, auditLog }}
     >
       {children}
     </AuthContextObject.Provider>
