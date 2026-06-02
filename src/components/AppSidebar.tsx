@@ -68,7 +68,9 @@ export function AppSidebar() {
   }, [pathname]);
 
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
-  const visibleItems = items.filter(i => isPathVisible(i.url));
+  const visibleItems = isClientOnly
+    ? items.filter(i => i.url === "/" || i.url === "/help")
+    : items.filter(i => isPathVisible(i.url));
 
   return (
     <aside className="w-[240px] shrink-0 h-screen sticky top-0 z-40 bg-sidebar border-r border-sidebar-border flex flex-col">
