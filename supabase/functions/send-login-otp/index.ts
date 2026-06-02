@@ -44,22 +44,39 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
-    // Rate limit: max 3 in last 10 min, 30s cooldown between sends
+    // Rate limit: max 3 in last 10 min, 30s cooldown between sends.
+    // If there is already an active code, treat repeated calls as idempotent instead
+    // of returning HTTP 429. This prevents OAuth/auth-state retries from blanking the app.
     const since = new Date(Date.now() - 10 * 60_000).toISOString();
     const { data: recent } = await admin
       .from("login_otps")
-      .select("created_at")
+      .select("created_at, expires_at, used")
       .eq("email", email)
       .gte("created_at", since)
       .order("created_at", { ascending: false });
 
+    const now = Date.now();
+    const latestActive = recent?.find((row) => !row.used && new Date(row.expires_at).getTime() > now);
+    if (latestActive) {
+      const ageMs = now - new Date(latestActive.created_at).getTime();
+      const cooldownSeconds = Math.max(0, Math.ceil((30_000 - ageMs) / 1000));
+      if (ageMs < 30_000 || (recent?.length ?? 0) >= 3) {
+        return json({
+          ok: true,
+          alreadySent: true,
+          cooldownSeconds,
+          devNotice: "A verification code was already sent. Use the latest code to continue.",
+        });
+      }
+    }
+
     if (recent && recent.length >= 3) {
-      return json({ error: "Too many requests. Try again in a few minutes." }, 429);
+      return json({ ok: false, error: "Too many requests. Try again in a few minutes.", cooldownSeconds: 60 });
     }
     if (recent && recent.length > 0) {
       const last = new Date(recent[0].created_at).getTime();
-      if (Date.now() - last < 30_000) {
-        return json({ error: "Please wait before requesting another code." }, 429);
+      if (now - last < 30_000) {
+        return json({ ok: false, error: "Please wait before requesting another code.", cooldownSeconds: Math.ceil((30_000 - (now - last)) / 1000) });
       }
     }
 

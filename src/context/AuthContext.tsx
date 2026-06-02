@@ -2,7 +2,7 @@ import { useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import type { Session, User } from "@supabase/supabase-js";
-import { AuthContextObject, AuthUser, AuditEntry, AuthCtx, LoginResult, isDemoUser } from "./auth-context-base";
+import { AuthContextObject, AuthUser, AuditEntry, AuthCtx, LoginResult, OtpResult, isDemoUser } from "./auth-context-base";
 
 export { useAuth, validateCorporateEmail, isInternalEmail } from "./auth-context-base";
 export type { AuthUser, AuditEntry, LoginResult } from "./auth-context-base";
@@ -23,15 +23,40 @@ function toAuthUser(u: User | null): AuthUser | null {
   };
 }
 
-async function callFn(name: string, body: Record<string, unknown>): Promise<{ ok: boolean; error?: string; devCode?: string; devNotice?: string }> {
+async function callFn(name: string, body: Record<string, unknown>): Promise<OtpResult> {
   const { data, error } = await supabase.functions.invoke(name, { body });
   if (error) {
-    const msg = (data as { error?: string } | null)?.error || error.message;
-    return { ok: false, error: msg };
+    const d = (data ?? {}) as OtpResult;
+    return { ok: false, error: d.error || error.message, cooldownSeconds: d.cooldownSeconds };
   }
-  const d = (data ?? {}) as { error?: string; devCode?: string; devNotice?: string };
-  if (d.error) return { ok: false, error: d.error };
-  return { ok: true, devCode: d.devCode, devNotice: d.devNotice };
+  const d = (data ?? {}) as OtpResult;
+  if (d.error || d.ok === false) return { ok: false, error: d.error || "Request failed", cooldownSeconds: d.cooldownSeconds };
+  return { ok: true, devCode: d.devCode, devNotice: d.devNotice, alreadySent: d.alreadySent, cooldownSeconds: d.cooldownSeconds };
+}
+
+const OTP_SEND_COOLDOWN_MS = 30_000;
+
+function rememberOtpSend(email: string, r: OtpResult) {
+  sessionStorage.setItem("login_email", email);
+  sessionStorage.setItem("login_otp_sent_at", String(Date.now()));
+  sessionStorage.removeItem("login_otp_request_started_at");
+  if (r.devCode) {
+    sessionStorage.setItem("login_dev_code", r.devCode);
+    if (r.devNotice) sessionStorage.setItem("login_dev_notice", r.devNotice);
+  }
+}
+
+function markOtpRequestStarted(email: string) {
+  sessionStorage.setItem("login_email", email);
+  sessionStorage.setItem("login_otp_request_started_at", String(Date.now()));
+}
+
+function hasFreshOtpRequest(email: string) {
+  if (sessionStorage.getItem("login_email") !== email) return false;
+  const sentAt = Number(sessionStorage.getItem("login_otp_sent_at") || 0);
+  const startedAt = Number(sessionStorage.getItem("login_otp_request_started_at") || 0);
+  const now = Date.now();
+  return (sentAt > 0 && now - sentAt < OTP_SEND_COOLDOWN_MS) || (startedAt > 0 && now - startedAt < 10_000);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -48,9 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_IN" && next && !next.mfaVerified) {
         // detect OAuth (provider != email) by looking at identities
         const isOAuth = (session?.user?.identities || []).some((i) => i.provider !== "email");
-        if (isOAuth) {
-          sessionStorage.setItem("login_email", next.email);
+        if (isOAuth && !hasFreshOtpRequest(next.email)) {
+          markOtpRequestStarted(next.email);
           callFn("send-login-otp", { email: next.email }).then((r) => {
+            if (r.ok) rememberOtpSend(next.email, r);
             if (r.ok && !window.location.pathname.startsWith("/login/verify")) {
               window.location.assign("/login/verify");
             }
@@ -136,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const send = await callFn("send-login-otp", { email: email.toLowerCase() });
     if (!send.ok) return { ok: false, error: send.error || "Could not send verification code." };
+    rememberOtpSend(email.toLowerCase(), send);
 
     return { ok: true, mfa: true, email, devCode: send.devCode, devNotice: send.devNotice };
   };
