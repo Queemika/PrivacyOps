@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const send = await callFn("send-login-otp", { email: email.toLowerCase() });
     if (!send.ok) return { ok: false, error: send.error || "Could not send verification code." };
 
-    return { ok: true, mfa: true, email };
+    return { ok: true, mfa: true, email, devCode: send.devCode, devNotice: send.devNotice };
   };
 
   const verifyLoginOtp: AuthCtx["verifyLoginOtp"] = async (email, code) => {
