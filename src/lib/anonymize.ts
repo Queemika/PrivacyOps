@@ -110,3 +110,39 @@ export function anonymizeText(input: string, _strict = true): AnonymizationResul
     },
   };
 }
+
+// --- Extra helpers for the Transcript module enhancements ---
+
+export interface SpeakerInfo { id: string; label: string; lineCount: number }
+
+/**
+ * Re-labels [PERSON_n] placeholders into friendlier "Speaker n" labels and
+ * returns counts. Operates on already-anonymized text.
+ */
+export function relabelAsSpeakers(anonText: string): { text: string; speakers: SpeakerInfo[] } {
+  const counts = new Map<number, number>();
+  const re = /\[PERSON_(\d+)\]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(anonText)) !== null) {
+    const n = parseInt(m[1], 10);
+    counts.set(n, (counts.get(n) ?? 0) + 1);
+  }
+  const text = anonText.replace(re, (_, n) => `Speaker ${n}`);
+  const speakers: SpeakerInfo[] = Array.from(counts.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([n, c]) => ({ id: `S${n}`, label: `Speaker ${n}`, lineCount: c }));
+  return { text, speakers };
+}
+
+/**
+ * Lightweight Taglish-aware pass. Real ASR happens upstream; here we just
+ * keep common Tagalog particles intact (in case a downstream cleaner
+ * strips them) and normalize whitespace. Pure heuristic, no network.
+ */
+export function applyLanguageHints(text: string, language: "EN" | "FIL" | "Taglish"): string {
+  if (language === "EN") return text;
+  // Preserve Tagalog particles by surrounding them with non-breaking markers
+  // (no-op pass-through here — placeholder for future ASR integration).
+  return text.replace(/\s+/g, (s) => s.length > 2 ? " " : s);
+}
+

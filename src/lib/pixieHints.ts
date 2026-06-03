@@ -3,7 +3,7 @@ export const PIXIE_HINTS: Record<string, string> = {
   "/": "👋 Hi! I'm Pixie, your data privacy guide. Pick an engagement to begin — under PH DPA, a PIA is required before any new DPS goes live.",
   "/engagements": "👋 Pick an engagement to open its dashboard. Each engagement keeps its own PIAs, DRL, PRADAR, and outputs.",
   "/dashboard": "📊 This dashboard summarizes your engagement. Watch the open DRL items and PRADAR score for early warning signs.",
-  "/upload": "🎙️ Upload a meeting transcript and I'll extract data types, purposes, sharing, cross-border transfers, and action items into a draft PIA.",
+  "/upload": "🎙️ Upload a meeting transcript — I'll preview it before processing, anonymize PII (stored locally as `pa_uploads`), label speakers, and extract PIA / TSA / DRL / Email outputs. Transcripts must be reviewed and validated by a supervisor before they're used downstream.",
   "/library": "📋 NPC Circular 2022-01 requires a PIA for any new or significantly changed DPS. Use Threshold Analysis in Phase 1 to decide if a full PIA is needed.",
   "/drl": "📂 DRL items open > 7 days deserve a follow-up. Use the Email Generator to send a polite nudge in one click.",
   "/pradar": "📊 PRADAR rates maturity across 10 domains. Scores below 2.5 are gaps that need immediate attention.",
