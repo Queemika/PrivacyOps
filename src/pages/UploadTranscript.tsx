@@ -459,9 +459,10 @@ export default function Upload() {
                   </table>
                 </div>
               </CardContent>
-            </Card>
-          </CollapsibleContent>
+            </CollapsibleContent>
+          </Card>
         </Collapsible>
+
       </div>
 
       {/* ---------- Pre-process modal ---------- */}
