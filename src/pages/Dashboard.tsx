@@ -10,6 +10,8 @@ import { mockPIAs } from "@/lib/mockData";
 import { loadActions } from "@/lib/actionsStore";
 import { loadPias } from "@/lib/pia/store";
 import { loadTodos, addTodos, toggleTodo, removeTodo, type Todo } from "@/lib/todosStore";
+import { getOverallProgress } from "@/lib/progress/calc";
+import { Progress } from "@/components/ui/progress";
 import {
   FileText, Upload, Library, FolderPlus, FileCog, ShieldCheck, Mail,
   ArrowRight, ListChecks, BarChart3, Sparkles, Plus, X, CheckCircle2,
@@ -56,6 +58,17 @@ export default function Dashboard() {
 
   return (
     <PageShell title="Dashboard" subtitle="Overview of your data privacy workflows">
+      <Link to="/progress" className="block rounded-xl border bg-card p-4 hover:border-accent transition-colors">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Overall Progress</div>
+            <div className="text-2xl font-semibold mt-1">{getOverallProgress()}%</div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <Progress value={getOverallProgress()} />
+      </Link>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile label="Total PIAs" value={totalPias} hint="all phases" icon={FileText} accent="blue" />
         <StatTile label="In Draft" value={drafts} hint="pending review" icon={ListChecks} accent="amber" />
