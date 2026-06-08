@@ -45,7 +45,7 @@ function pradarProgress(): ModuleProgress {
 function tsaProgress(): ModuleProgress {
   const rows = loadTechStackFull();
   const total = rows.length;
-  const done = rows.filter(r => r.status && r.status !== "").length;
+  const done = rows.filter(r => !!r.status).length;
   const percent = total ? Math.round((done / total) * 100) : 0;
   return { id: "tsa", label: "Tech Security", percent, completed: done, total, detail: `${done} of ${total} controls assessed`, href: "/tsa" };
 }
@@ -56,7 +56,7 @@ function inspectionProgress(): ModuleProgress {
   for (const a of areas) {
     for (const r of a.rows) {
       total++;
-      if (r.status && r.status !== "") done++;
+      if (r.status) done++;
     }
   }
   const percent = total ? Math.round((done / total) * 100) : 0;
