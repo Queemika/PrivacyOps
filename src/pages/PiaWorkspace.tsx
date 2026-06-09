@@ -150,7 +150,7 @@ export default function PiaWorkspace() {
           <TabsTrigger value="drl">DRL</TabsTrigger>
         </TabsList>
         <TabsContent value="p1">
-          <Phase1Form value={pia.phase1} onChange={(p) => setPia({ ...pia, phase1: p })} phase1OnlyMode={isPhase1Only} />
+          <Phase1Form value={pia.phase1} onChange={(p) => setPia({ ...pia, phase1: p })} phase1OnlyMode={isPhase1Only} piaId={pia.id} dpsName={pia.phase2?.dpsName || pia.title} />
         </TabsContent>
         {!isPhase1Only && (
           <TabsContent value="p2">
