@@ -162,6 +162,37 @@ export default function GeneratedPIA() {
         </TabsContent>
       </Tabs>
 
+      {annexes.length > 0 && (
+        <Card className="mt-4">
+          <CardContent className="p-0">
+            <div className="px-4 py-2.5 border-b bg-muted/40 flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              <h3 className="text-sm font-semibold">Annexes</h3>
+              <span className="text-[11px] text-muted-foreground">{annexes.length} attachment{annexes.length === 1 ? "" : "s"} included on export</span>
+            </div>
+            <div className="divide-y">
+              {annexes.map((a, i) => (
+                <div key={a.key} className="p-3 flex items-start gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground w-20 shrink-0">
+                    Annex {String.fromCharCode(65 + (i % 26))}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium truncate">DRL-{a.drlNo} · {a.title}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">{a.fileName} <span className="ml-1">({a.mime})</span></div>
+                    {a.mime?.startsWith("image/") && (
+                      <img src={a.dataUrl} alt={a.fileName} className="mt-2 max-h-48 rounded border" />
+                    )}
+                  </div>
+                  <a href={a.dataUrl} download={a.fileName} className="text-[11px] text-info hover:underline shrink-0">Download</a>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
+
       <Card className="mt-4 bg-info/5 border-info/30">
         <CardContent className="p-4 flex items-center gap-3 text-sm">
           <Send className="h-4 w-4 text-info shrink-0" />
