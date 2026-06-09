@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { RATING_CLASS } from "@/lib/pia/risk";
 
 interface Phase3FormProps {
@@ -27,15 +28,22 @@ export function Phase3Form({ value, onChange, piaId, dpsName }: Phase3FormProps)
     seeds: ChecklistSeed[],
     answers: Record<string, ChecklistAnswer>,
     onAnswers: (next: Record<string, ChecklistAnswer>) => void,
+    cta?: { label: string; to: string },
   ) => {
-    // Group seeds by section heading
     const bySection = seeds.reduce<Record<string, ChecklistSeed[]>>((acc, s) => {
       (acc[s.section] ||= []).push(s); return acc;
     }, {});
     return (
       <Card>
         <CardContent className="p-0">
-          <div className="px-4 py-2.5 border-b bg-accent/5"><h3 className="text-sm font-semibold">{title}</h3></div>
+          <div className="px-4 py-2.5 border-b bg-accent/5 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{title}</h3>
+            {cta && (
+              <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
+                <Link to={cta.to}><ExternalLink className="h-3 w-3 mr-1" />{cta.label}</Link>
+              </Button>
+            )}
+          </div>
           <div>
             {Object.entries(bySection).map(([sec, list]) => (
               <div key={sec}>
@@ -62,14 +70,17 @@ export function Phase3Form({ value, onChange, piaId, dpsName }: Phase3FormProps)
     );
   };
 
+  const piaParam = piaId ? `?piaId=${piaId}` : "";
 
   return (
     <div className="space-y-6">
       {renderGroup("General Data Privacy Principles", PRINCIPLES_SEED, value.principles, (v) => set("principles", v))}
       {renderGroup("Data Subject Rights", RIGHTS_SEED, value.rights, (v) => set("rights", v))}
       {renderGroup("Organizational Security", ORG_SECURITY_SEED, value.organizational, (v) => set("organizational", v))}
-      {renderGroup("Physical Security", PHY_SECURITY_SEED, value.physical, (v) => set("physical", v))}
-      {renderGroup("Technical Security", TECH_SECURITY_SEED, value.technical, (v) => set("technical", v))}
+      {renderGroup("Physical Security", PHY_SECURITY_SEED, value.physical, (v) => set("physical", v),
+        { label: "Open in Physical Inspection", to: `/inspection${piaParam}` })}
+      {renderGroup("Technical Security", TECH_SECURITY_SEED, value.technical, (v) => set("technical", v),
+        { label: "Open in TSA", to: `/tsa${piaParam}` })}
 
       <Card>
         <CardContent className="p-0">
