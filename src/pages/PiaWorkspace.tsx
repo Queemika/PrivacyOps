@@ -13,7 +13,7 @@ import { Phase3Form } from "@/components/pia/Phase3Form";
 import { Phase4SignOff } from "@/components/pia/Phase4SignOff";
 import { Pia } from "@/lib/pia/schema";
 import { getPia, upsertPia, ensureSeedEngagement, createPia } from "@/lib/pia/store";
-import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, BookOpen, Table2 } from "lucide-react";
+import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, BookOpen, Table2, Building2, Server } from "lucide-react";
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
