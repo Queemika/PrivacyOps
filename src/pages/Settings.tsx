@@ -236,6 +236,57 @@ export default function Settings() {
         </CardContent></Card>
       )}
 
+      {tab === "pia-answers" && isAdmin && (
+        <Card><CardContent className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold"><MessageSquare className="h-4 w-4" /> PIA Answer Options</div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => {
+                resetAnswerConfig();
+                setAnswerCfg(loadAnswerConfig());
+                toast.success("Reset to Yes / No / N/A");
+              }}>Reset to defaults</Button>
+              <Button size="sm" onClick={() => { saveAnswerConfig(answerCfg); toast.success("Saved"); }}>Save</Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Configure the answer dropdown options used in every PIA checklist row.
+            Add an optional regex pattern to validate the Response text when the option is chosen.
+            Use "No" as the answer that triggers risk scoring and DRL auto-creation.
+          </p>
+          <div className="space-y-2">
+            {answerCfg.default.map((opt, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                <Input className="h-8 text-xs col-span-2" value={opt.value}
+                  onChange={(e) => {
+                    const next = [...answerCfg.default];
+                    next[i] = { ...opt, value: e.target.value };
+                    setAnswerCfg({ ...answerCfg, default: next });
+                  }} placeholder="Option label" />
+                <Input className="h-8 text-xs col-span-4 font-mono" value={opt.pattern || ""}
+                  onChange={(e) => {
+                    const next = [...answerCfg.default];
+                    next[i] = { ...opt, pattern: e.target.value };
+                    setAnswerCfg({ ...answerCfg, default: next });
+                  }} placeholder="Regex (optional, e.g. .{10,})" />
+                <Input className="h-8 text-xs col-span-5" value={opt.message || ""}
+                  onChange={(e) => {
+                    const next = [...answerCfg.default];
+                    next[i] = { ...opt, message: e.target.value };
+                    setAnswerCfg({ ...answerCfg, default: next });
+                  }} placeholder="Validation message shown on failure" />
+                <Button size="icon" variant="ghost" className="col-span-1" onClick={() => {
+                  setAnswerCfg({ ...answerCfg, default: answerCfg.default.filter((_, j) => j !== i) });
+                }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+              </div>
+            ))}
+            <Button size="sm" variant="outline" onClick={() => {
+              setAnswerCfg({ ...answerCfg, default: [...answerCfg.default, { value: "" } as AnswerOption] });
+            }}>+ Add option</Button>
+          </div>
+        </CardContent></Card>
+      )}
+
       {tab === "admin" && isAdmin && (
         <Card><CardContent className="p-6 space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> Admin tools</div>
