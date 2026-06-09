@@ -13,6 +13,7 @@ import { Moon, Sun, ShieldAlert, Settings as SettingsIcon, Trash2, Users, Lock a
 import { toast } from "sonner";
 import { loadTooltipOverrides, saveTooltipOverrides, defaultTooltips } from "@/lib/tooltipStore";
 import { THEMES, applyTheme as applyPalette, getActiveThemeId } from "@/lib/theme/themes";
+import { loadAnswerConfig, saveAnswerConfig, resetAnswerConfig, AnswerOption } from "@/lib/pia/answerConfig";
 
 const ROLES = ["Intern", "Preparer/Associate", "Lead/Supervisor", "Approver/Manager"];
 const TABLES = [
@@ -45,6 +46,7 @@ export default function Settings() {
   const [tooltipOverrides, setTooltipOverrides] = useState<Record<string, string>>(loadTooltipOverrides());
   const [tooltipsEnabled, setTooltipsEnabled] = useState(localStorage.getItem("pa_tooltips_enabled") !== "false");
   const [themeId, setThemeId] = useState<string>(getActiveThemeId());
+  const [answerCfg, setAnswerCfg] = useState(loadAnswerConfig());
   const pickTheme = (id: string) => { applyPalette(id); setThemeId(id); toast.success(`Theme: ${THEMES.find(t=>t.id===id)?.name}`); };
 
   const applyTheme = (t: "light" | "dark") => {
@@ -82,6 +84,7 @@ export default function Settings() {
             { id: "roles", label: "Roles" },
             { id: "tooltips", label: "Tooltips" },
             { id: "tables", label: "Tables & Fields" },
+            { id: "pia-answers", label: "PIA Answers" },
             { id: "admin", label: "Admin Tools" },
           ] : []),
         ]}
