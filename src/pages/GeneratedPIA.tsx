@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusChip } from "@/components/StatusChip";
-import { Download, Edit3, Sparkles, ShieldCheck, Send, FileLock2 } from "lucide-react";
+import { Download, Edit3, Sparkles, ShieldCheck, Send, FileLock2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { anonymizeText } from "@/lib/anonymize";
 import { transcriptSample } from "@/lib/mockData";
+import { loadDrl } from "@/lib/drl/store";
 
 interface UploadRecord {
   id: string;
@@ -53,6 +54,22 @@ export default function GeneratedPIA() {
   const [edit, setEdit] = useState(false);
   const [params] = useSearchParams();
   const uploadId = params.get("uploadId");
+  const piaId = params.get("piaId");
+
+  const annexes = useMemo(() => {
+    const rows = loadDrl().filter(r =>
+      r.category === "pia" && (!piaId || r.fields?.piaId === piaId)
+    );
+    return rows.flatMap(r => (r.attachments || []).map((a, i) => ({
+      drlNo: r.no,
+      title: r.fields?.request || r.fields?.field || "Attachment",
+      fileName: a.name,
+      mime: a.mime,
+      dataUrl: a.dataUrl,
+      key: `${r.id}-${i}`,
+    })));
+  }, [piaId]);
+
 
   const anonymizedTranscript = useMemo(() => {
     if (uploadId) {
@@ -144,6 +161,37 @@ export default function GeneratedPIA() {
           </CardContent></Card>
         </TabsContent>
       </Tabs>
+
+      {annexes.length > 0 && (
+        <Card className="mt-4">
+          <CardContent className="p-0">
+            <div className="px-4 py-2.5 border-b bg-muted/40 flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              <h3 className="text-sm font-semibold">Annexes</h3>
+              <span className="text-[11px] text-muted-foreground">{annexes.length} attachment{annexes.length === 1 ? "" : "s"} included on export</span>
+            </div>
+            <div className="divide-y">
+              {annexes.map((a, i) => (
+                <div key={a.key} className="p-3 flex items-start gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground w-20 shrink-0">
+                    Annex {String.fromCharCode(65 + (i % 26))}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium truncate">DRL-{a.drlNo} · {a.title}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">{a.fileName} <span className="ml-1">({a.mime})</span></div>
+                    {a.mime?.startsWith("image/") && (
+                      <img src={a.dataUrl} alt={a.fileName} className="mt-2 max-h-48 rounded border" />
+                    )}
+                  </div>
+                  <a href={a.dataUrl} download={a.fileName} className="text-[11px] text-info hover:underline shrink-0">Download</a>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       <Card className="mt-4 bg-info/5 border-info/30">
         <CardContent className="p-4 flex items-center gap-3 text-sm">

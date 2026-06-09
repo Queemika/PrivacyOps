@@ -13,7 +13,7 @@ import { Phase3Form } from "@/components/pia/Phase3Form";
 import { Phase4SignOff } from "@/components/pia/Phase4SignOff";
 import { Pia } from "@/lib/pia/schema";
 import { getPia, upsertPia, ensureSeedEngagement, createPia } from "@/lib/pia/store";
-import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, BookOpen, Table2 } from "lucide-react";
+import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, BookOpen, Table2, Building2, Server } from "lucide-react";
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
@@ -150,7 +150,7 @@ export default function PiaWorkspace() {
           <TabsTrigger value="drl">DRL</TabsTrigger>
         </TabsList>
         <TabsContent value="p1">
-          <Phase1Form value={pia.phase1} onChange={(p) => setPia({ ...pia, phase1: p })} phase1OnlyMode={isPhase1Only} />
+          <Phase1Form value={pia.phase1} onChange={(p) => setPia({ ...pia, phase1: p })} phase1OnlyMode={isPhase1Only} piaId={pia.id} dpsName={pia.phase2?.dpsName || pia.title} />
         </TabsContent>
         {!isPhase1Only && (
           <TabsContent value="p2">
@@ -182,6 +182,8 @@ export default function PiaWorkspace() {
         links={[
           { to: `/ropa/${pia.id}`, label: "Compilation / NPC-RS", icon: Table2 },
           { to: `/drl?piaId=${pia.id}`, label: "DRL / IRL items", icon: ShieldAlert },
+          { to: `/inspection?piaId=${pia.id}`, label: "Physical Inspection", icon: Building2 },
+          { to: `/tsa?piaId=${pia.id}`, label: "Technical Security Assessment", icon: Server },
           { to: `/consistency?piaId=${pia.id}`, label: "Consistency Checker", icon: GitCompare },
           { to: `/email?source=pia&refId=${pia.id}`, label: "Email Generator", icon: Mail },
           { to: `/upload?piaId=${pia.id}`, label: "Source Transcript", icon: Upload },

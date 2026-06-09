@@ -9,6 +9,8 @@ import { Sparkles, Link2 } from "lucide-react";
 import { ChecklistSeed } from "@/lib/pia/templates";
 import { addRow as addDrlRow } from "@/lib/drl/store";
 import { toast } from "sonner";
+import { getAnswerOptions, validateResponse } from "@/lib/pia/answerConfig";
+import { triggerForChecklistAnswer } from "@/lib/pia/drlAutoTrigger";
 
 interface ChecklistRowProps {
   seed: ChecklistSeed;
@@ -30,6 +32,22 @@ export function ChecklistRow({
     onChange(merged);
   };
 
+  const handleYnChange = (v: string) => {
+    const next = { ...answer, yn: v as ChecklistAnswer["yn"] } as ChecklistAnswer;
+    if (v === "No") {
+      // Risk trigger — hydrate from seed defaults if currently empty.
+      if (next.impact == null && seed.defaultImpact != null) next.impact = seed.defaultImpact;
+      if (next.probability == null && seed.defaultProbability != null) next.probability = seed.defaultProbability;
+    } else {
+      // Clear risk fields when not a risk-triggering answer.
+      next.impact = null;
+      next.probability = null;
+    }
+    next.rating = computeRating(next.impact, next.probability);
+    onChange(next);
+    triggerForChecklistAnswer(seed.id, v, { piaId, dpsName, sectionLabel });
+  };
+
   const handleAddToDrl = () => {
     const row = addDrlRow("pia", {
       fields: {
@@ -43,6 +61,10 @@ export function ChecklistRow({
     });
     toast.success(`Added to DRL — ${row.id.slice(-4)}`);
   };
+
+  const answerOptions = getAnswerOptions(sectionLabel);
+  const showRisk = answer.yn === "No";
+  const validation = validateResponse(answer.yn, answer.response, sectionLabel);
 
   return (
     <div className="grid grid-cols-12 gap-3 px-3 py-3 border-b last:border-0 text-xs">
@@ -64,29 +86,48 @@ export function ChecklistRow({
         )}
       </div>
       <div className="col-span-1">
-        <Select value={answer.yn} onValueChange={(v) => set({ yn: v as ChecklistAnswer["yn"] })}>
+        <Select value={answer.yn} onValueChange={handleYnChange}>
           <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="Yes">Yes</SelectItem>
-            <SelectItem value="No">No</SelectItem>
-            <SelectItem value="N/A">N/A</SelectItem>
+            {answerOptions.map(o => (
+              <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
       <div className="col-span-2">
-        <Textarea value={answer.response} onChange={(e) => set({ response: e.target.value })} className="text-xs min-h-[60px]" placeholder="Response" />
+        <Textarea
+          value={answer.response}
+          onChange={(e) => set({ response: e.target.value })}
+          className={`text-xs min-h-[60px] ${!validation.ok ? "border-destructive" : ""}`}
+          placeholder="Response"
+        />
+        {!validation.ok && (
+          <p className="text-[10px] text-destructive mt-1">{validation.message}</p>
+        )}
       </div>
       <div className="col-span-1 text-[11px] text-muted-foreground whitespace-pre-wrap">{answer.legalBasis}</div>
       <div className="col-span-1">
-        <NumberPicker value={answer.impact} onChange={(n) => set({ impact: n })} descriptions={IMPACT_DESCRIPTIONS} />
+        {showRisk ? (
+          <NumberPicker value={answer.impact} onChange={(n) => set({ impact: n })} descriptions={IMPACT_DESCRIPTIONS} />
+        ) : (
+          <span className="text-muted-foreground/50">—</span>
+        )}
       </div>
       <div className="col-span-1">
-        <NumberPicker value={answer.probability} onChange={(n) => set({ probability: n })} descriptions={PROBABILITY_DESCRIPTIONS} />
+        {showRisk ? (
+          <NumberPicker value={answer.probability} onChange={(n) => set({ probability: n })} descriptions={PROBABILITY_DESCRIPTIONS} />
+        ) : (
+          <span className="text-muted-foreground/50">—</span>
+        )}
       </div>
       <div className="col-span-1">
-        <span className={`status-chip text-[10px] ${RATING_CLASS[answer.rating]}`}>{answer.rating || "—"}</span>
+        {showRisk ? (
+          <span className={`status-chip text-[10px] ${RATING_CLASS[answer.rating]}`}>{answer.rating || "—"}</span>
+        ) : (
+          <span className="text-muted-foreground/50">—</span>
+        )}
       </div>
-      {/* Sticky-right action column */}
       <div className="col-span-1 flex flex-col gap-1">
         <Button size="sm" variant="outline" className="h-7 text-[10px] px-1.5 justify-start" onClick={handleAddToDrl}>
           <Link2 className="h-3 w-3 mr-1" />Add to DRL
@@ -122,7 +163,7 @@ export function ChecklistHeader() {
     <div className="grid grid-cols-12 gap-3 px-3 py-2 border-b bg-muted/40 text-[10px] uppercase tracking-wide font-medium text-muted-foreground">
       <div className="col-span-1">No.</div>
       <div className="col-span-3">Questions</div>
-      <div className="col-span-1">Yes/No/N/A</div>
+      <div className="col-span-1">Answer</div>
       <div className="col-span-2">Response</div>
       <div className="col-span-1">Legal Basis</div>
       <div className="col-span-1">Impact</div>

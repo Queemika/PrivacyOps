@@ -14,6 +14,7 @@ import {
 } from "@/lib/inspections/store";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
 import { ReferencesPanel } from "@/components/ReferencesPanel";
+import { LinkedPiaBadge } from "@/components/pia/LinkedPiaBadge";
 import { toast } from "sonner";
 
 const YN_OPTS: YNA[] = ["Yes", "No", "N-A"];
@@ -101,6 +102,7 @@ export default function PhysicalInspection() {
         <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1.5" />Download CSV</Button>
       </>}
     >
+      <LinkedPiaBadge />
       <SectionTabs
         tabs={[
           { id: "summary", label: "Summary" },
