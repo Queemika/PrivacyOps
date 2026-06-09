@@ -54,6 +54,22 @@ export default function GeneratedPIA() {
   const [edit, setEdit] = useState(false);
   const [params] = useSearchParams();
   const uploadId = params.get("uploadId");
+  const piaId = params.get("piaId");
+
+  const annexes = useMemo(() => {
+    const rows = loadDrl().filter(r =>
+      r.category === "pia" && (!piaId || r.fields?.piaId === piaId)
+    );
+    return rows.flatMap(r => (r.attachments || []).map((a, i) => ({
+      drlNo: r.no,
+      title: r.fields?.request || r.fields?.field || "Attachment",
+      fileName: a.name,
+      mime: a.mime,
+      dataUrl: a.dataUrl,
+      key: `${r.id}-${i}`,
+    })));
+  }, [piaId]);
+
 
   const anonymizedTranscript = useMemo(() => {
     if (uploadId) {
