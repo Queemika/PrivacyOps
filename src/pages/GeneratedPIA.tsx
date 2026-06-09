@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { StatusChip } from "@/components/StatusChip";
-import { Download, Edit3, Sparkles, ShieldCheck, Send, FileLock2 } from "lucide-react";
+import { Download, Edit3, Sparkles, ShieldCheck, Send, FileLock2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { anonymizeText } from "@/lib/anonymize";
 import { transcriptSample } from "@/lib/mockData";
+import { loadDrl } from "@/lib/drl/store";
 
 interface UploadRecord {
   id: string;
