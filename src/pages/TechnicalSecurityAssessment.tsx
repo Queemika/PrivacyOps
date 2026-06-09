@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { defaultTechStack, TechItem } from "@/lib/templates/techStack";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
 import { ReferencesPanel } from "@/components/ReferencesPanel";
+import { LinkedPiaBadge } from "@/components/pia/LinkedPiaBadge";
 import { loadTechStackFull, saveTechStackFull, TechStackRow } from "@/lib/templates/techStackFull";
 import { toast } from "sonner";
 import { Lock, ShieldCheck, AlertCircle, ListChecks } from "lucide-react";
@@ -46,6 +47,7 @@ export default function TechnicalSecurityAssessment() {
       subtitle="Baseline controls evaluated against PH DPA, NPC issuances, and ISO 27001."
       actions={<Button variant="outline" onClick={() => { localStorage.removeItem(STORE); setItems(defaultTechStack); toast.success("Reset to template"); }}>Reset working file</Button>}
     >
+      <LinkedPiaBadge />
       <SectionTabs
         tabs={[
           { id: "summary", label: "Summary" },
