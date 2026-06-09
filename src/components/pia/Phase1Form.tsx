@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Phase1, Phase1Desc } from "@/lib/pia/schema";
 import { THRESHOLD_QUESTIONS, PHASE1_TOOLTIPS, DATA_COLLECTION_OPTIONS, DATA_STORAGE_OPTIONS, DATA_DISPOSAL_OPTIONS, INTEGRATION_OPTIONS, RECORD_VOLUME_OPTIONS } from "@/lib/pia/templates";
 import { isPiaRequired } from "@/lib/pia/store";
@@ -9,11 +10,25 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info, Plus, Trash2, Lock } from "lucide-react";
+import { ensureAutoDrl } from "@/lib/pia/drlAutoTrigger";
 
-export function Phase1Form({ value, onChange, phase1OnlyMode }: { value: Phase1; onChange: (next: Phase1) => void; phase1OnlyMode?: boolean }) {
+export function Phase1Form({ value, onChange, phase1OnlyMode, piaId, dpsName }: { value: Phase1; onChange: (next: Phase1) => void; phase1OnlyMode?: boolean; piaId?: string; dpsName?: string }) {
   const set = <K extends keyof Phase1>(k: K, v: Phase1[K]) => onChange({ ...value, [k]: v });
   const setDesc = (patch: Partial<Phase1Desc>) => onChange({ ...value, desc: { ...value.desc, ...patch } });
   const required = isPiaRequired(value);
+
+  // Auto-trigger System Design / TOR DRL item once context becomes meaningful.
+  useEffect(() => {
+    if (!piaId) return;
+    const hasContext =
+      !!value.desc.supportingDocs?.trim() ||
+      !!value.desc.systemFunction?.trim() ||
+      value.threshold?.T6?.yn === "Yes" ||
+      value.threshold?.T10?.yn === "Yes";
+    if (hasContext) {
+      ensureAutoDrl(piaId, "SystemDesignDoc", { dpsName, sourceField: "Phase 1 — Project Context", silent: true });
+    }
+  }, [piaId, dpsName, value.desc.supportingDocs, value.desc.systemFunction, value.threshold?.T6?.yn, value.threshold?.T10?.yn]);
 
   return (
     <div className="space-y-6">
