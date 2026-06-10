@@ -166,3 +166,88 @@ export default function EngagementManager() {
     </div>
   );
 }
+
+function EngagementSettingsButton({ engagement }: { engagement: Engagement }) {
+  const [open, setOpen] = useState(false);
+  const initial = useMemo(() => getEngagementCodenames(engagement.id), [engagement.id]);
+  const [client, setClient] = useState(initial.clientCodename);
+  const [team, setTeam] = useState(initial.myTeamCodename);
+  const [depts, setDepts] = useState<string[]>([]);
+  const [newDept, setNewDept] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const cur = getEngagementCodenames(engagement.id);
+    setClient(cur.clientCodename);
+    setTeam(cur.myTeamCodename);
+    setDepts(loadDepartments());
+  }, [open, engagement.id]);
+
+  const save = () => {
+    setEngagementCodenames(engagement.id, { clientCodename: client.trim() || "Client", myTeamCodename: team.trim() || "MyTeam" });
+    toast.success("Codenames saved");
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(true); }}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); e.preventDefault(); setOpen(true); } }}
+          className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted text-muted-foreground"
+          title="Engagement settings"
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+        </span>
+      </DialogTrigger>
+      <DialogContent onClick={(e) => e.stopPropagation()}>
+        <DialogHeader><DialogTitle>{engagement.clientName} — Settings</DialogTitle></DialogHeader>
+        <Tabs defaultValue="codenames">
+          <TabsList>
+            <TabsTrigger value="codenames">Codenames</TabsTrigger>
+            <TabsTrigger value="depts">Departments</TabsTrigger>
+          </TabsList>
+          <TabsContent value="codenames" className="space-y-3 pt-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Client codename</Label>
+              <Input value={client} onChange={(e) => setClient(e.target.value)} />
+              <p className="text-[11px] text-muted-foreground">Used as the "Client" option in DRL Owner.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">MyTeam codename</Label>
+              <Input value={team} onChange={(e) => setTeam(e.target.value)} />
+              <p className="text-[11px] text-muted-foreground">Used as the internal team option in DRL Owner.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={save}>Save</Button>
+            </DialogFooter>
+          </TabsContent>
+          <TabsContent value="depts" className="space-y-3 pt-3">
+            <p className="text-xs text-muted-foreground">Shared with Physical Inspection areas and DRL Assignment tags.</p>
+            <div className="flex gap-2">
+              <Input value={newDept} placeholder="New department" onChange={(e) => setNewDept(e.target.value)} onKeyDown={(e) => {
+                if (e.key === "Enter" && newDept.trim()) { addDepartment(newDept); setNewDept(""); setDepts(loadDepartments()); }
+              }} />
+              <Button size="sm" onClick={() => { if (newDept.trim()) { addDepartment(newDept); setNewDept(""); setDepts(loadDepartments()); } }}>Add</Button>
+            </div>
+            <div className="max-h-64 overflow-y-auto border rounded divide-y">
+              {depts.map(d => (
+                <div key={d} className="flex items-center justify-between px-2 py-1.5 text-xs">
+                  <span>{d}</span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { removeDepartment(d); setDepts(loadDepartments()); }}>
+                    <Trash2 className="h-3 w-3 text-rose-500" />
+                  </Button>
+                </div>
+              ))}
+              {depts.length === 0 && <div className="px-2 py-3 text-xs text-muted-foreground text-center">No departments yet.</div>}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
