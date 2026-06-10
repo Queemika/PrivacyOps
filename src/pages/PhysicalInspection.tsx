@@ -12,6 +12,7 @@ import { Plus, Download, Trash2, ChevronDown, Pencil, ListChecks, ShieldCheck, A
 import {
   loadAreas, saveAreas, InspectionArea, InspectionRow, YNA, DEFAULT_QUESTIONS,
 } from "@/lib/inspections/store";
+import { addDepartment, removeDepartment, renameDepartment } from "@/lib/departments/store";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
 import { ReferencesPanel } from "@/components/ReferencesPanel";
 import { LinkedPiaBadge } from "@/components/pia/LinkedPiaBadge";
