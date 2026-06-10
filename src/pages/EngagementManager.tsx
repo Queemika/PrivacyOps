@@ -100,7 +100,7 @@ export default function EngagementManager() {
             <button
               key={e.id}
               onClick={() => select(e.id)}
-              className="text-left"
+              className="text-left relative"
             >
               <Card className="hover:shadow-md hover:border-accent/40 transition-all">
                 <CardContent className="p-5">
@@ -108,12 +108,15 @@ export default function EngagementManager() {
                     <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", m.tint)}>
                       <ShieldCheck className="h-5 w-5" />
                     </div>
-                    <span className={cn(
-                      "text-[10px] px-2 py-0.5 rounded-full font-medium",
-                      m.status === "Active" && "bg-emerald-100 text-emerald-700",
-                      m.status === "On Hold" && "bg-amber-100 text-amber-700",
-                      m.status === "Closed" && "bg-slate-100 text-slate-600",
-                    )}>{m.status}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-[10px] px-2 py-0.5 rounded-full font-medium",
+                        m.status === "Active" && "bg-emerald-100 text-emerald-700",
+                        m.status === "On Hold" && "bg-amber-100 text-amber-700",
+                        m.status === "Closed" && "bg-slate-100 text-slate-600",
+                      )}>{m.status}</span>
+                      <EngagementSettingsButton engagement={e} />
+                    </div>
                   </div>
                   <div className="mt-3">
                     <div className="text-base font-semibold">{e.clientName}</div>
