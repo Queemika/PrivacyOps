@@ -1,70 +1,66 @@
-# PIA Logic Enhancements
+# DRL — Owner & Assignment Enhancements
 
-Five connected behaviors across the PIA module. All scoped to PIA UI + small helpers; no schema/migration changes.
+Five changes scoped to the DRL module + a small per-engagement settings panel and one notification email.
 
-## 1. Risk Trigger — show Risk columns only on "No"
+## 1. Rename "Assigned To" → "Owner" (codename dropdown)
 
-In `src/components/pia/ChecklistRow.tsx`:
-- Treat `yn === "No"` as the risk trigger. When `Yes` or `N/A`, hide / disable Impact, Probability, Rating cells (render dashes), and clear stored impact/probability/rating on transition to non-"No".
-- When switching to `No`, hydrate Impact/Probability from the seed defaults (`defaultImpact`, `defaultProbability`) if present, then auto-compute `rating`.
-- Update `ChecklistHeader` to keep column layout stable (cells render muted placeholder when hidden, so the grid doesn't shift).
+`src/pages/DrlGenerator.tsx`:
+- Rename `ASSIGNED_COL` label to `Owner`, key stays `assignedTo` (keeps existing data).
+- Change cell to a `Select` with two options: the engagement's **Client codename** and **MyTeam codename**.
+- Filter input above the table relabeled "Filter by owner…" and matches the two codename strings.
 
-## 2. Admin-configurable answer options
+## 2. Per-engagement codenames (Settings)
 
-New helper `src/lib/pia/answerConfig.ts` (localStorage `pia:answerOptions:v1`):
-- Default set = `["Yes", "No", "N/A"]`.
-- Optional per-section overrides (e.g., principles vs. rights) and optional custom validation rule per option (regex + message) that gates the `response` text field.
-- `ChecklistRow` reads options via `getAnswerOptions(sectionLabel)` instead of hard-coded items, and shows the validation message under `response` when the rule fails.
+Codenames are stored per engagement (per user choice):
+- New helper `src/lib/engagementSettings.ts` (localStorage `engagement:settings:v1`):
+  - `getEngagementCodenames(engagementId) → { client: string; myTeam: string }`
+  - Defaults: client = engagement's `clientName` (from `EngagementContext` / `listEngagements`), myTeam = "MyTeam".
+- New tab in `src/pages/EngagementManager.tsx` (or open in the engagement detail panel) → "Codenames" — two text inputs.
+- DRL reads the active engagement id from existing context (already used to scope rows) and resolves the two codename strings for the Owner dropdown.
 
-Admin UI: add a new tab in `src/pages/Settings.tsx` ("PIA Answers") to edit the option list and validation rules. No backend changes.
+## 3. New "Assignment" column (free-text department tags)
 
-## 3. DRL auto-triggers
+Added to every category in `SPEC` after `Owner`:
+- Stored in `DrlRow.fields.assignment` as a comma-separated list of department tag strings (no schema change to `store.ts` beyond a typed helper).
+- Cell renders chips + a small "+ tag" popover with:
+  - Autocomplete suggestions from the editable department list (see #5).
+  - Free-text entry — Enter adds a new chip; chips removable with ×.
+- New filter "Filter by assignment…" matches any chip substring.
 
-Centralize trigger rules in `src/lib/pia/drlAutoTrigger.ts`:
-| Source | Condition | DRL kind |
-|---|---|---|
-| Phase 1 – Project Context | On first save where `phase1.desc.supportingDocs` or `systemFunction` is non-empty, or when threshold T6/T10 = Yes | `SystemDesignDoc` ("System Design / TOR") |
-| Phase 3 – Transparency (GP-T1, GP-T2) | answer = `No` | `PrivacyNoticeFull` |
-| Phase 3 – Right to object (DSR-1, DSR-2, DSR-3) | answer = `No` | `ConsentForm` |
+## 4. Notification on assignment
 
-Implementation:
-- Helper `ensureDrlItem(piaId, kind, label)` — dedupes by `(piaId, kind)` using a tag in `fields.piaId` + `fields.kind`, calls `addRow("pia", ...)` only if missing, returns existing otherwise.
-- Hook into `Phase1Form` save effect (when first becoming non-empty) and `ChecklistRow` `onChange` (when yn flips to No for the trigger IDs).
-- Toast: "DRL item auto-created — Privacy Notice" (suppress if already exists).
+When a new chip is added to `assignment`:
+- **In-app**: insert into `notifications` table for users in the engagement whose profile email matches the tag (department tags without a matching user are stored as labels only, no notification).
+- **Email**: new edge function `notify-drl-assignment` using **Lovable Emails** (`send-transactional-email`) — sends to those matched users with subject "You were tagged on a DRL item" and a link back to `/drl?tab={category}&row={id}`.
+- Triggered from the DRL cell after `updateRow`, debounced 300ms per row.
+- Suppresses duplicates by tracking `fields.notifiedFor` (chip list already notified).
 
-## 4. Output — attachments as Annex on export
+Note: emails depend on a verified email domain. If none is configured, the email step is skipped silently and only the in-app bell fires; we surface a one-time toast telling the admin to set up the email domain.
 
-In the PIA export path (today `src/pages/GeneratedPIA.tsx` + `src/lib/pradarExport.ts`-style helpers — confirm and reuse the PIA export flow):
-- After the main document, append an **Annexes** section listing every DRL attachment linked to the PIA (`drlLinks` + scan rows where `category === "pia"` and `fields.piaId === pia.id`).
-- For each attachment: render label "Annex A — {drl no} {title}" with file name; image MIME types embed inline, other MIMEs render as a download/print placeholder block referencing the file name.
-- Print/PDF path uses the existing window-print pipeline (same approach as `DeckPreview`).
+## 5. Editable department list (linked to Physical Inspection)
 
-## 5. Cross-linking to TSA / Physical Inspection
-
-- `src/components/pia/Phase3Form.tsx`: add a small header CTA on the Physical Security and Technical Security cards.
-  - Physical Security → link `/inspection?piaId={piaId}` with label "Open in Physical Inspection".
-  - Technical Security → link `/tsa?piaId={piaId}` with label "Open in TSA".
-- Two-way: on `src/pages/PhysicalInspection.tsx` and `src/pages/TechnicalSecurityAssessment.tsx`, read `piaId` from query string and show a "Linked PIA" badge with a back-link to `/pia/{id}` (tab `p3`).
-- Add the two new entries to `RelatedLinks` in `PiaWorkspace.tsx`.
-- No data duplication — links only; status mirror is out of scope for this pass.
+Single source of truth for department tag suggestions:
+- New helper `src/lib/departments/store.ts` (localStorage `departments:v1`) seeded from `DEFAULT_AREAS` in `src/lib/inspections/store.ts`.
+- `loadDepartments()` / `saveDepartments(list)` / `addDepartment(name)` / `removeDepartment(name)`.
+- `PhysicalInspection.tsx` area-name editor writes through this helper so adds/edits/removes in the inspection module update DRL suggestions, and vice versa.
+- New "Departments" section in `EngagementManager.tsx` settings (admin-only) for direct editing without leaving DRL.
 
 ## Files
 
 **New**
-- `src/lib/pia/answerConfig.ts`
-- `src/lib/pia/drlAutoTrigger.ts`
+- `src/lib/engagementSettings.ts`
+- `src/lib/departments/store.ts`
+- `src/components/drl/AssignmentCell.tsx` (chips + popover)
+- `supabase/functions/notify-drl-assignment/index.ts`
 
 **Edited**
-- `src/components/pia/ChecklistRow.tsx` (risk gating, configurable options, trigger hook)
-- `src/components/pia/Phase1Form.tsx` (System Design DRL trigger)
-- `src/components/pia/Phase3Form.tsx` (cross-link CTAs)
-- `src/pages/PiaWorkspace.tsx` (RelatedLinks additions)
-- `src/pages/Settings.tsx` (Admin tab for answer options)
-- `src/pages/PhysicalInspection.tsx`, `src/pages/TechnicalSecurityAssessment.tsx` (PIA back-link)
-- `src/pages/GeneratedPIA.tsx` (Annex section on export)
+- `src/pages/DrlGenerator.tsx` (Owner select, Assignment column, filters)
+- `src/lib/drl/store.ts` (typed helpers only; no shape change)
+- `src/pages/EngagementManager.tsx` (Codenames + Departments tabs)
+- `src/pages/PhysicalInspection.tsx` (read/write departments via shared store)
 
 ## Out of scope
 
-- Editing PIA `schema.ts` or storage shape.
-- Server-side validation or new Supabase tables.
-- Auto-syncing TSA/Inspection findings into Phase 3 answers (links only).
+- Renaming the underlying `assignedTo` field/migration.
+- Per-row permission gating by owner.
+- SMS / Slack notifications.
