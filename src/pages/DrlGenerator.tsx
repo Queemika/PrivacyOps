@@ -109,6 +109,7 @@ const ALL_SPEC: ColSpec[] = [
   { key: "summary", label: "Item", width: 320, visible: true, kind: "text" },
   { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
   ASSIGNED_COL,
+  ASSIGNMENT_COL,
   { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
   { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
   { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
