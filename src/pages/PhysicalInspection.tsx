@@ -62,8 +62,10 @@ export default function PhysicalInspection() {
   const addArea = () => {
     const name = prompt("New area name?");
     if (!name) return;
+    const trimmed = name.trim();
+    addDepartment(trimmed);
     persist([...areas, {
-      id: `AREA-${Date.now()}`, name: name.trim(),
+      id: `AREA-${Date.now()}`, name: trimmed,
       rows: DEFAULT_QUESTIONS.map((q, i) => ({
         id: `q-${i}-${Date.now()}`, no: i + 1, question: q,
         status: "", remarks: "", observation: "", recommendation: "",
@@ -74,11 +76,19 @@ export default function PhysicalInspection() {
   const renameArea = (id: string) => {
     const cur = areas.find(a => a.id === id);
     const name = prompt("Rename area:", cur?.name || "");
-    if (name) updateArea(id, { name: name.trim() });
+    if (name) {
+      const trimmed = name.trim();
+      if (cur?.name) renameDepartment(cur.name, trimmed);
+      else addDepartment(trimmed);
+      updateArea(id, { name: trimmed });
+    }
   };
 
   const deleteArea = (id: string) => {
-    if (!confirm(`Delete area "${areas.find(a => a.id === id)?.name}"?`)) return;
+    const target = areas.find(a => a.id === id);
+    if (!target) return;
+    if (!confirm(`Delete area "${target.name}"?`)) return;
+    removeDepartment(target.name);
     persist(areas.filter(a => a.id !== id));
   };
 
