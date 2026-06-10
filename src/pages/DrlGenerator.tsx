@@ -467,7 +467,7 @@ function AllDrlView({ rows, refresh }: { rows: DrlRow[]; refresh: () => void }) 
             </SelectContent>
           </Select>
           <Input
-            placeholder="Filter by assignee…"
+            placeholder="Filter by owner…"
             value={assignedFilter}
             onChange={(e) => setAssignedFilter(e.target.value)}
             className="h-8 w-[200px] text-xs"
