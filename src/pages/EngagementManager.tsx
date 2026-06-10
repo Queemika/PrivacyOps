@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Briefcase, ShieldCheck, Plus } from "lucide-react";
+import { Briefcase, ShieldCheck, Plus, Settings2, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,14 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   loadEngagements, saveEngagements, setActiveEngagementId, createEngagement,
 } from "@/lib/pia/store";
 import type { Engagement } from "@/lib/pia/schema";
+import { getEngagementCodenames, setEngagementCodenames } from "@/lib/engagementSettings";
+import { loadDepartments, addDepartment, removeDepartment } from "@/lib/departments/store";
 import { toast } from "sonner";
 
 interface DemoMeta {
