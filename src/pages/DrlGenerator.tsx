@@ -11,17 +11,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, Settings2, RotateCcw } from "lucide-react";
 import { addRow, deleteRow, DrlCategory, DrlColumnConfig, DrlRow, DrlStatus, loadCols, loadDrl, saveCols, saveDrl, updateRow } from "@/lib/drl/store";
 import { PRADAR_SEEDS } from "@/lib/drl/seeds";
-import { loadPias } from "@/lib/pia/store";
+import { loadPias, getActiveEngagementId } from "@/lib/pia/store";
 import { toast } from "sonner";
 import { DrlAttachmentCell } from "@/components/DrlAttachmentCell";
 import { DateCell } from "@/components/DateCell";
 import { ExportMenu } from "@/components/ExportMenu";
+import { AssignmentCell } from "@/components/drl/AssignmentCell";
+import { getEngagementCodenames } from "@/lib/engagementSettings";
 
 const STATUSES: DrlStatus[] = ["Open", "Partially Received", "Under Inspection", "Closed", "Not Applicable", "Completed"];
 
-interface ColSpec extends DrlColumnConfig { kind?: "text" | "status" | "date" | "select"; options?: string[]; field?: boolean; }
+interface ColSpec extends DrlColumnConfig { kind?: "text" | "status" | "date" | "select" | "owner" | "assignment"; options?: string[]; field?: boolean; }
 
-const ASSIGNED_COL: ColSpec = { key: "assignedTo", label: "Assigned To", width: 130, visible: true, kind: "text" };
+const ASSIGNED_COL: ColSpec = { key: "assignedTo", label: "Owner", width: 140, visible: true, kind: "owner" };
+const ASSIGNMENT_COL: ColSpec = { key: "assignment", label: "Assignment", width: 220, visible: true, kind: "assignment", field: true };
 
 const SPEC: Record<DrlCategory, ColSpec[]> = {
   tsa: [
@@ -32,6 +35,7 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "requirement", label: "Requirement", width: 220, visible: true, field: true, kind: "text" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
     ASSIGNED_COL,
+    ASSIGNMENT_COL,
     { key: "tool", label: "Tool", width: 110, visible: true, field: true, kind: "text" },
     { key: "version", label: "Version", width: 80, visible: true, field: true, kind: "text" },
     { key: "managedBy", label: "Managed By", width: 120, visible: true, field: true, kind: "text" },
@@ -49,6 +53,7 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
     ASSIGNED_COL,
+    ASSIGNMENT_COL,
     { key: "coList", label: "Co-listed", width: 110, visible: true, field: true, kind: "text" },
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
@@ -64,6 +69,7 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
     ASSIGNED_COL,
+    ASSIGNMENT_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
@@ -76,6 +82,7 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
     ASSIGNED_COL,
+    ASSIGNMENT_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
@@ -88,6 +95,7 @@ const SPEC: Record<DrlCategory, ColSpec[]> = {
     { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
     { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
     ASSIGNED_COL,
+    ASSIGNMENT_COL,
     { key: "remarks", label: "Remarks", width: 180, visible: true, kind: "text" },
     { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
   ],
@@ -101,6 +109,7 @@ const ALL_SPEC: ColSpec[] = [
   { key: "summary", label: "Item", width: 320, visible: true, kind: "text" },
   { key: "status", label: "Status", width: 130, visible: true, kind: "status" },
   ASSIGNED_COL,
+  ASSIGNMENT_COL,
   { key: "dateRequested", label: "Date Requested", width: 130, visible: true, kind: "date" },
   { key: "dateReceived", label: "Date Received", width: 130, visible: true, kind: "date" },
   { key: "attachment", label: "Attachment", width: 130, visible: true, kind: "text" },
@@ -304,6 +313,31 @@ function CellEditor({ row, col, onChange }: { row: DrlRow; col: ColSpec; onChang
       </Select>
     );
   }
+  if (col.kind === "owner") {
+    const codes = getEngagementCodenames(getActiveEngagementId());
+    const opts = Array.from(new Set([codes.clientCodename, codes.myTeamCodename].filter(Boolean)));
+    return (
+      <Select value={value || undefined} onValueChange={commit}>
+        <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+        <SelectContent>{opts.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+      </Select>
+    );
+  }
+  if (col.kind === "assignment") {
+    return (
+      <AssignmentCell
+        rowId={row.id}
+        drlNo={`${row.category.toUpperCase()}-${String(row.no).padStart(3, "0")}`}
+        category={row.category}
+        value={row.fields.assignment || ""}
+        notifiedFor={row.fields.assignmentNotified || ""}
+        onChange={({ assignment, notifiedFor }) => {
+          updateRow(row.id, { fields: { assignment, assignmentNotified: notifiedFor } });
+          onChange();
+        }}
+      />
+    );
+  }
   if (col.kind === "select" && col.options) {
     return (
       <Select value={value} onValueChange={commit}>
@@ -433,7 +467,7 @@ function AllDrlView({ rows, refresh }: { rows: DrlRow[]; refresh: () => void }) 
             </SelectContent>
           </Select>
           <Input
-            placeholder="Filter by assignee…"
+            placeholder="Filter by owner…"
             value={assignedFilter}
             onChange={(e) => setAssignedFilter(e.target.value)}
             className="h-8 w-[200px] text-xs"

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Briefcase, ShieldCheck, Plus } from "lucide-react";
+import { Briefcase, ShieldCheck, Plus, Settings2, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,14 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   loadEngagements, saveEngagements, setActiveEngagementId, createEngagement,
 } from "@/lib/pia/store";
 import type { Engagement } from "@/lib/pia/schema";
+import { getEngagementCodenames, setEngagementCodenames } from "@/lib/engagementSettings";
+import { loadDepartments, addDepartment, removeDepartment } from "@/lib/departments/store";
 import { toast } from "sonner";
 
 interface DemoMeta {
@@ -97,7 +100,7 @@ export default function EngagementManager() {
             <button
               key={e.id}
               onClick={() => select(e.id)}
-              className="text-left"
+              className="text-left relative"
             >
               <Card className="hover:shadow-md hover:border-accent/40 transition-all">
                 <CardContent className="p-5">
@@ -105,12 +108,15 @@ export default function EngagementManager() {
                     <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", m.tint)}>
                       <ShieldCheck className="h-5 w-5" />
                     </div>
-                    <span className={cn(
-                      "text-[10px] px-2 py-0.5 rounded-full font-medium",
-                      m.status === "Active" && "bg-emerald-100 text-emerald-700",
-                      m.status === "On Hold" && "bg-amber-100 text-amber-700",
-                      m.status === "Closed" && "bg-slate-100 text-slate-600",
-                    )}>{m.status}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-[10px] px-2 py-0.5 rounded-full font-medium",
+                        m.status === "Active" && "bg-emerald-100 text-emerald-700",
+                        m.status === "On Hold" && "bg-amber-100 text-amber-700",
+                        m.status === "Closed" && "bg-slate-100 text-slate-600",
+                      )}>{m.status}</span>
+                      <EngagementSettingsButton engagement={e} />
+                    </div>
                   </div>
                   <div className="mt-3">
                     <div className="text-base font-semibold">{e.clientName}</div>
@@ -158,5 +164,90 @@ export default function EngagementManager() {
         </Dialog>
       </div>
     </div>
+  );
+}
+
+function EngagementSettingsButton({ engagement }: { engagement: Engagement }) {
+  const [open, setOpen] = useState(false);
+  const initial = useMemo(() => getEngagementCodenames(engagement.id), [engagement.id]);
+  const [client, setClient] = useState(initial.clientCodename);
+  const [team, setTeam] = useState(initial.myTeamCodename);
+  const [depts, setDepts] = useState<string[]>([]);
+  const [newDept, setNewDept] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const cur = getEngagementCodenames(engagement.id);
+    setClient(cur.clientCodename);
+    setTeam(cur.myTeamCodename);
+    setDepts(loadDepartments());
+  }, [open, engagement.id]);
+
+  const save = () => {
+    setEngagementCodenames(engagement.id, { clientCodename: client.trim() || "Client", myTeamCodename: team.trim() || "MyTeam" });
+    toast.success("Codenames saved");
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(true); }}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); e.preventDefault(); setOpen(true); } }}
+          className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted text-muted-foreground"
+          title="Engagement settings"
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+        </span>
+      </DialogTrigger>
+      <DialogContent onClick={(e) => e.stopPropagation()}>
+        <DialogHeader><DialogTitle>{engagement.clientName} — Settings</DialogTitle></DialogHeader>
+        <Tabs defaultValue="codenames">
+          <TabsList>
+            <TabsTrigger value="codenames">Codenames</TabsTrigger>
+            <TabsTrigger value="depts">Departments</TabsTrigger>
+          </TabsList>
+          <TabsContent value="codenames" className="space-y-3 pt-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Client codename</Label>
+              <Input value={client} onChange={(e) => setClient(e.target.value)} />
+              <p className="text-[11px] text-muted-foreground">Used as the "Client" option in DRL Owner.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">MyTeam codename</Label>
+              <Input value={team} onChange={(e) => setTeam(e.target.value)} />
+              <p className="text-[11px] text-muted-foreground">Used as the internal team option in DRL Owner.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button onClick={save}>Save</Button>
+            </DialogFooter>
+          </TabsContent>
+          <TabsContent value="depts" className="space-y-3 pt-3">
+            <p className="text-xs text-muted-foreground">Shared with Physical Inspection areas and DRL Assignment tags.</p>
+            <div className="flex gap-2">
+              <Input value={newDept} placeholder="New department" onChange={(e) => setNewDept(e.target.value)} onKeyDown={(e) => {
+                if (e.key === "Enter" && newDept.trim()) { addDepartment(newDept); setNewDept(""); setDepts(loadDepartments()); }
+              }} />
+              <Button size="sm" onClick={() => { if (newDept.trim()) { addDepartment(newDept); setNewDept(""); setDepts(loadDepartments()); } }}>Add</Button>
+            </div>
+            <div className="max-h-64 overflow-y-auto border rounded divide-y">
+              {depts.map(d => (
+                <div key={d} className="flex items-center justify-between px-2 py-1.5 text-xs">
+                  <span>{d}</span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { removeDepartment(d); setDepts(loadDepartments()); }}>
+                    <Trash2 className="h-3 w-3 text-rose-500" />
+                  </Button>
+                </div>
+              ))}
+              {depts.length === 0 && <div className="px-2 py-3 text-xs text-muted-foreground text-center">No departments yet.</div>}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }
