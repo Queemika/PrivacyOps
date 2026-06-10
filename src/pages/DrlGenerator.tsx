@@ -313,6 +313,31 @@ function CellEditor({ row, col, onChange }: { row: DrlRow; col: ColSpec; onChang
       </Select>
     );
   }
+  if (col.kind === "owner") {
+    const codes = getEngagementCodenames(getActiveEngagementId());
+    const opts = Array.from(new Set([codes.clientCodename, codes.myTeamCodename].filter(Boolean)));
+    return (
+      <Select value={value || undefined} onValueChange={commit}>
+        <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+        <SelectContent>{opts.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+      </Select>
+    );
+  }
+  if (col.kind === "assignment") {
+    return (
+      <AssignmentCell
+        rowId={row.id}
+        drlNo={`${row.category.toUpperCase()}-${String(row.no).padStart(3, "0")}`}
+        category={row.category}
+        value={row.fields.assignment || ""}
+        notifiedFor={row.fields.assignmentNotified || ""}
+        onChange={({ assignment, notifiedFor }) => {
+          updateRow(row.id, { fields: { assignment, assignmentNotified: notifiedFor } });
+          onChange();
+        }}
+      />
+    );
+  }
   if (col.kind === "select" && col.options) {
     return (
       <Select value={value} onValueChange={commit}>
