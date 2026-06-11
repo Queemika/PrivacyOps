@@ -11,13 +11,16 @@ interface Props {
   rowId: string;
   drlNo: string;
   category: string;
-  value: string;                     // comma-separated chips
-  notifiedFor: string;               // comma-separated chips already notified
+  value: string; // comma-separated chips
+  notifiedFor: string; // comma-separated chips already notified
   onChange: (next: { assignment: string; notifiedFor: string }) => void;
 }
 
 function parse(s: string): string[] {
-  return (s || "").split(",").map(x => x.trim()).filter(Boolean);
+  return (s || "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onChange }: Props) {
@@ -28,20 +31,22 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
   const [departments, setDepartments] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setDepartments(loadDepartments()); }, [open]);
+  useEffect(() => {
+    setDepartments(loadDepartments());
+  }, [open]);
 
   const suggestions = useMemo(() => {
     const q = text.trim().toLowerCase();
     return departments
-      .filter(d => !chips.includes(d))
-      .filter(d => !q || d.toLowerCase().includes(q))
+      .filter((d) => !chips.includes(d))
+      .filter((d) => !q || d.toLowerCase().includes(q))
       .slice(0, 8);
   }, [departments, chips, text]);
 
   const commit = (nextChips: string[]) => {
     const assignment = nextChips.join(", ");
     // figure out newly added chips (not in old chips, not in notified)
-    const added = nextChips.filter(c => !chips.includes(c) && !notified.has(c));
+    const added = nextChips.filter((c) => !chips.includes(c) && !notified.has(c));
     const nextNotified = Array.from(new Set([...Array.from(notified), ...added])).join(", ");
     onChange({ assignment, notifiedFor: nextNotified });
     if (added.length) fireNotifications(added);
@@ -49,24 +54,76 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
 
   const fireNotifications = async (added: string[]) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log("=== fireNotifications START ===");
+      console.log("Added tags:", added);
+      console.log("rowId:", rowId);
+      console.log("drlNo:", drlNo);
+      console.log("category:", category);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      console.log("Auth result:", {
+        user: user?.id,
+        email: user?.email,
+        error: userError,
+      });
+
       if (user) {
-        await supabase.from("notifications").insert({
+        const { error: notificationError } = await supabase.from("notifications").insert({
           user_id: user.id,
           kind: "assignment",
           title: `DRL ${drlNo} assigned to ${added.join(", ")}`,
           body: `New assignment tag(s) added on ${category.toUpperCase()} DRL ${drlNo}.`,
           link: `/drl?tab=${category}&row=${rowId}`,
-          meta: { rowId, drlNo, category, tags: added },
+          meta: {
+            rowId,
+            drlNo,
+            category,
+            tags: added,
+          },
+        });
+
+        console.log("Notification insert result:", {
+          success: !notificationError,
+          error: notificationError,
         });
       }
-      // fire-and-forget email
-      supabase.functions.invoke("notify-drl-assignment", {
-        body: { rowId, drlNo, category, tags: added, link: `/drl?tab=${category}&row=${rowId}` },
-      }).catch(() => { /* silently ignore */ });
+
+      console.log("About to invoke notify-drl-assignment");
+
+      const { data, error } = await supabase.functions.invoke("notify-drl-assignment", {
+        body: {
+          rowId,
+          drlNo,
+          category,
+          tags: added,
+          link: `/drl?tab=${category}&row=${rowId}`,
+        },
+      });
+
+      console.log("Function invoke response:", {
+        data,
+        error,
+      });
+
+      if (error) {
+        console.error("notify-drl-assignment invoke failed:", error);
+
+        toast.error(`Email notification failed: ${error.message ?? "Unknown error"}`);
+
+        return;
+      }
+
+      console.log("notify-drl-assignment succeeded");
+
       toast.success(`Notified: ${added.join(", ")}`);
-    } catch {
-      /* offline / not signed in — chips still saved */
+    } catch (error) {
+      console.error("fireNotifications error:", error);
+
+      toast.error(error instanceof Error ? error.message : "Failed to send notification");
     }
   };
 
@@ -83,13 +140,16 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
     inputRef.current?.focus();
   };
   const removeChip = (c: string) => {
-    commit(chips.filter(x => x !== c));
+    commit(chips.filter((x) => x !== c));
   };
 
   return (
     <div className="flex flex-wrap gap-1 items-center">
-      {chips.map(c => (
-        <span key={c} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent/10 text-accent text-[10px] border border-accent/20">
+      {chips.map((c) => (
+        <span
+          key={c}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent/10 text-accent text-[10px] border border-accent/20"
+        >
           {c}
           <button type="button" onClick={() => removeChip(c)} className="hover:text-rose-500">
             <X className="h-2.5 w-2.5" />
@@ -99,7 +159,8 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button size="sm" variant="ghost" className="h-5 px-1.5 text-[10px]">
-            <Plus className="h-2.5 w-2.5 mr-0.5" />tag
+            <Plus className="h-2.5 w-2.5 mr-0.5" />
+            tag
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-2" align="start">
@@ -109,12 +170,15 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); addChip(text); }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addChip(text);
+              }
             }}
             className="h-7 text-xs mb-2"
           />
           <div className="max-h-48 overflow-y-auto space-y-0.5">
-            {suggestions.map(s => (
+            {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"
