@@ -31,11 +31,12 @@ export function AssignTaskPopover({
 
   async function submit() {
     if (!assignee) { toast.error("Pick an assignee"); return; }
+    if (!engagementId) { toast.error("No engagement context"); return; }
     setBusy(true);
     const { error } = await supabase.from("module_assignments").insert({
       module,
       record_id: recordId,
-      engagement_id: engagementId || null,
+      engagement_id: engagementId,
       assignee_id: assignee,
       assigned_by: user?.id,
       due_date: due || null,
