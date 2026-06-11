@@ -44,6 +44,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import CalendarPage from "./pages/CalendarPage";
 import ProgressPage from "./pages/Progress";
 import SearchResults from "./pages/SearchResults";
+import MyTasks from "./pages/MyTasks";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
