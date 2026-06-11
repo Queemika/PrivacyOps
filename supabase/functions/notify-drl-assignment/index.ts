@@ -1,15 +1,11 @@
 Deno.serve(async () => {
+  const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
+  const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
+
   return new Response(
     JSON.stringify({
-      version: "TEST-2026-06-11",
-      success: true,
-      message: "You reached the correct function",
+      hasResendKey: !!RESEND_KEY,
+      hasLovableKey: !!LOVABLE_KEY,
     }),
-    {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    },
   );
 });
