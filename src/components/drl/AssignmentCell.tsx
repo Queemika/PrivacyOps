@@ -52,27 +52,26 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
     if (added.length) fireNotifications(added);
   };
 
-  const fireNotifications = async (added: string[]) => {
-    try {
-      console.log("=== fireNotifications START ===");
-      console.log("Added tags:", added);
-      console.log("rowId:", rowId);
-      console.log("drlNo:", drlNo);
-      console.log("category:", category);
+const fireNotifications = async (added: string[]) => {
+  try {
+    console.log("=== fireNotifications START ===");
+    console.log("Added tags:", added);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-      console.log("Auth result:", {
-        user: user?.id,
-        email: user?.email,
-        error: userError,
-      });
+    console.log("Auth result:", {
+      user: user?.id,
+      email: user?.email,
+      error: userError,
+    });
 
-      if (user) {
-        const { error: notificationError } = await supabase.from("notifications").insert({
+    if (user) {
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert({
           user_id: user.id,
           kind: "assignment",
           title: `DRL ${drlNo} assigned to ${added.join(", ")}`,
@@ -86,31 +85,60 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
           },
         });
 
-        console.log("Notification insert result:", {
-          success: !notificationError,
-          error: notificationError,
-        });
-      }
-
-      console.log("About to invoke notify-drl-assignment");
-
-      const response = await supabase.functions.invoke(
-    "notify-drl-assignment",
-    {
-      body: {
-        rowId,
-        drlNo,
-        category,
-        tags: added,
-        link: `/drl?tab=${category}&row=${rowId}`,
-      },
+      console.log("Notification insert result:", {
+        success: !notificationError,
+        error: notificationError,
+      });
     }
-  );
-  
-  console.log("FULL RESPONSE", response);
-  
-  if (response.error) {
-  console.log("ERROR OBJECT", response.error);
+
+    console.log("About to invoke notify-drl-assignment");
+
+    const response = await supabase.functions.invoke(
+      "notify-drl-assignment",
+      {
+        body: {
+          rowId,
+          drlNo,
+          category,
+          tags: added,
+          link: `/drl?tab=${category}&row=${rowId}`,
+        },
+      }
+    );
+
+    console.log("FULL RESPONSE", response);
+
+    if (response.error) {
+      console.error("Function Error:", response.error);
+
+      alert(
+        JSON.stringify(
+          {
+            data: response.data,
+            error: response.error,
+            response: (response.error as any)?.context ?? null,
+          },
+          null,
+          2
+        )
+      );
+
+      return;
+    }
+
+    console.log("SUCCESS:", response.data);
+
+    toast.success(`Notified: ${added.join(", ")}`);
+  } catch (error) {
+    console.error("fireNotifications error:", error);
+
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Failed to send notification"
+    );
+  }
+};
 
   const rawResponse = response.error.context as Response;
 
