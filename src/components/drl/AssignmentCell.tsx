@@ -110,23 +110,23 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
   console.log("FULL RESPONSE", response);
   
   if (response.error) {
-    console.log("ERROR OBJECT", response.error);
-  
-    const rawResponse = response.error.context as Response;
-  
-    if (rawResponse) {
-      console.log("STATUS", rawResponse.status);
-      console.log("STATUS TEXT", rawResponse.statusText);
-  
-      try {
-        const bodyText = await rawResponse.text();
-        console.log("RAW BODY", bodyText);
-        alert(bodyText);
-      } catch (e) {
-        console.error("Could not read response body", e);
-      }
+  console.log("ERROR OBJECT", response.error);
+
+  const rawResponse = response.error.context as Response;
+
+  if (rawResponse) {
+    console.log("STATUS", rawResponse.status);
+    console.log("STATUS TEXT", rawResponse.statusText);
+
+    try {
+      const bodyText = await rawResponse.text();
+      console.log("RAW BODY", bodyText);
+      alert(bodyText);
+    } catch (e) {
+      console.error("Could not read response body", e);
     }
   }
+}
 
   const addChip = (raw: string) => {
     const v = raw.trim();
