@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Upload, Library, BarChart3, ListChecks,
-  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText, Calendar as CalendarIcon, Gauge,
+  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText, Calendar as CalendarIcon, Gauge, CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
