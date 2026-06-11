@@ -17,6 +17,7 @@ import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, Boo
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { PresenceStrip } from "@/components/cowork/PresenceStrip";
 
 export default function PiaWorkspace() {
   const { id } = useParams();
