@@ -191,7 +191,6 @@ for insert
 to authenticated
 with check (
   user_id = auth.uid()
-  and user_email = auth.jwt() ->> 'email'
 );
 
 create policy "audit_log: self read"
