@@ -94,7 +94,7 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
 
       console.log("About to invoke notify-drl-assignment");
 
-      const { data, error } = await supabase.functions.invoke("notify-drl-assignment", {
+      const response = await supabase.functions.invoke("notify-drl-assignment", {
         body: {
           rowId,
           drlNo,
@@ -104,10 +104,9 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
         },
       });
 
-      console.log("Function invoke response:", {
-        data,
-        error,
-      });
+      console.log("FULL RESPONSE", response);
+
+      alert(JSON.stringify(response, null, 2));
 
       if (error) {
         console.error("notify-drl-assignment invoke failed:", error);
