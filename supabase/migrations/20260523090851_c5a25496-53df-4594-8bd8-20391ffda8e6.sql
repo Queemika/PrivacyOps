@@ -48,6 +48,7 @@ with check (
 );
 
 -- ============ ROLES ============
+
 create table public.user_roles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -55,20 +56,41 @@ create table public.user_roles (
   created_at timestamptz not null default now(),
   unique (user_id, role)
 );
+
 alter table public.user_roles enable row level security;
 
-create or replace function public.has_role(_user_id uuid, _role public.app_role)
+create or replace function public.has_role(
+  _user_id uuid,
+  _role public.app_role
+)
 returns boolean
-language sql stable security definer set search_path = public
+language sql
+stable
+security definer
+set search_path = public
 as $$
-  select exists (select 1 from public.user_roles where user_id = _user_id and role = _role)
+  select exists (
+    select 1
+    from public.user_roles
+    where user_id = _user_id
+      and role = _role
+  );
 $$;
 
-create policy "user_roles: self read" on public.user_roles for select using (auth.uid() = user_id or public.has_role(auth.uid(), 'Admin'));
-create policy "user_roles: admin write" on public.user_roles for all using (public.has_role(auth.uid(), 'Admin')) with check (public.has_role(auth.uid(), 'Admin'));
+-- Users can view their own roles
+-- Admins can view all roles
 
--- Allow admins to see all profiles (added after has_role exists)
-create policy "profiles: admin read" on public.profiles for select using (public.has_role(auth.uid(), 'Admin'));
+create policy "user_roles: read"
+on public.user_roles
+for select
+to authenticated
+using (
+  user_id = auth.uid()
+  or public.has_role(auth.uid(), 'Admin')
+);
+
+-- No insert/update/delete policies for normal users
+-- Admin role management should be handled through RPCs or service role
 
 -- ============ ENGAGEMENTS ============
 create table public.engagements (
