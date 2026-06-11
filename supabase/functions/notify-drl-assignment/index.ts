@@ -1,10 +1,11 @@
 Deno.serve(async () => {
-  console.log("HELLO TEST");
+  const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
+  const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
 
   return new Response(
     JSON.stringify({
-      ok: true,
-      message: "Edge Function works",
+      hasResendKey: !!RESEND_KEY,
+      hasLovableKey: !!LOVABLE_KEY,
     }),
     {
       headers: {
