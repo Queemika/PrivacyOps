@@ -74,51 +74,21 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
         });
       }
 
-      const response = await supabase.functions.invoke("notify-drl-assignment", {
-        body: {
-          rowId,
-          drlNo,
-          category,
-          tags: added,
-          link: `/drl?tab=${category}&row=${rowId}`,
-        },
-      });
+      // Email temporarily disabled
+      // await supabase.functions.invoke("notify-drl-assignment", {
+      //   body: {
+      //     rowId,
+      //     drlNo,
+      //     category,
+      //     tags: added,
+      //     link: `/drl?tab=${category}&row=${rowId}`,
+      //   },
+      // });
 
-      console.log("FULL RESPONSE", response);
-
-      if (response.error) {
-        console.error("FULL ERROR", response.error);
-
-        const err = response.error as any;
-
-        let responseText = "";
-
-        try {
-          if (err.context instanceof Response) {
-            responseText = await err.context.text();
-          }
-        } catch (e) {
-          responseText = `Could not read response body: ${String(e)}`;
-        }
-
-        alert(
-          JSON.stringify(
-            {
-              name: err.name,
-              message: err.message,
-              responseBody: responseText,
-            },
-            null,
-            2,
-          ),
-        );
-
-        return;
-      }
-
-      toast.success(`Notified: ${added.join(", ")}`);
+      toast.success(`Assigned: ${added.join(", ")}`);
     } catch (error) {
       console.error("fireNotifications error:", error);
+      toast.error("Failed to create notification");
     }
   };
 
