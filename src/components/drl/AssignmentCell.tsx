@@ -74,7 +74,7 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
         });
       }
 
-      const response = await supabase.functions.invoke("notify-drl-assignment-TEST", {
+      const response = await supabase.functions.invoke("notify-drl-assignment", {
         body: {
           rowId,
           drlNo,
