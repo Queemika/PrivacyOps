@@ -16,7 +16,7 @@ export function AssignTaskPopover({
 }: {
   module: string;
   recordId: string;
-  engagementId?: string | null;
+  engagementId: string;
   trigger?: React.ReactNode;
 }) {
   const { user } = useAuth();
