@@ -94,7 +94,9 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
 
       console.log("About to invoke notify-drl-assignment");
 
-    const response = await supabase.functions.invoke("notify-drl-assignment", {
+      const response = await supabase.functions.invoke(
+    "notify-drl-assignment",
+    {
       body: {
         rowId,
         drlNo,
@@ -102,11 +104,29 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
         tags: added,
         link: `/drl?tab=${category}&row=${rowId}`,
       },
-    });
-
+    }
+  );
+  
   console.log("FULL RESPONSE", response);
   
-  alert(JSON.stringify(response, null, 2));
+  if (response.error) {
+    console.log("ERROR OBJECT", response.error);
+  
+    const rawResponse = response.error.context as Response;
+  
+    if (rawResponse) {
+      console.log("STATUS", rawResponse.status);
+      console.log("STATUS TEXT", rawResponse.statusText);
+  
+      try {
+        const bodyText = await rawResponse.text();
+        console.log("RAW BODY", bodyText);
+        alert(bodyText);
+      } catch (e) {
+        console.error("Could not read response body", e);
+      }
+    }
+  }
 
   const addChip = (raw: string) => {
     const v = raw.trim();
