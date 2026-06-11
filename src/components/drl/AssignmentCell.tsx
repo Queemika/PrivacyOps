@@ -94,38 +94,19 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
 
       console.log("About to invoke notify-drl-assignment");
 
-      const { data, error } = await supabase.functions.invoke("notify-drl-assignment", {
-        body: {
-          rowId,
-          drlNo,
-          category,
-          tags: added,
-          link: `/drl?tab=${category}&row=${rowId}`,
-        },
-      });
+    const response = await supabase.functions.invoke("notify-drl-assignment", {
+      body: {
+        rowId,
+        drlNo,
+        category,
+        tags: added,
+        link: `/drl?tab=${category}&row=${rowId}`,
+      },
+    });
 
-      console.log("Function invoke response:", {
-        data,
-        error,
-      });
-
-      if (error) {
-        console.error("notify-drl-assignment invoke failed:", error);
-
-        toast.error(`Email notification failed: ${error.message ?? "Unknown error"}`);
-
-        return;
-      }
-
-      console.log("notify-drl-assignment succeeded");
-
-      toast.success(`Notified: ${added.join(", ")}`);
-    } catch (error) {
-      console.error("fireNotifications error:", error);
-
-      toast.error(error instanceof Error ? error.message : "Failed to send notification");
-    }
-  };
+  console.log("FULL RESPONSE", response);
+  
+  alert(JSON.stringify(response, null, 2));
 
   const addChip = (raw: string) => {
     const v = raw.trim();
