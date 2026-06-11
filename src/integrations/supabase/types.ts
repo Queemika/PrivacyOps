@@ -393,6 +393,7 @@ export type Database = {
           module: string
           notes: string | null
           record_id: string | null
+          status: string
         }
         Insert: {
           assigned_by?: string | null
@@ -404,6 +405,7 @@ export type Database = {
           module: string
           notes?: string | null
           record_id?: string | null
+          status?: string
         }
         Update: {
           assigned_by?: string | null
@@ -415,6 +417,7 @@ export type Database = {
           module?: string
           notes?: string | null
           record_id?: string | null
+          status?: string
         }
         Relationships: [
           {
