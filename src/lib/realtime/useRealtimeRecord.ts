@@ -21,7 +21,7 @@ export function useRealtimeRecord<T extends { id: string; updated_by?: string | 
     setLoading(true);
     (async () => {
       const { data } = await supabase.from(table).select("*").eq("id", id).maybeSingle();
-      if (!cancelled) { setRecord(data as T); setLoading(false); }
+      if (!cancelled) { setRecord(data as unknown as T); setLoading(false); }
     })();
     const ch = supabase
       .channel(`rt:${table}:${id}`)
