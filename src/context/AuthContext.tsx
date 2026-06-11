@@ -2,7 +2,15 @@ import { useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import type { Session, User } from "@supabase/supabase-js";
-import { AuthContextObject, AuthUser, AuditEntry, AuthCtx, LoginResult, OtpResult, isDemoUser } from "./auth-context-base";
+import {
+  AuthContextObject,
+  AuthUser,
+  AuditEntry,
+  AuthCtx,
+  LoginResult,
+  OtpResult,
+  isDemoUser,
+} from "./auth-context-base";
 
 export { useAuth, validateCorporateEmail, isInternalEmail } from "./auth-context-base";
 export type { AuthUser, AuditEntry, LoginResult } from "./auth-context-base";
@@ -24,14 +32,36 @@ function toAuthUser(u: User | null): AuthUser | null {
 }
 
 async function callFn(name: string, body: Record<string, unknown>): Promise<OtpResult> {
-  const { data, error } = await supabase.functions.invoke(name, { body });
+  const result = await supabase.functions.invoke(name, { body });
+
+  console.log("FUNCTION RESULT:", name, result);
+
+  const { data, error } = result;
+
   if (error) {
-    const d = (data ?? {}) as OtpResult;
-    return { ok: false, error: d.error || error.message, cooldownSeconds: d.cooldownSeconds };
+    console.error("FUNCTION ERROR:", error);
+
+    return {
+      ok: false,
+      error: JSON.stringify(error),
+    };
   }
+
   const d = (data ?? {}) as OtpResult;
-  if (d.error || d.ok === false) return { ok: false, error: d.error || "Request failed", cooldownSeconds: d.cooldownSeconds };
-  return { ok: true, devCode: d.devCode, devNotice: d.devNotice, alreadySent: d.alreadySent, cooldownSeconds: d.cooldownSeconds };
+
+  console.log("FUNCTION DATA:", d);
+
+  if (d.error || d.ok === false) {
+    return {
+      ok: false,
+      error: d.error || "Request failed",
+    };
+  }
+
+  return {
+    ok: true,
+    ...d,
+  };
 }
 
 const OTP_SEND_COOLDOWN_MS = 30_000;
@@ -192,7 +222,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContextObject.Provider
-      value={{ user, ready, login, verifyLoginOtp, resendLoginOtp, signup, loginWithGoogle, logout, logAction, auditLog }}
+      value={{
+        user,
+        ready,
+        login,
+        verifyLoginOtp,
+        resendLoginOtp,
+        signup,
+        loginWithGoogle,
+        logout,
+        logAction,
+        auditLog,
+      }}
     >
       {children}
     </AuthContextObject.Provider>
