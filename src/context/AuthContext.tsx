@@ -17,11 +17,20 @@ export type { AuthUser, AuditEntry, LoginResult } from "./auth-context-base";
 
 function toAuthUser(u: User | null): AuthUser | null {
   if (!u) return null;
+
   const meta = (u.user_metadata || {}) as Record<string, string>;
   const appMeta = (u.app_metadata || {}) as Record<string, unknown>;
+
+  console.log("AUTH USER:", {
+    email: u.email,
+    appMeta,
+    mfaVerified: !!appMeta.mfa_verified_at,
+  });
+
   const fullName = meta.full_name || meta.name || "";
   const [fnPart, ...rest] = fullName.split(" ");
   const email = u.email || "";
+
   return {
     id: u.id,
     email,

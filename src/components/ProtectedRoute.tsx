@@ -4,6 +4,13 @@ import { ReactNode } from "react";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth();
+
+  console.log("PROTECTED ROUTE:", {
+    ready,
+    user,
+    mfaVerified: user?.mfaVerified,
+  });
+
   const loc = useLocation();
   if (!ready) return null;
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
