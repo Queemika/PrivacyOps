@@ -112,3 +112,18 @@ Matrix (summary):
 - Hard row locking.
 - Per-section (sub-phase) review gates — workflow is per-record.
 - Slack/Teams notifications (email + in-app only).
+
+## Shipped (iteration 1)
+
+- Schema, RLS, GRANTs, realtime publication, `change_log` + `log_workable_change` trigger.
+- Realtime infra: `usePresence`, `useRealtimeRecord`, `PresenceAvatars`, `PresenceStrip`, `FieldFocusRing`.
+- Workflow: `permissions.ts`, `ReviewBar`, `RecordHistory`, `AssignTaskPopover`.
+- Pages: `/tasks` (My Tasks board), upgraded `/audit` (workable vs system tabs, filters, diff view, CSV export).
+- PiaWorkspace shows live presence avatars via `PresenceStrip`.
+- Sidebar entry for My Tasks.
+
+## Deferred to iteration 2
+
+- Migrating PIA/DRL/Inspection/TSA/ROPA persistence from `localStorage` to the new DB tables. Hooks (`useRealtimeRecord`) and the `ReviewBar`/`RecordHistory` components are ready to drop in once each module has a DB-backed record. The localStorage `ENG-${ts}` engagement ids do not satisfy the uuid FK on `engagements`, so the migration includes wiring local engagements to real `engagements` rows.
+- Mounting `ReviewBar`/`RecordHistory`/`AssignTaskPopover` into every workable header (depends on the DB migration above).
+- `FieldFocusRing` on individual form inputs (depends on `useRealtimeRecord` integration).
