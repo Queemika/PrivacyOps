@@ -75,7 +75,7 @@ const fireNotifications = async (added: string[]) => {
     }
 
     const response = await supabase.functions.invoke(
-      "notify-drl-assignment",
+      "notify-drl-assignment-TEST",
       {
         body: {
           rowId,
