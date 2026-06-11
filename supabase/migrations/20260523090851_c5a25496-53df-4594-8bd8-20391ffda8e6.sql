@@ -6,6 +6,7 @@ create type public.comment_kind as enum ('comment', 'highlight');
 create type public.engagement_status as enum ('active', 'archived');
 
 -- ============ PROFILES ============
+
 create table public.profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references auth.users(id) on delete cascade,
@@ -16,11 +17,35 @@ create table public.profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
 alter table public.profiles enable row level security;
 
-create policy "profiles: self read"  on public.profiles for select using (auth.uid() = user_id);
-create policy "profiles: self update" on public.profiles for update using (auth.uid() = user_id);
-create policy "profiles: self insert" on public.profiles for insert with check (auth.uid() = user_id);
+create policy "profiles: self read"
+on public.profiles
+for select
+to authenticated
+using (
+  auth.uid() = user_id
+);
+
+create policy "profiles: self insert"
+on public.profiles
+for insert
+to authenticated
+with check (
+  auth.uid() = user_id
+);
+
+create policy "profiles: self update"
+on public.profiles
+for update
+to authenticated
+using (
+  auth.uid() = user_id
+)
+with check (
+  auth.uid() = user_id
+);
 
 -- ============ ROLES ============
 create table public.user_roles (
