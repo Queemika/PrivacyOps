@@ -172,6 +172,7 @@ create policy "notifications: insert (any auth or system)" on public.notificatio
 create policy "notifications: self delete" on public.notifications for delete using (user_id = auth.uid());
 
 -- ============ AUDIT LOG ============
+
 create table public.audit_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
@@ -181,10 +182,26 @@ create table public.audit_log (
   meta jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+
 alter table public.audit_log enable row level security;
 
-create policy "audit_log: self insert" on public.audit_log for insert with check (user_id = auth.uid() or auth.uid() is not null);
-create policy "audit_log: self read" on public.audit_log for select using (user_id = auth.uid() or public.has_role(auth.uid(), 'Admin'));
+create policy "audit_log: self insert"
+on public.audit_log
+for insert
+to authenticated
+with check (
+  user_id = auth.uid()
+  and user_email = auth.jwt() ->> 'email'
+);
+
+create policy "audit_log: self read"
+on public.audit_log
+for select
+to authenticated
+using (
+  user_id = auth.uid()
+  or public.has_role(auth.uid(), 'Admin')
+);
 
 -- ============ TRIGGERS ============
 create or replace function public.update_updated_at_column()
