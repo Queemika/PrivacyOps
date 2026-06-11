@@ -52,31 +52,29 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
     if (added.length) fireNotifications(added);
   };
 
-const fireNotifications = async (added: string[]) => {
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const fireNotifications = async (added: string[]) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (user) {
-      await supabase.from("notifications").insert({
-        user_id: user.id,
-        kind: "assignment",
-        title: `DRL ${drlNo} assigned to ${added.join(", ")}`,
-        body: `New assignment tag(s) added on ${category.toUpperCase()} DRL ${drlNo}.`,
-        link: `/drl?tab=${category}&row=${rowId}`,
-        meta: {
-          rowId,
-          drlNo,
-          category,
-          tags: added,
-        },
-      });
-    }
+      if (user) {
+        await supabase.from("notifications").insert({
+          user_id: user.id,
+          kind: "assignment",
+          title: `DRL ${drlNo} assigned to ${added.join(", ")}`,
+          body: `New assignment tag(s) added on ${category.toUpperCase()} DRL ${drlNo}.`,
+          link: `/drl?tab=${category}&row=${rowId}`,
+          meta: {
+            rowId,
+            drlNo,
+            category,
+            tags: added,
+          },
+        });
+      }
 
-    const response = await supabase.functions.invoke(
-      "notify-drl-assignment-TEST",
-      {
+      const response = await supabase.functions.invoke("notify-drl-assignment-TEST", {
         body: {
           rowId,
           drlNo,
@@ -84,32 +82,29 @@ const fireNotifications = async (added: string[]) => {
           tags: added,
           link: `/drl?tab=${category}&row=${rowId}`,
         },
+      });
+
+      console.log("FULL RESPONSE", response);
+
+      if (response.error) {
+        alert(
+          JSON.stringify(
+            {
+              name: response.error.name,
+              message: response.error.message,
+            },
+            null,
+            2,
+          ),
+        );
+        return;
       }
-    );
 
-    console.log("FULL RESPONSE", response);
-
-    toast.success(`Notified: ${added.join(", ")}`);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-  const rawResponse = response.error.context as Response;
-
-  if (rawResponse) {
-    console.log("STATUS", rawResponse.status);
-    console.log("STATUS TEXT", rawResponse.statusText);
-
-    try {
-      const bodyText = await rawResponse.text();
-      console.log("RAW BODY", bodyText);
-      alert(bodyText);
-    } catch (e) {
-      console.error("Could not read response body", e);
+      toast.success(`Notified: ${added.join(", ")}`);
+    } catch (error) {
+      console.error("fireNotifications error:", error);
     }
-  }
-}
+  };
 
   const addChip = (raw: string) => {
     const v = raw.trim();
