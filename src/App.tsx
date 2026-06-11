@@ -97,6 +97,7 @@ const App = () => (
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/progress" element={<ProgressPage />} />
                 <Route path="/search" element={<SearchResults />} />
+                <Route path="/tasks" element={<MyTasks />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
