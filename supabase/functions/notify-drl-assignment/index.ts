@@ -1,9 +1,11 @@
 Deno.serve(async () => {
   return new Response(
     JSON.stringify({
-      version: "DIRECT_RESEND_TEST_V1",
+      version: "2026-06-11-test",
+      function: "notify-drl-assignment",
     }),
     {
+      status: 200,
       headers: {
         "Content-Type": "application/json",
       },
