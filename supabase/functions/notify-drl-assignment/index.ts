@@ -176,14 +176,35 @@ Deno.serve(async (req) => {
     console.log("Email response status:", resp.status);
     console.log("Email response body:", responseText);
 
+    if (!resp.ok) {
+      console.error("Resend request failed");
+      console.error("Status:", resp.status);
+      console.error("Body:", responseText);
+
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          resendStatus: resp.status,
+          resendResponse: responseText,
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
     return new Response(
       JSON.stringify({
-        ok: resp.ok,
-        status: resp.status,
-        response: responseText,
+        ok: true,
+        resendStatus: resp.status,
+        resendResponse: responseText,
       }),
       {
-        status: resp.ok ? 200 : 502,
+        status: 200,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
