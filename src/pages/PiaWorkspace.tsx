@@ -83,6 +83,7 @@ export default function PiaWorkspace() {
         description={`${pia.id} · ${pia.type} · ${pia.dpsStatus} DPS · ${pia.scope} · ${completion}% complete`}
         actions={
           <>
+            <PresenceStrip channelKey={`pia:${pia.id}`} />
             <Select value={pia.type} onValueChange={(v) => setPia({ ...pia, type: v as Pia["type"] })}>
               <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
               <SelectContent>
