@@ -87,24 +87,34 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
       console.log("FULL RESPONSE", response);
 
       if (response.error) {
-        alert(
-          JSON.stringify(
-            {
-              name: response.error.name,
-              message: response.error.message,
-            },
-            null,
-            2,
-          ),
-        );
-        return;
-      }
+  console.error("FULL ERROR", response.error);
 
-      toast.success(`Notified: ${added.join(", ")}`);
-    } catch (error) {
-      console.error("fireNotifications error:", error);
+  const err = response.error as any;
+
+  let responseText = "";
+
+  try {
+    if (err.context instanceof Response) {
+      responseText = await err.context.text();
     }
-  };
+  } catch (e) {
+    responseText = `Could not read response body: ${String(e)}`;
+  }
+
+  alert(
+    JSON.stringify(
+      {
+        name: err.name,
+        message: err.message,
+        responseBody: responseText,
+      },
+      null,
+      2,
+    ),
+  );
+
+  return;
+}
 
   const addChip = (raw: string) => {
     const v = raw.trim();
