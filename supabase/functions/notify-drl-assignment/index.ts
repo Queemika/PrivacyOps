@@ -1,3 +1,14 @@
 Deno.serve(async () => {
-  throw new Error("THIS IS A TEST ERROR FROM INDEX_TS");
+  return new Response(
+    JSON.stringify({
+      reached: true,
+      timestamp: Date.now(),
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
 });
