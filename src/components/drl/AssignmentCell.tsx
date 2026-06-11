@@ -54,44 +54,25 @@ export function AssignmentCell({ rowId, drlNo, category, value, notifiedFor, onC
 
 const fireNotifications = async (added: string[]) => {
   try {
-    console.log("=== fireNotifications START ===");
-    console.log("Added tags:", added);
-
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
 
-    console.log("Auth result:", {
-      user: user?.id,
-      email: user?.email,
-      error: userError,
-    });
-
     if (user) {
-      const { error: notificationError } = await supabase
-        .from("notifications")
-        .insert({
-          user_id: user.id,
-          kind: "assignment",
-          title: `DRL ${drlNo} assigned to ${added.join(", ")}`,
-          body: `New assignment tag(s) added on ${category.toUpperCase()} DRL ${drlNo}.`,
-          link: `/drl?tab=${category}&row=${rowId}`,
-          meta: {
-            rowId,
-            drlNo,
-            category,
-            tags: added,
-          },
-        });
-
-      console.log("Notification insert result:", {
-        success: !notificationError,
-        error: notificationError,
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        kind: "assignment",
+        title: `DRL ${drlNo} assigned to ${added.join(", ")}`,
+        body: `New assignment tag(s) added on ${category.toUpperCase()} DRL ${drlNo}.`,
+        link: `/drl?tab=${category}&row=${rowId}`,
+        meta: {
+          rowId,
+          drlNo,
+          category,
+          tags: added,
+        },
       });
     }
-
-    console.log("About to invoke notify-drl-assignment");
 
     const response = await supabase.functions.invoke(
       "notify-drl-assignment",
@@ -108,35 +89,9 @@ const fireNotifications = async (added: string[]) => {
 
     console.log("FULL RESPONSE", response);
 
-    if (response.error) {
-      console.error("Function Error:", response.error);
-
-      alert(
-        JSON.stringify(
-          {
-            data: response.data,
-            error: response.error,
-            response: (response.error as any)?.context ?? null,
-          },
-          null,
-          2
-        )
-      );
-
-      return;
-    }
-
-    console.log("SUCCESS:", response.data);
-
     toast.success(`Notified: ${added.join(", ")}`);
   } catch (error) {
-    console.error("fireNotifications error:", error);
-
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : "Failed to send notification"
-    );
+    console.error(error);
   }
 };
 
