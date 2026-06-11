@@ -21,6 +21,7 @@ type Item = { title: string; url: string; icon: any };
 const items: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Calendar", url: "/calendar", icon: CalendarIcon },
+  { title: "My Tasks", url: "/tasks", icon: CheckSquare },
   { title: "Transcript", url: "/upload", icon: Upload },
   { title: "PIA", url: "/library", icon: Library },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
