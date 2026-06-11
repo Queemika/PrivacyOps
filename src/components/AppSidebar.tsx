@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Upload, Library, BarChart3, ListChecks,
-  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText, Calendar as CalendarIcon, Gauge,
+  Shield, Lock, Camera, Eye, BookOpen, Mail, Settings, LogOut, ShieldCheck, HelpCircle, ScrollText, Calendar as CalendarIcon, Gauge, CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -21,6 +21,7 @@ type Item = { title: string; url: string; icon: any };
 const items: Item[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Calendar", url: "/calendar", icon: CalendarIcon },
+  { title: "My Tasks", url: "/tasks", icon: CheckSquare },
   { title: "Transcript", url: "/upload", icon: Upload },
   { title: "PIA", url: "/library", icon: Library },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },

@@ -17,6 +17,7 @@ import { Save, ShieldCheck, FileText, Mail, GitCompare, ShieldAlert, Upload, Boo
 import { toast } from "sonner";
 import { RelatedLinks } from "@/components/RelatedLinks";
 import { DrlInlinePanel } from "@/components/DrlInlinePanel";
+import { PresenceStrip } from "@/components/cowork/PresenceStrip";
 
 export default function PiaWorkspace() {
   const { id } = useParams();
@@ -82,6 +83,7 @@ export default function PiaWorkspace() {
         description={`${pia.id} · ${pia.type} · ${pia.dpsStatus} DPS · ${pia.scope} · ${completion}% complete`}
         actions={
           <>
+            <PresenceStrip channelKey={`pia:${pia.id}`} />
             <Select value={pia.type} onValueChange={(v) => setPia({ ...pia, type: v as Pia["type"] })}>
               <SelectTrigger className="h-9 w-32"><SelectValue /></SelectTrigger>
               <SelectContent>

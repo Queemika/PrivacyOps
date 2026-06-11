@@ -1,66 +1,129 @@
-# DRL — Owner & Assignment Enhancements
+# Cowork, Review Workflow & Audit Log
 
-Five changes scoped to the DRL module + a small per-engagement settings panel and one notification email.
+Bring multi-user live editing, supervisor sign-off, and a tamper-evident audit trail to every major workable (PIA, DRL, Physical Inspection, TSA, ROPA).
 
-## 1. Rename "Assigned To" → "Owner" (codename dropdown)
+## 1. Move workable storage to the database
 
-`src/pages/DrlGenerator.tsx`:
-- Rename `ASSIGNED_COL` label to `Owner`, key stays `assignedTo` (keeps existing data).
-- Change cell to a `Select` with two options: the engagement's **Client codename** and **MyTeam codename**.
-- Filter input above the table relabeled "Filter by owner…" and matches the two codename strings.
+Today most modules persist to `localStorage` (`pia/store.ts`, `drl/store.ts`, `inspections/store.ts`, etc.). Realtime needs a shared source of truth.
 
-## 2. Per-engagement codenames (Settings)
+New tables (one migration):
 
-Codenames are stored per engagement (per user choice):
-- New helper `src/lib/engagementSettings.ts` (localStorage `engagement:settings:v1`):
-  - `getEngagementCodenames(engagementId) → { client: string; myTeam: string }`
-  - Defaults: client = engagement's `clientName` (from `EngagementContext` / `listEngagements`), myTeam = "MyTeam".
-- New tab in `src/pages/EngagementManager.tsx` (or open in the engagement detail panel) → "Codenames" — two text inputs.
-- DRL reads the active engagement id from existing context (already used to scope rows) and resolves the two codename strings for the Owner dropdown.
+- `pia_records` — `{ id, engagement_id, title, type, dps_status, scope, data jsonb, status, created_by, updated_by, version, updated_at }`
+- `drl_rows` — `{ id, engagement_id, category, fields jsonb, owner, assignment text[], status, updated_by, version, updated_at }`
+- `inspection_records`, `tsa_records`, `ropa_records` — same shape (`engagement_id`, `data jsonb`, `status`, `updated_by`, `version`).
+- `presence` (ephemeral, in `Realtime` only — no table needed; uses `channel.track`).
 
-## 3. New "Assignment" column (free-text department tags)
+Every table follows the four-step rule (CREATE → GRANT → ENABLE RLS → POLICY) and is added to `supabase_realtime` publication. RLS: row visible/editable only if `is_engagement_member(auth.uid(), engagement_id)`; approvers/admins via `has_role`.
 
-Added to every category in `SPEC` after `Owner`:
-- Stored in `DrlRow.fields.assignment` as a comma-separated list of department tag strings (no schema change to `store.ts` beyond a typed helper).
-- Cell renders chips + a small "+ tag" popover with:
-  - Autocomplete suggestions from the editable department list (see #5).
-  - Free-text entry — Enter adds a new chip; chips removable with ×.
-- New filter "Filter by assignment…" matches any chip substring.
+A one-time client migrator copies existing `localStorage` records into the DB on first load (keyed by engagement) so no data is lost.
 
-## 4. Notification on assignment
+## 2. Live editing (field-level LWW + presence)
 
-When a new chip is added to `assignment`:
-- **In-app**: insert into `notifications` table for users in the engagement whose profile email matches the tag (department tags without a matching user are stored as labels only, no notification).
-- **Email**: new edge function `notify-drl-assignment` using **Lovable Emails** (`send-transactional-email`) — sends to those matched users with subject "You were tagged on a DRL item" and a link back to `/drl?tab={category}&row={id}`.
-- Triggered from the DRL cell after `updateRow`, debounced 300ms per row.
-- Suppresses duplicates by tracking `fields.notifiedFor` (chip list already notified).
+New hook `useRealtimeRecord(table, id)`:
 
-Note: emails depend on a verified email domain. If none is configured, the email step is skipped silently and only the in-app bell fires; we surface a one-time toast telling the admin to set up the email domain.
+- Loads row, subscribes to `postgres_changes` for that row.
+- Exposes `patch(fieldPath, value)` → debounced `update` with `version = version + 1` and `updated_by = auth.uid()`.
+- Conflict resolution: last write wins, but the hook surfaces a toast "Field updated by {name}" when an incoming change overwrites a local pending edit.
 
-## 5. Editable department list (linked to Physical Inspection)
+New hook `usePresence(channelKey)`:
 
-Single source of truth for department tag suggestions:
-- New helper `src/lib/departments/store.ts` (localStorage `departments:v1`) seeded from `DEFAULT_AREAS` in `src/lib/inspections/store.ts`.
-- `loadDepartments()` / `saveDepartments(list)` / `addDepartment(name)` / `removeDepartment(name)`.
-- `PhysicalInspection.tsx` area-name editor writes through this helper so adds/edits/removes in the inspection module update DRL suggestions, and vice versa.
-- New "Departments" section in `EngagementManager.tsx` settings (admin-only) for direct editing without leaving DRL.
+- Tracks `{ user_id, name, color, focusedField }` via Supabase Realtime presence.
+- New `<PresenceAvatars />` rendered in `PageHeader` of each workable showing who is viewing.
+- `<FieldFocusRing field="..." />` wraps inputs in `Phase1Form`, `Phase3Form`, `DrlGenerator` cells, `PhysicalInspection` rows, `TechnicalSecurityAssessment` rows — shows a colored outline + avatar bubble when another user is focused on the same field.
 
-## Files
+No CRDT, no locking — explicitly chosen for simplicity.
+
+## 3. Task assignment (reuse `module_assignments`)
+
+- New page `/tasks` ("My Tasks") listing assignments where `assignee_id = auth.uid()`, grouped by module, with status (`open`, `in_progress`, `done`) and due date.
+- "Assign" action added to PIA, DRL row, Inspection area, TSA control, ROPA row — opens a popover (user picker from `profiles` + due date + notes), inserts into `module_assignments`. Existing `handle_new_assignment` trigger already notifies the assignee.
+- Sidebar badge on "My Tasks" with open count.
+
+## 4. Supervisor review workflow
+
+Add `status` enum on each workable: `Draft → Preparer → Lead Review → Approver Sign-off → Approved | Rejected`.
+
+- Transitions gated by `has_role`:
+  - Preparer → Lead Review: any engagement member.
+  - Lead Review → Approver Sign-off: role `Lead`.
+  - Approver Sign-off → Approved/Rejected: role `Approver` or `Admin`.
+- `<ReviewBar />` component in each workable header showing current status, next-step button (disabled with tooltip if role lacks permission), and reviewer comment textarea.
+- Rejection sends record back to `Preparer` with a required reason; reason stored in `review_history` jsonb column and notified to `updated_by` via `notifications`.
+
+## 5. Audit log (every change, everywhere)
+
+Single `change_log` table:
+
+```text
+id | table_name | record_id | engagement_id | user_id | user_email
+   | action ('insert'|'update'|'delete'|'status_change')
+   | field_path | old_value jsonb | new_value jsonb | created_at
+```
+
+- Postgres trigger `log_changes()` attached to each workable table. For `UPDATE`, walks the top-level keys of `data` jsonb and emits one row per changed field (uses `jsonb_each` diff). Captures `auth.uid()` and joins to `profiles` for email.
+- Existing `audit_log` table stays for app-level events (login, export, role change). The Audit Log page merges both feeds.
+- `AuditLog.tsx` upgrades:
+  - Tabs: **All / Workables / System**.
+  - Filters: module, engagement, user, date range, action type.
+  - Each row expands to show old → new diff (rendered as a small two-column block).
+  - Export CSV.
+- Per-record "History" drawer in each workable header (`<RecordHistory recordId />`) showing the same data scoped to that record.
+
+## 6. Permissions per role
+
+Centralized in `src/lib/permissions.ts`:
+
+```text
+can(action, module, record?) → boolean
+```
+
+Reads from `useMyRoles` and the record's current `status`. Used by `<ReviewBar />`, assignment popovers, edit guards on `useRealtimeRecord.patch` (server still enforces via RLS, this is UX-only).
+
+Matrix (summary):
+
+| Role     | Edit Draft | Submit | Lead Approve | Final Sign-off | Assign tasks |
+|----------|------------|--------|--------------|----------------|--------------|
+| Intern   | view-only  | —      | —            | —              | —            |
+| Preparer | yes        | yes    | —            | —              | yes          |
+| Lead     | yes        | yes    | yes          | —              | yes          |
+| Approver | yes        | yes    | yes          | yes            | yes          |
+| Admin    | yes        | yes    | yes          | yes            | yes          |
+| Client   | read-only on Approved | — | — | — | — |
+
+## Files (high level)
 
 **New**
-- `src/lib/engagementSettings.ts`
-- `src/lib/departments/store.ts`
-- `src/components/drl/AssignmentCell.tsx` (chips + popover)
-- `supabase/functions/notify-drl-assignment/index.ts`
+- `supabase/migrations/<ts>_cowork_audit.sql` (tables, RLS, grants, realtime publication, `log_changes` trigger)
+- `src/lib/realtime/useRealtimeRecord.ts`, `src/lib/realtime/usePresence.ts`
+- `src/components/cowork/PresenceAvatars.tsx`, `FieldFocusRing.tsx`, `ReviewBar.tsx`, `RecordHistory.tsx`, `AssignTaskPopover.tsx`
+- `src/lib/permissions.ts`
+- `src/pages/MyTasks.tsx`
+- `src/lib/migration/localToDb.ts` (one-time migrator)
 
 **Edited**
-- `src/pages/DrlGenerator.tsx` (Owner select, Assignment column, filters)
-- `src/lib/drl/store.ts` (typed helpers only; no shape change)
-- `src/pages/EngagementManager.tsx` (Codenames + Departments tabs)
-- `src/pages/PhysicalInspection.tsx` (read/write departments via shared store)
+- `src/pages/PiaWorkspace.tsx`, `DrlGenerator.tsx`, `PhysicalInspection.tsx`, `TechnicalSecurityAssessment.tsx`, `RopaGenerator.tsx` — swap local stores for `useRealtimeRecord`, mount presence + review bar.
+- `src/pages/AuditLog.tsx` — new filters, tabs, diff view, CSV export.
+- `src/components/AppSidebar.tsx` — add "My Tasks".
+- `src/lib/pia/store.ts`, `drl/store.ts`, `inspections/store.ts` — thin adapters that read/write through the DB instead of localStorage.
 
 ## Out of scope
 
-- Renaming the underlying `assignedTo` field/migration.
-- Per-row permission gating by owner.
-- SMS / Slack notifications.
+- True CRDT co-typing (Yjs) — explicitly rejected.
+- Hard row locking.
+- Per-section (sub-phase) review gates — workflow is per-record.
+- Slack/Teams notifications (email + in-app only).
+
+## Shipped (iteration 1)
+
+- Schema, RLS, GRANTs, realtime publication, `change_log` + `log_workable_change` trigger.
+- Realtime infra: `usePresence`, `useRealtimeRecord`, `PresenceAvatars`, `PresenceStrip`, `FieldFocusRing`.
+- Workflow: `permissions.ts`, `ReviewBar`, `RecordHistory`, `AssignTaskPopover`.
+- Pages: `/tasks` (My Tasks board), upgraded `/audit` (workable vs system tabs, filters, diff view, CSV export).
+- PiaWorkspace shows live presence avatars via `PresenceStrip`.
+- Sidebar entry for My Tasks.
+
+## Deferred to iteration 2
+
+- Migrating PIA/DRL/Inspection/TSA/ROPA persistence from `localStorage` to the new DB tables. Hooks (`useRealtimeRecord`) and the `ReviewBar`/`RecordHistory` components are ready to drop in once each module has a DB-backed record. The localStorage `ENG-${ts}` engagement ids do not satisfy the uuid FK on `engagements`, so the migration includes wiring local engagements to real `engagements` rows.
+- Mounting `ReviewBar`/`RecordHistory`/`AssignTaskPopover` into every workable header (depends on the DB migration above).
+- `FieldFocusRing` on individual form inputs (depends on `useRealtimeRecord` integration).

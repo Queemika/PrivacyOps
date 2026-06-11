@@ -44,6 +44,48 @@ export type Database = {
         }
         Relationships: []
       }
+      change_log: {
+        Row: {
+          action: string
+          created_at: string
+          engagement_id: string | null
+          field_path: string | null
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          record_id: string
+          table_name: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          engagement_id?: string | null
+          field_path?: string | null
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          record_id: string
+          table_name: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          engagement_id?: string | null
+          field_path?: string | null
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          record_id?: string
+          table_name?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       comment_todos: {
         Row: {
           assignee_id: string
@@ -142,6 +184,62 @@ export type Database = {
           },
         ]
       }
+      drl_rows: {
+        Row: {
+          assignment: string[]
+          category: string
+          created_at: string
+          created_by: string | null
+          engagement_id: string
+          fields: Json
+          id: string
+          owner: string | null
+          review_history: Json
+          status: Database["public"]["Enums"]["workable_status"]
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          assignment?: string[]
+          category: string
+          created_at?: string
+          created_by?: string | null
+          engagement_id: string
+          fields?: Json
+          id?: string
+          owner?: string | null
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          assignment?: string[]
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          engagement_id?: string
+          fields?: Json
+          id?: string
+          owner?: string | null
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drl_rows_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       engagement_members: {
         Row: {
           created_at: string
@@ -204,6 +302,56 @@ export type Database = {
         }
         Relationships: []
       }
+      inspection_records: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          engagement_id: string
+          id: string
+          review_history: Json
+          status: Database["public"]["Enums"]["workable_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engagement_id: string
+          id?: string
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engagement_id?: string
+          id?: string
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_records_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_otps: {
         Row: {
           attempts: number
@@ -245,6 +393,7 @@ export type Database = {
           module: string
           notes: string | null
           record_id: string | null
+          status: string
         }
         Insert: {
           assigned_by?: string | null
@@ -256,6 +405,7 @@ export type Database = {
           module: string
           notes?: string | null
           record_id?: string | null
+          status?: string
         }
         Update: {
           assigned_by?: string | null
@@ -267,6 +417,7 @@ export type Database = {
           module?: string
           notes?: string | null
           record_id?: string | null
+          status?: string
         }
         Relationships: [
           {
@@ -314,6 +465,65 @@ export type Database = {
         }
         Relationships: []
       }
+      pia_records: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          dps_status: string
+          engagement_id: string
+          id: string
+          review_history: Json
+          scope: string
+          status: Database["public"]["Enums"]["workable_status"]
+          title: string
+          type: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          dps_status?: string
+          engagement_id: string
+          id?: string
+          review_history?: Json
+          scope?: string
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          dps_status?: string
+          engagement_id?: string
+          id?: string
+          review_history?: Json
+          scope?: string
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pia_records_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -346,6 +556,106 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      ropa_records: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          engagement_id: string
+          id: string
+          review_history: Json
+          status: Database["public"]["Enums"]["workable_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engagement_id: string
+          id?: string
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engagement_id?: string
+          id?: string
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ropa_records_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tsa_records: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          engagement_id: string
+          id: string
+          review_history: Json
+          status: Database["public"]["Enums"]["workable_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engagement_id: string
+          id?: string
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          engagement_id?: string
+          id?: string
+          review_history?: Json
+          status?: Database["public"]["Enums"]["workable_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tsa_records_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "engagements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -391,6 +701,13 @@ export type Database = {
       comment_kind: "comment" | "highlight"
       comment_status: "open" | "resolved"
       engagement_status: "active" | "archived"
+      workable_status:
+        | "Draft"
+        | "Preparer"
+        | "LeadReview"
+        | "ApproverSignoff"
+        | "Approved"
+        | "Rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -522,6 +839,14 @@ export const Constants = {
       comment_kind: ["comment", "highlight"],
       comment_status: ["open", "resolved"],
       engagement_status: ["active", "archived"],
+      workable_status: [
+        "Draft",
+        "Preparer",
+        "LeadReview",
+        "ApproverSignoff",
+        "Approved",
+        "Rejected",
+      ],
     },
   },
 } as const
